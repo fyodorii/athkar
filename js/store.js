@@ -28,8 +28,11 @@ export const DEFAULTS = {
     notify: {
       enabled: false,
       prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
+      // Minutes before each adhan for a heads-up (0 = only at the adhan); unset → `before`.
+      beforeBy: {},
       iqama: true,
       sunrise: false,
+      sunriseBefore: 0, // minutes before sunrise (0 = at sunrise), to catch Fajr in time
       before: 10,
       morning: true,
       morningDelay: 30,
@@ -40,7 +43,11 @@ export const DEFAULTS = {
       lastThird: false,
       friday: true,
       fasting: false,
+      fastingTime: '21:00',
       whiteDays: false,
+      whiteDaysTime: '21:00',
+      occasions: false, // the evening before Ramadan, Arafah, Ashura and the other occasions
+      occasionsTime: '21:00',
       salawat: false,
       salawatHours: 3,
       worship: false,
@@ -73,6 +80,7 @@ export const DEFAULTS = {
   worshipCustom: [],
   diary: {},
   hifz: { on: false, day: 1, checks: {} },
+  surahs: {}, // kahf | mulk | baqarah → { ayah: where reading stopped, done: day finished }
   tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };

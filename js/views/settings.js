@@ -2,7 +2,7 @@
 
 import { CITIES, nearestCity } from '../cities.js';
 import { clockText, countdown, gregText, hijri, HIJRI_MONTHS, hijriText, minutesText, num, weekday } from '../dates.js';
-import { icon } from '../icons.js';
+import { icon, PRAYER_ICONS } from '../icons.js';
 import { iqamaTime, METHODS, PRAYER_NAMES } from '../prayer.js';
 import { disablePush, enablePush, isIOS, isStandalone, pushActive, pushSupported, sendTest, syncSchedule } from '../push.js';
 import { exportData, importData, save, state } from '../store.js';
@@ -320,6 +320,8 @@ export function renderMethod(view) {
 // ---- Notifications ----
 
 const BEFORE = [0, 5, 10, 15, 20, 30];
+const PRAYER_OPTS = ['off', 0, 5, 10, 15, 20, 30];
+const SUNRISE_OPTS = ['off', 0, 10, 15, 20, 30];
 const DELAYS = [0, 15, 30, 45, 60, 90];
 
 export function renderNotify(view) {
@@ -332,8 +334,10 @@ export function renderNotify(view) {
     const needsInstall = isIOS() && !isStandalone();
     const select = (name, values, value, label) =>
       `<select name="${name}">${values.map((v) => `<option value="${v}" ${v === value ? 'selected' : ''}>${label(v)}</option>`).join('')}</select>`;
+    const lab = (ic, text, small = '') => `<span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${text}${small ? `<small>${small}</small>` : ''}</span>`;
+    const timeRow = (name) => `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="${name}" value="${esc(n[name])}"></div>`;
     view.innerHTML = `
-      ${pageHeader('الإشعارات والتنبيهات', { back: '#/settings' })}
+      ${pageHeader('الإشعارات', { back: '#/settings', sub: 'اختر ما يصلك ومتى' })}
       ${
         needsInstall
           ? `<div class="banner info">${icon('info', 22)}<div><b>أضف التطبيق إلى الشاشة الرئيسية أولاً</b>
@@ -347,55 +351,64 @@ export function renderNotify(view) {
         ${n.enabled ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} إرسال إشعار تجريبي</button>` : ''}
       </div>
       <div class="group">
-        <h4>الأذان</h4>
+        <h4>مواقيت الصلاة</h4>
         ${['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']
-          .map((k) => `<div class="row"><span class="row-label">${PRAYER_NAMES[k]}</span>${toggle('p-' + k, n.prayers[k])}</div>`)
+          .map((k) => {
+            const v = n.prayers[k] ? n.beforeBy?.[k] ?? n.before : 'off';
+            return `<div class="row">${lab(PRAYER_ICONS[k], PRAYER_NAMES[k])}${select('pb-' + k, PRAYER_OPTS, v, (x) => (x === 'off' ? 'متوقف' : x ? `في الموعد وقبله ${minutesText(x)}` : 'في الموعد'))}</div>`;
+          })
           .join('')}
-        <div class="row"><span class="row-label">الشروق<small>نهاية وقت الفجر</small></span>${toggle('sunrise', n.sunrise)}</div>
-        <div class="row"><span class="row-label">الإقامة<small>${['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map((k) => `${PRAYER_NAMES[k]} ${num(s.iqama[k])}`).join(' • ')} دقيقة — <a class="link" href="#/settings/method">تعديل</a></small></span>${toggle('iqama', n.iqama)}</div>
-        <div class="row"><span class="row-label">تنبيه قبل الأذان</span>${select('before', BEFORE, n.before, (v) => (v ? `قبل ${minutesText(v)}` : 'بلا تنبيه'))}</div>
-        <div class="row"><span class="row-label">تنبيه بعد الأذان<small>«هل صليت؟» وأذكار ما بعد الصلاة</small></span>${select('afterAdhan', BEFORE, n.afterAdhan, (v) => (v ? `بعد ${minutesText(v)}` : 'بلا تنبيه'))}</div>
-        <div class="row"><span class="row-label">خروج وقت الصلاة<small>قبل أن ينتهي وقت كل صلاة</small></span>${select('prayerEnd', [0, 10, 15, 20, 30, 45, 60], n.prayerEnd, (v) => (v ? `قبل ${minutesText(v)}` : 'بلا تنبيه'))}</div>
+        <div class="row">${lab('sunrise', 'الشروق', 'خروج وقت الفجر')}${select('sunriseOpt', SUNRISE_OPTS, n.sunrise ? n.sunriseBefore || 0 : 'off', (x) => (x === 'off' ? 'متوقف' : x ? `قبل الشروق بـ${minutesText(x)}` : 'عند الشروق'))}</div>
+        <div class="row">${lab('mosque', 'الإقامة', `${['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map((k) => `${PRAYER_NAMES[k]} ${num(s.iqama[k])}`).join(' • ')} دقيقة — <a class="link" href="#/settings/method">تعديل</a>`)}${toggle('iqama', n.iqama)}</div>
+        <div class="row">${lab('check', 'بعد الأذان', '«هل صليت؟» وأذكار ما بعد الصلاة')}${select('afterAdhan', BEFORE, n.afterAdhan, (v) => (v ? `بعد ${minutesText(v)}` : 'متوقف'))}</div>
+        <div class="row">${lab('clock', 'خروج وقت الصلاة', 'قبل أن ينتهي وقت كل صلاة')}${select('prayerEnd', [0, 10, 15, 20, 30, 45, 60], n.prayerEnd, (v) => (v ? `قبل ${minutesText(v)}` : 'متوقف'))}</div>
         <p class="hint">ينتهي وقت الفجر بالشروق، والظهر بدخول العصر، والعصر بالغروب (ويُكره تأخيرها إلى اصفرار الشمس)، والمغرب بدخول العشاء، والعشاء بمنتصف الليل.</p>
       </div>
       <div class="group">
         <h4>أوقات أخرى</h4>
-        <div class="row"><span class="row-label">صلاة الضحى</span>${toggle('duha', n.duha)}</div>
+        <div class="row">${lab('sun', 'صلاة الضحى')}${toggle('duha', n.duha)}</div>
         ${n.duha ? `<div class="row sub"><span class="row-label">بعد الشروق بـ</span>${select('duhaDelay', [15, 30, 60, 90, 120, 180], n.duhaDelay, (v) => (v >= 60 ? (v === 60 ? 'ساعة' : v === 120 ? 'ساعتين' : v === 180 ? '٣ ساعات' : 'ساعة ونصف') : minutesText(v)))}</div>` : ''}
-        <div class="row"><span class="row-label">منتصف الليل<small>آخر وقت العشاء</small></span>${toggle('midnight', n.midnight)}</div>
-        <div class="row"><span class="row-label">القيلولة<small>عند بدء الساعة السادسة قبل الزوال</small></span>${toggle('qailulah', n.qailulah)}</div>
-        <div class="row"><span class="row-label">وقت النهي قبل الظهر<small>عند قيام الشمس، قبل الظهر بـ١٠ دقائق</small></span>${toggle('nahy', n.nahy)}</div>
-        <div class="row"><span class="row-label">الثلث الأخير من الليل<small>لقيام الليل والدعاء</small></span>${toggle('lastThird', n.lastThird)}</div>
+        <div class="row">${lab('moon', 'منتصف الليل', 'آخر وقت العشاء')}${toggle('midnight', n.midnight)}</div>
+        <div class="row">${lab('moonStar', 'القيلولة', 'عند بدء الساعة السادسة قبل الزوال')}${toggle('qailulah', n.qailulah)}</div>
+        <div class="row">${lab('info', 'وقت النهي قبل الظهر', 'عند قيام الشمس، قبل الظهر بـ١٠ دقائق')}${toggle('nahy', n.nahy)}</div>
+        <div class="row">${lab('stars', 'الثلث الأخير من الليل', 'لقيام الليل والدعاء')}${toggle('lastThird', n.lastThird)}</div>
       </div>
       <div class="group">
         <h4>القرآن</h4>
-        <div class="row"><span class="row-label">سورة الكهف<small>كل يوم جمعة</small></span>${toggle('kahf', n.kahf)}</div>
-        ${n.kahf ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="kahfTime" value="${esc(n.kahfTime)}"></div>` : ''}
-        <div class="row"><span class="row-label">سورة الملك<small>كل ليلة</small></span>${toggle('mulk', n.mulk)}</div>
-        ${n.mulk ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="mulkTime" value="${esc(n.mulkTime)}"></div>` : ''}
-        <div class="row"><span class="row-label">سورة البقرة</span>${select('baqarah', [0, 1, 2, 3, 7], n.baqarah, (v) => ({ 0: 'بلا تنبيه', 1: 'كل يوم', 2: 'كل يومين', 3: 'كل ٣ أيام', 7: 'كل أسبوع' })[v])}</div>
-        ${n.baqarah ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="baqarahTime" value="${esc(n.baqarahTime)}"></div>` : ''}
-        <div class="row"><span class="row-label">ورد الختمة<small>${state.khatma.start ? 'وردك اليومي من القرآن' : 'ابدأ ختمة من قسم القرآن'}</small></span>${toggle('khatma', n.khatma)}</div>
-        ${n.khatma ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="khatmaTime" value="${esc(n.khatmaTime)}"></div>` : ''}
+        <div class="row">${lab('mountain', 'سورة الكهف', 'كل يوم جمعة')}${toggle('kahf', n.kahf)}</div>
+        ${n.kahf ? timeRow('kahfTime') : ''}
+        <div class="row">${lab('crown', 'سورة الملك', 'كل ليلة')}${toggle('mulk', n.mulk)}</div>
+        ${n.mulk ? timeRow('mulkTime') : ''}
+        <div class="row">${lab('shield', 'سورة البقرة')}${select('baqarah', [0, 1, 2, 3, 7], n.baqarah, (v) => ({ 0: 'متوقف', 1: 'كل يوم', 2: 'كل يومين', 3: 'كل ٣ أيام', 7: 'كل أسبوع' })[v])}</div>
+        ${n.baqarah ? timeRow('baqarahTime') : ''}
+        <div class="row">${lab('book', 'تذكير الختمة', state.khatma.start ? 'وردك اليومي من القرآن' : 'ابدأ ختمة من قسم القرآن')}${toggle('khatma', n.khatma)}</div>
+        ${n.khatma ? timeRow('khatmaTime') : ''}
       </div>
       <div class="group">
         <h4>الأذكار</h4>
-        <div class="row"><span class="row-label">أذكار الصباح</span>${toggle('morning', n.morning)}</div>
+        <div class="row">${lab('sunrise', 'أذكار الصباح')}${toggle('morning', n.morning)}</div>
         ${n.morning ? `<div class="row sub"><span class="row-label">بعد الفجر بـ</span>${select('morningDelay', DELAYS, n.morningDelay, (v) => (v ? minutesText(v) : 'عند الأذان'))}</div>` : ''}
-        <div class="row"><span class="row-label">أذكار المساء</span>${toggle('evening', n.evening)}</div>
+        <div class="row">${lab('moonStar', 'أذكار المساء')}${toggle('evening', n.evening)}</div>
         ${n.evening ? `<div class="row sub"><span class="row-label">بعد العصر بـ</span>${select('eveningDelay', DELAYS, n.eveningDelay, (v) => (v ? minutesText(v) : 'عند الأذان'))}</div>` : ''}
-        <div class="row"><span class="row-label">أذكار النوم</span>${toggle('sleep', n.sleep)}</div>
-        ${n.sleep ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="sleepTime" value="${esc(n.sleepTime)}"></div>` : ''}
-        <div class="row"><span class="row-label">الصلاة على النبي ﷺ<small>من ٩ صباحاً إلى ٩ مساءً</small></span>${toggle('salawat', n.salawat)}</div>
+        <div class="row">${lab('moon', 'أذكار النوم')}${toggle('sleep', n.sleep)}</div>
+        ${n.sleep ? timeRow('sleepTime') : ''}
+        <div class="row">${lab('heart', 'الصلاة على النبي ﷺ', 'من ٩ صباحاً إلى ٩ مساءً')}${toggle('salawat', n.salawat)}</div>
         ${n.salawat ? `<div class="row sub"><span class="row-label">كل</span>${select('salawatHours', [1, 2, 3, 4, 6], n.salawatHours, (v) => (v === 1 ? 'ساعة' : v === 2 ? 'ساعتين' : `${num(v)} ساعات`))}</div>` : ''}
         <p class="hint">ولكل ذكر في «أذكاري» تذكيره الخاص بالوقت الذي تختاره.</p>
       </div>
       <div class="group">
+        <h4>الصيام والمناسبات</h4>
+        <div class="row">${lab('leaf', 'صيام الاثنين والخميس', 'مساء الأحد والأربعاء')}${toggle('fasting', n.fasting)}</div>
+        ${n.fasting ? timeRow('fastingTime') : ''}
+        <div class="row">${lab('moon', 'صيام الأيام البيض', '١٣ و١٤ و١٥ — مساء اليوم الثاني عشر')}${toggle('whiteDays', n.whiteDays)}</div>
+        ${n.whiteDays ? timeRow('whiteDaysTime') : ''}
+        <div class="row">${lab('calendar', 'المناسبات', 'رمضان، والعشر، وعرفة، والعيدان، وعاشوراء… مساء اليوم السابق — <a class="link" href="#/occasions">عرضها</a>')}${toggle('occasions', n.occasions)}</div>
+        ${n.occasions ? timeRow('occasionsTime') : ''}
+      </div>
+      <div class="group">
         <h4>تذكيرات أخرى</h4>
-        <div class="row"><span class="row-label">يوم الجمعة<small>الصلاة على النبي ﷺ وساعة الإجابة</small></span>${toggle('friday', n.friday)}</div>
-        <div class="row"><span class="row-label">صيام الاثنين والخميس<small>مساء اليوم السابق</small></span>${toggle('fasting', n.fasting)}</div>
-        <div class="row"><span class="row-label">الأيام البيض<small>١٣ و١٤ و١٥ من كل شهر هجري</small></span>${toggle('whiteDays', n.whiteDays)}</div>
-        <div class="row"><span class="row-label">متابعة العبادات<small>كل ليلة الساعة ٩:٣٠ مساءً</small></span>${toggle('worship', n.worship)}</div>
+        <div class="row">${lab('mosque', 'يوم الجمعة', 'الصلاة على النبي ﷺ وساعة الإجابة')}${toggle('friday', n.friday)}</div>
+        <div class="row">${lab('check', 'متابعة العبادات', 'كل ليلة الساعة ٩:٣٠ مساءً')}${toggle('worship', n.worship)}</div>
       </div>
       <p class="hint center">التنبيهات تُرسل من خادم التطبيق في وقتها، فافتح التطبيق مرة كل بضعة أسابيع ليبقى جدولها محدّثاً.</p>`;
   };
@@ -437,13 +450,19 @@ export function renderNotify(view) {
       save();
       return draw();
     }
-    if (t.name.startsWith('p-')) n.prayers[t.name.slice(2)] = t.checked;
-    else if (t.type === 'checkbox') n[t.name] = t.checked;
+    if (t.name.startsWith('pb-')) {
+      const k = t.name.slice(3);
+      n.prayers[k] = t.value !== 'off';
+      if (t.value !== 'off') (n.beforeBy ??= {})[k] = Number(t.value);
+    } else if (t.name === 'sunriseOpt') {
+      n.sunrise = t.value !== 'off';
+      if (n.sunrise) n.sunriseBefore = Number(t.value);
+    } else if (t.type === 'checkbox') n[t.name] = t.checked;
     else if (t.type === 'time') n[t.name] = t.value || n[t.name];
     else n[t.name] = Number(t.value);
     save();
     syncSchedule();
-    if (['morning', 'evening', 'sleep', 'salawat', 'duha', 'kahf', 'mulk', 'baqarah', 'khatma'].includes(t.name)) draw();
+    if (['morning', 'evening', 'sleep', 'salawat', 'duha', 'kahf', 'mulk', 'baqarah', 'khatma', 'fasting', 'whiteDays', 'occasions'].includes(t.name)) draw();
   };
   view.onclick = async (e) => {
     if (!e.target.closest('[data-test]')) return;

@@ -5,6 +5,7 @@ import { addDays, dateAt, dayTimes, forbiddenTimes, iqamaTime, PRAYER_NAMES, pra
 import { PAGES } from './quran-data.js';
 import { dailyPages } from './khatma.js';
 import { clockText, hijri, minutesText, num } from './dates.js';
+import { OCCASIONS } from './occasions.js';
 
 export const SCHEDULE_DAYS = 30;
 
@@ -52,11 +53,12 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
       if (!n.prayers[k]) continue;
       const name = k === 'dhuhr' && weekday === 5 ? 'الجمعة' : PRAYER_NAMES[k];
       add(t[k].at, `حان الآن وقت صلاة ${name}`, `${ADHAN_BODY[k]} — ${place}`, '#/home', `adhan-${k}`);
-      if (n.before > 0) {
+      const before = n.beforeBy?.[k] ?? n.before;
+      if (before > 0) {
         add(
-          t[k].at - n.before * 60000,
+          t[k].at - before * 60000,
           `اقترب وقت صلاة ${name}`,
-          `بعد ${minutesText(n.before)}، الساعة ${clockText(t[k].hours, s.clock24)}`,
+          `بعد ${minutesText(before)}، الساعة ${clockText(t[k].hours, s.clock24)}`,
           '#/home',
           `before-${k}`
         );
@@ -95,7 +97,11 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
       add(a0, 'وقت القيلولة', `نافذة ما قبل الزوال حتى ${clockText(t.dhuhr.hours - (s.offsets.dhuhr || 0) / 60, s.clock24)} — والقائلة: الاستراحة وسط النهار`, '#/qailulah', 'qailulah');
     }
     if (n.midnight) add(t.midnight.at, 'منتصف الليل', 'آخر وقت صلاة العشاء، وأوتر قبل أن تنام إن خشيت ألا تقوم', '#/home', 'midnight');
-    if (n.sunrise) add(t.sunrise.at, 'الشروق', 'انتهى وقت صلاة الفجر', '#/home', 'sunrise');
+    if (n.sunrise) {
+      if (n.sunriseBefore > 0) {
+        add(t.sunrise.at - n.sunriseBefore * 60000, 'اقترب الشروق', `يخرج وقت الفجر بعد ${minutesText(n.sunriseBefore)} (${clockText(t.sunrise.hours, s.clock24)}) — إن لم تصلِّ فبادر`, '#/home', 'sunrise');
+      } else add(t.sunrise.at, 'الشروق', 'انتهى وقت صلاة الفجر', '#/home', 'sunrise');
+    }
     if (n.morning) {
       add(t.fajr.at + n.morningDelay * 60000, 'أذكار الصباح ☀️', '«أصبحنا وأصبح الملك لله…» حصّن يومك بأذكار الصباح', '#/adhkar/morning', 'morning');
     }
@@ -113,22 +119,31 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
       add(atClock(day, '10:00', t), 'يوم الجمعة', 'أكثر من الصلاة على النبي ﷺ، وتحرَّ ساعة الإجابة آخر ساعة بعد العصر', '#/home', 'friday');
     }
     if (n.kahf && weekday === 5) {
-      add(atClock(day, n.kahfTime, t), 'سورة الكهف 📖', '«من قرأ سورة الكهف يوم الجمعة أضاء له من النور ما بين الجمعتين»', '#/quran', 'kahf');
+      add(atClock(day, n.kahfTime, t), 'سورة الكهف 📖', '«من قرأ سورة الكهف يوم الجمعة أضاء له من النور ما بين الجمعتين»', '#/surah/kahf', 'kahf');
     }
     if (n.mulk) {
-      add(atClock(day, n.mulkTime, t), 'سورة الملك', '«سورة من القرآن ثلاثون آية شفعت لرجل حتى غُفر له: تبارك الذي بيده الملك»', '#/quran', 'mulk');
+      add(atClock(day, n.mulkTime, t), 'سورة الملك', '«سورة من القرآن ثلاثون آية شفعت لرجل حتى غُفر له: تبارك الذي بيده الملك»', '#/surah/mulk', 'mulk');
     }
     if (n.baqarah > 0 && dayNumber(day) % n.baqarah === 0) {
-      add(atClock(day, n.baqarahTime, t), 'سورة البقرة', '«لا تجعلوا بيوتكم مقابر، إن الشيطان ينفر من البيت الذي تُقرأ فيه سورة البقرة»', '#/quran', 'baqarah');
+      add(atClock(day, n.baqarahTime, t), 'سورة البقرة', '«لا تجعلوا بيوتكم مقابر، إن الشيطان ينفر من البيت الذي تُقرأ فيه سورة البقرة»', '#/surah/baqarah', 'baqarah');
     }
     if (n.khatma && state.khatma.page < PAGES) {
       add(atClock(day, n.khatmaTime, t), 'وردك من القرآن', `وردك اليوم ${num(dailyPages(state.khatma, day))} صفحة لتختم في موعدك`, '#/quran', 'khatma');
     }
     if (n.fasting && (weekday === 0 || weekday === 3)) {
-      add(atClock(day, '21:00', t), `غداً ${weekday === 0 ? 'الاثنين' : 'الخميس'}`, 'تذكير بصيام التطوع، وتُعرض الأعمال فيه على الله', '#/home', 'fasting');
+      add(atClock(day, n.fastingTime || '21:00', t), `غداً ${weekday === 0 ? 'الاثنين' : 'الخميس'}`, 'تذكير بصيام التطوع، وتُعرض الأعمال فيه على الله', '#/home', 'fasting');
     }
     if (n.whiteDays && hijri(day, s.hijriAdjust).day === 12) {
-      add(atClock(day, '21:00', t), 'الأيام البيض', `تبدأ غداً صيام الأيام البيض: ${num(13)} و${num(14)} و${num(15)} من الشهر`, '#/home', 'white-days');
+      add(atClock(day, n.whiteDaysTime || '21:00', t), 'الأيام البيض', `تبدأ غداً صيام الأيام البيض: ${num(13)} و${num(14)} و${num(15)} من الشهر`, '#/home', 'white-days');
+    }
+    if (n.occasions) {
+      // The evening before an occasion begins.
+      const h = hijri(addDays(day, 1), s.hijriAdjust);
+      for (const o of OCCASIONS) {
+        if (h.month !== o.month || h.day !== o.from) continue;
+        const one = o.from === o.to;
+        add(atClock(day, n.occasionsTime || '21:00', t), `${one ? 'غداً' : 'تبدأ غداً'}: ${o.name}`, o.text.replace(/\s+—.*$/, ''), '#/occasions', `occasion-${o.id}`);
+      }
     }
     if (n.salawat) {
       const every = Math.max(1, n.salawatHours);

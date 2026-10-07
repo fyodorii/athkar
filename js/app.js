@@ -16,6 +16,8 @@ import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as quran from './views/quran.js';
 import * as hifz from './views/hifz.js';
+import * as calendar from './views/calendar.js';
+import * as surah from './views/surah.js';
 import * as tools from './views/tools.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
@@ -36,6 +38,9 @@ const ROUTES = [
   [/^#\/adhkar(?:\/[\w-]+)?$/, 'mine', (v) => adhkar.renderMine(v)], // old links
   [/^#\/quran$/, 'quran', (v) => quran.renderKhatma(v)],
   [/^#\/hifz$/, 'quran', (v) => hifz.renderHifz(v)],
+  [/^#\/surah\/(kahf|mulk|baqarah)$/, 'quran', (v, id) => surah.renderSurah(v, id)],
+  [/^#\/calendar(?:\/(\d{4}-\d{2}-\d{2}))?$/, 'home', (v, key) => calendar.renderCalendar(v, key)],
+  [/^#\/occasions$/, 'home', (v) => calendar.renderOccasions(v)],
   [/^#\/ruqyah$/, 'quran', (v) => quran.renderRuqyah(v)],
   [/^#\/radio$/, 'quran', (v) => quran.renderRadio(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],

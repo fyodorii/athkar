@@ -1359,7 +1359,6 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 /* ---------- Memorization plan (ورد الحفظ) ---------- */
 
 .hz-nav { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-.hz-nav .flip svg { transform: scaleX(-1); }
 .hz-nav .icon-btn[disabled] { opacity: 0.35; }
 .hz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
 .hz-card { position: relative; display: grid; gap: 2px; padding: 14px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); border-top: 4px solid var(--hz, var(--primary)); }
@@ -1387,3 +1386,110 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .hz-step-list li.note { list-style: none; margin-right: -22px; padding: 10px 12px; border-radius: 14px; background: var(--gold-soft, rgba(201, 162, 39, 0.12)); }
 .hz-step-list li.note p { margin: 0; }
 .hz-step-list b { font-weight: 700; }
+
+/* ---------- Shared ---------- */
+
+.flip svg { transform: scaleX(-1); }
+.aya.flash { border-radius: 8px; animation: aya-flash 2s ease; }
+@keyframes aya-flash { 0%, 50% { background: var(--gold-soft); } 100% { background: transparent; } }
+
+/* ---------- Home: following prayer, clock and part of the day, day picker ---------- */
+
+.next-after { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 14px; opacity: 0.85; }
+.next-after b { color: var(--gold-2); }
+.now-tiles { display: grid; grid-template-columns: 1fr 1.6fr; gap: 12px; margin-bottom: 14px; }
+.now-tiles .card { margin: 0; }
+.analog { display: grid; place-items: center; padding: 12px; }
+.analog-svg { width: 100%; max-width: 128px; aspect-ratio: 1; }
+.analog-svg .face { fill: var(--bg-2); stroke: var(--line); stroke-width: 1.5; }
+.analog-svg line { stroke: var(--ink-3); stroke-width: 1.4; stroke-linecap: round; }
+.analog-svg line.major { stroke: var(--ink-2); stroke-width: 2.4; }
+.analog-svg .hand-h { stroke: var(--ink); stroke-width: 4.5; }
+.analog-svg .hand-m { stroke: var(--ink); stroke-width: 3; }
+.analog-svg .hand-s { stroke: var(--gold); stroke-width: 1.4; }
+.analog-svg .pin { fill: var(--gold); }
+.period { display: grid; align-content: center; justify-items: center; gap: 4px; text-align: center; }
+.period .pt-ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--gold-soft); color: var(--gold); margin-bottom: 4px; }
+.period b { font-size: 17px; }
+.period small { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+.pday { display: flex; align-items: center; gap: 8px; margin: -2px 0 6px; }
+.pday-label { flex: 1; display: grid; justify-items: center; gap: 1px; padding: 7px 10px; border-radius: 16px; background: var(--bg-2); }
+.pday-label b { font-size: 15px; }
+.pday-label small { font-size: 12px; color: var(--ink-2); }
+.pday-label.other { background: var(--gold-soft); }
+.pday .icon-btn { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-2); }
+
+/* ---------- Quick access to al-Kahf, al-Mulk and al-Baqarah ---------- */
+
+.quick-surahs h3 { margin: 0 0 10px; font-size: 16px; }
+.quick-surahs > div { display: grid; grid-template-columns: repeat(3, 1fr); }
+.quick-surahs a { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 4px; }
+.quick-surahs a + a { border-right: 1px solid var(--line); }
+.qs-ic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); flex-shrink: 0; }
+.quick-surahs b { font-size: 16px; }
+
+/* ---------- Surah reader ---------- */
+
+.mushaf { padding: 18px 16px; border-radius: var(--radius); background: linear-gradient(180deg, var(--gold-soft), transparent 140px), var(--card); box-shadow: var(--shadow), inset 0 0 0 1px var(--gold-soft); margin-bottom: 14px; }
+.mushaf .hafs { margin: 0; font-size: calc(1.6rem * var(--qscale, 1)); line-height: 2.2; text-align: justify; }
+.mushaf .basmala { text-align: center; color: var(--ink-2); font-size: calc(1.35rem * var(--qscale, 1)); margin-bottom: 6px; }
+.mushaf-title { margin: 0 0 6px; text-align: center; font-weight: 700; color: var(--gold); padding: 6px; border-radius: 12px; border: 1px solid var(--gold-soft); }
+.mushaf-page { display: flex; align-items: center; gap: 10px; margin: 10px 0; color: var(--ink-3); font-size: 12px; }
+.mushaf-page::before, .mushaf-page::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+/* ---------- Calendar and occasions ---------- */
+
+.seg-big { display: flex; padding: 4px; border-radius: 18px; background: var(--bg-2); margin-bottom: 14px; }
+.seg-big button { flex: 1; padding: 10px; border-radius: 14px; font-size: 16px; font-weight: 700; color: var(--ink-2); }
+.seg-big button.on { background: var(--primary); color: var(--primary-ink); }
+.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.cal-head > div { display: grid; justify-items: center; }
+.cal-head b { font-size: 19px; }
+.cal-head small { font-size: 12.5px; color: var(--ink-3); }
+.cal-head .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.cal-wd { font-size: 12.5px; color: var(--ink-3); padding: 4px 0 6px; }
+.cal-day { position: relative; display: grid; justify-items: center; align-content: center; aspect-ratio: 1; border-radius: 50%; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.cal-day b { font-size: 16px; font-weight: 600; }
+.cal-day small { font-size: 9.5px; color: var(--ink-3); }
+.cal-day.out { opacity: 0.35; }
+.cal-day.fri b { color: var(--primary); }
+.cal-day.today { box-shadow: inset 0 0 0 1.5px var(--primary); }
+.cal-day.sel { background: var(--primary); }
+.cal-day.sel b, .cal-day.sel small { color: var(--primary-ink); }
+.cal-day i, .cal-legend i { position: absolute; bottom: 3px; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
+.cal-day i.white, .cal-legend i.white { background: var(--ink-3); }
+.cal-legend { display: flex; justify-content: center; gap: 18px; margin-top: 10px; font-size: 12px; color: var(--ink-3); }
+.cal-legend span { display: flex; align-items: center; gap: 6px; }
+.cal-legend i { position: static; }
+.cal-dates { display: grid; gap: 2px; margin: 0 0 10px; }
+.cal-dates b { font-size: 17px; color: var(--gold); }
+.cal-dates span { color: var(--ink-2); font-size: 14px; }
+.cal-occ { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; margin-bottom: 8px; border-radius: 14px; background: var(--gold-soft); font-weight: 700; text-align: right; }
+.cal-occ span { flex: 1; }
+.cal-occ .ic:last-child { transform: scaleX(1); opacity: 0.5; }
+.cal-note { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 13.5px; color: var(--ink-2); }
+.cal-times { display: grid; grid-template-columns: 1fr 1fr; margin-top: 6px; }
+.cal-times > div { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 10px 6px; border-top: 1px solid var(--line); }
+.cal-times > div:nth-child(odd) { border-left: 1px solid var(--line); }
+.cal-times span { grid-row: span 2; color: var(--primary); }
+.cal-times small { font-size: 13px; color: var(--ink-2); }
+.cal-times b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.occ-next-top { display: flex; align-items: center; gap: 12px; }
+.occ-next-top > div { flex: 1; display: grid; }
+.occ-next-top small { color: var(--primary); font-size: 13px; font-weight: 600; }
+.occ-next-top b { font-size: 22px; }
+.occ-ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); flex-shrink: 0; }
+.occ-next-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.occ-next-dates > div { display: grid; }
+.occ-next-dates small { font-size: 12.5px; color: var(--ink-3); }
+.occ-next-dates b { font-size: 16px; }
+.occ-row .row-value { font-size: 13px; color: var(--primary); white-space: nowrap; }
+.occ-mini { display: flex; align-items: center; gap: 12px; }
+.occ-mini .km-icon { background: var(--gold-soft); color: var(--gold); }
+.occ-mini .km-text small:first-child { color: var(--gold); font-size: 12px; font-weight: 600; }
+.occ-sheet { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.occ-when { display: grid; gap: 2px; margin: 0; }
+.occ-when b { font-size: 17px; color: var(--gold); }
+.occ-when span { font-size: 13.5px; color: var(--ink-2); }
+.occ-text { margin: 0; font-family: var(--font-text); font-size: 19px; line-height: 1.9; }

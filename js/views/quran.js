@@ -10,6 +10,7 @@ import { BASMALA, RUQYAH_DUAS, RUQYAH_VERSES } from '../ruqyah-data.js';
 import { syncSchedule } from '../push.js';
 import { isSaved, save, state, toggleSaved, uid } from '../store.js';
 import { today } from '../today.js';
+import { quickSurahs } from './surah.js';
 import { $, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
 
 export const QURAN_TABS = [
@@ -34,6 +35,7 @@ export function renderKhatma(view) {
     view.innerHTML = `
       ${pageHeader('القرآن الكريم', { sub: 'ختمتك، وحفظك، والرقية، والإذاعة' })}
       ${segmented(TABS, '#/quran')}
+      ${quickSurahs()}
       ${started ? khatmaBody(t) : khatmaStart()}`;
   };
 
