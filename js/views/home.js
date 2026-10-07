@@ -5,7 +5,7 @@ import { wirdDone } from './adhkar.js';
 import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, gregText, hijriText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
-import { forbiddenTimes, METHODS, PRAYER_END, PRAYERS } from '../prayer.js';
+import { forbiddenTimes, iqamaTime, METHODS, PRAYER_END, PRAYERS } from '../prayer.js';
 import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
@@ -194,6 +194,7 @@ function prayerRow(info, k) {
   const passed = t.at <= Date.now() && !isNext && !isCurrent;
   const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : t.name;
   const c = clock(t.hours, s.clock24);
+  const iq = k !== 'sunrise' && s.iqama?.[k] ? iqamaTime(info.times, k, s.iqama) : null;
   const bell =
     k === 'sunrise'
       ? '<span class="bell-space"></span>'
@@ -201,7 +202,7 @@ function prayerRow(info, k) {
   return `<li class="prayer ${isNext ? 'next' : ''} ${isCurrent ? 'current' : ''} ${passed ? 'passed' : ''} ${k === 'sunrise' ? 'minor' : ''}">
     <span class="p-icon">${icon(PRAYER_ICONS[k], 20)}</span>
     <span class="p-name"><span>${name}${isNext ? '<em>القادمة</em>' : isCurrent ? '<em class="now">وقتها الآن</em>' : ''}</span><small class="p-end">${endLabel(info, k)}</small></span>
-    <span class="p-time">${c.time}<small>${c.period}</small></span>
+    <span class="p-time"><span>${c.time}<small>${c.period}</small></span>${iq ? `<small class="p-iqama">الإقامة ${clockText(iq.hours, s.clock24)}</small>` : ''}</span>
     ${bell}
   </li>`;
 }
@@ -249,7 +250,11 @@ function worshipCard(info) {
 function endsText(info) {
   const f = info.forbidden;
   const nahy = f ? `<span class="nahy">${icon('info', 15)} وقت نهي عن النافلة (${esc(f.name)}) حتى <b>${clockText(f.to.hours, state.settings.clock24)}</b></span>` : '';
-  return currentText(info) + nahy;
+  const q = info.iqama;
+  const iqama = q
+    ? `<span class="iqama">${icon('mosque', 15)} إقامة ${esc(q.name)} بعد <b>${countdown(q.at - Date.now())}</b> (${clockText(q.hours, state.settings.clock24)})</span>`
+    : '';
+  return iqama + currentText(info) + nahy;
 }
 
 function currentText(info) {

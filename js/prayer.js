@@ -174,6 +174,12 @@ export function dayTimes(day, settings, isRamadan = false) {
 // Maghrib, Maghrib at Isha, and Isha at the middle of the night (Muslim, from Ibn ʿAmr).
 export const PRAYER_END = { fajr: 'sunrise', dhuhr: 'asr', asr: 'maghrib', maghrib: 'isha', isha: 'midnight' };
 
+// The iqama: a set number of minutes after the adhan (settings.iqama).
+export function iqamaTime(times, key, iqama) {
+  const min = iqama?.[key] || 0;
+  return { key, hours: times[key].hours + min / 60, at: times[key].at + min * 60000, minutes: min };
+}
+
 // The times voluntary prayer is forbidden: after Fajr until the sun is a spear's length
 // up, when the sun stands at its height until it passes the meridian (taken as the 10
 // minutes before Dhuhr), and after Asr until sunset.

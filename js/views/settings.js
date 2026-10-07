@@ -3,7 +3,7 @@
 import { CITIES, nearestCity } from '../cities.js';
 import { clockText, countdown, gregText, hijri, HIJRI_MONTHS, hijriText, minutesText, num, weekday } from '../dates.js';
 import { icon } from '../icons.js';
-import { METHODS, PRAYER_NAMES } from '../prayer.js';
+import { iqamaTime, METHODS, PRAYER_NAMES } from '../prayer.js';
 import { disablePush, enablePush, isIOS, isStandalone, pushActive, pushSupported, sendTest, syncSchedule } from '../push.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
@@ -258,6 +258,16 @@ export function renderMethod(view) {
           )
           .join('')}
         <p class="hint">استعمله ليطابق التطبيق تقويم مسجدك أو وزارة الأوقاف في بلدك.</p>
+      </div>
+      <div class="group">
+        <h4>الإقامة (دقائق بعد الأذان)</h4>
+        ${['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']
+          .map(
+            (k) => `<div class="row"><span class="row-label">${PRAYER_NAMES[k]}<small>الإقامة ${clockText(iqamaTime(t, k, s.iqama).hours, s.clock24)}</small></span>
+              <div class="stepper" data-iq="${k}"><button data-d="-1">−</button><b>${num(s.iqama[k])}</b><button data-d="1">+</button></div></div>`
+          )
+          .join('')}
+        <p class="hint">عدّلها لتوافق إقامة مسجدك. ويصلك تنبيه عند الإقامة من إعدادات الإشعارات.</p>
       </div>`;
   };
   draw();
@@ -271,7 +281,12 @@ export function renderMethod(view) {
       const k = o.closest('[data-off]').dataset.off;
       s.offsets[k] = Math.max(-30, Math.min(30, s.offsets[k] + Number(o.dataset.d)));
     }
-    if (m || a || o) {
+    const q = e.target.closest('[data-iq] [data-d]');
+    if (q) {
+      const k = q.closest('[data-iq]').dataset.iq;
+      s.iqama[k] = Math.max(0, Math.min(60, s.iqama[k] + Number(q.dataset.d)));
+    }
+    if (m || a || o || q) {
       save();
       syncSchedule();
       const y = window.scrollY;
@@ -317,6 +332,7 @@ export function renderNotify(view) {
           .map((k) => `<div class="row"><span class="row-label">${PRAYER_NAMES[k]}</span>${toggle('p-' + k, n.prayers[k])}</div>`)
           .join('')}
         <div class="row"><span class="row-label">الشروق<small>نهاية وقت الفجر</small></span>${toggle('sunrise', n.sunrise)}</div>
+        <div class="row"><span class="row-label">الإقامة<small>${['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map((k) => `${PRAYER_NAMES[k]} ${num(s.iqama[k])}`).join(' • ')} دقيقة — <a class="link" href="#/settings/method">تعديل</a></small></span>${toggle('iqama', n.iqama)}</div>
         <div class="row"><span class="row-label">تنبيه قبل الأذان</span>${select('before', BEFORE, n.before, (v) => (v ? `قبل ${minutesText(v)}` : 'بلا تنبيه'))}</div>
         <div class="row"><span class="row-label">تنبيه بعد الأذان<small>«هل صليت؟» وأذكار ما بعد الصلاة</small></span>${select('afterAdhan', BEFORE, n.afterAdhan, (v) => (v ? `بعد ${minutesText(v)}` : 'بلا تنبيه'))}</div>
         <div class="row"><span class="row-label">خروج وقت الصلاة<small>قبل أن ينتهي وقت كل صلاة</small></span>${select('prayerEnd', [0, 10, 15, 20, 30, 45, 60], n.prayerEnd, (v) => (v ? `قبل ${minutesText(v)}` : 'بلا تنبيه'))}</div>

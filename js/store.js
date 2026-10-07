@@ -12,6 +12,8 @@ export const DEFAULTS = {
     method: 'umm_al_qura',
     asr: 1,
     offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
+    // Minutes from the adhan to the iqama.
+    iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
     hijriAdjust: 0,
     clock24: false,
     digits: 'arab',
@@ -22,6 +24,7 @@ export const DEFAULTS = {
     notify: {
       enabled: false,
       prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
+      iqama: true,
       sunrise: false,
       before: 10,
       morning: true,

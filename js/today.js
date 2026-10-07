@@ -16,7 +16,7 @@ function timesFor(day) {
 export function today(now = new Date()) {
   const s = state.settings;
   const day = dateAt(s.location.tz, now);
-  const key = dayKey(day) + JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust]);
+  const key = dayKey(day) + JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust, s.iqama]);
   if (cache.key !== key) {
     cache = { key, value: { day, key: dayKey(day), times: timesFor(day), tomorrow: timesFor(addDays(day, 1)) } };
   }
@@ -46,7 +46,14 @@ export function today(now = new Date()) {
     }
   }
   const forbidden = forbiddenTimes(times).find((f) => t >= f.from.at && t < f.to.at) || null;
-  return { ...cache.value, next, prev, current, forbidden, weekday, isFriday };
+  // Between a prayer's adhan and its iqama.
+  let iqama = null;
+  if (current) {
+    const min = s.iqama?.[current.key] || 0;
+    const at = current.at + min * 60000;
+    if (min && t < at) iqama = { key: current.key, name: current.name, at, hours: current.hours + min / 60, minutes: min };
+  }
+  return { ...cache.value, next, prev, current, forbidden, iqama, weekday, isFriday };
 }
 
 // Current wall-clock time at the location as decimal hours (for the big clock).

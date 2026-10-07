@@ -1,7 +1,7 @@
 // The list of reminders for the coming days, worked out on the device. The server
 // (push/cron.php) only sends each one at its time, so it needs no prayer-time code.
 
-import { addDays, dateAt, dayTimes, forbiddenTimes, PRAYER_NAMES, prayerEnd } from './prayer.js';
+import { addDays, dateAt, dayTimes, forbiddenTimes, iqamaTime, PRAYER_NAMES, prayerEnd } from './prayer.js';
 import { PAGES } from './quran-data.js';
 import { dailyPages } from './khatma.js';
 import { clockText, hijri, minutesText, num } from './dates.js';
@@ -60,6 +60,10 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
           '#/home',
           `before-${k}`
         );
+      }
+      if (n.iqama && s.iqama[k] > 0) {
+        const q = iqamaTime(t, k, s.iqama);
+        add(q.at, `إقامة صلاة ${name}`, `حان وقت الإقامة (${clockText(q.hours, s.clock24)}) — ${place}`, '#/home', `iqama-${k}`);
       }
       if (n.afterAdhan > 0) {
         add(t[k].at + n.afterAdhan * 60000, `هل صليت ${name}؟`, 'أقم صلاتك، ولا تنسَ أذكار ما بعد الصلاة', '#/worship', `after-${k}`);
@@ -139,7 +143,7 @@ export function scheduleHash(state) {
   const s = state.settings;
   const custom = state.custom.filter((c) => c.reminder).map((c) => [c.id, c.reminder, c.text]);
   const k = state.khatma;
-  const text = JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust, s.clock24, s.digits, s.notify, custom, k.days, k.start, k.page]);
+  const text = JSON.stringify([s.location, s.method, s.asr, s.offsets, s.iqama, s.hijriAdjust, s.clock24, s.digits, s.notify, custom, k.days, k.start, k.page]);
   let h = 0;
   for (let i = 0; i < text.length; i++) h = (Math.imul(31, h) + text.charCodeAt(i)) | 0;
   return String(h);
