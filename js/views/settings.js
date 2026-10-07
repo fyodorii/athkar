@@ -9,6 +9,7 @@ import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { $, $$, copyText, esc, openSheet, pageHeader, toast, toggle } from '../ui.js';
 import { widgetScript, WIDGET_STYLES } from '../widget.js';
+import { APP_VERSION } from '../config.js';
 import { dailyFor } from '../daily-data.js';
 import { DAILY } from '../adhkar-data.js';
 
@@ -60,6 +61,7 @@ export function render(view) {
       <b>أذكار ومواقيت</b>
       <p>الأذكار من الكتاب والسنة الصحيحة، ومواقيت الصلاة تُحسب على جهازك دون إنترنت.</p>
       <p class="muted">«ألا بذكر الله تطمئن القلوب»</p>
+      <small class="muted">الإصدار ${num(APP_VERSION)}</small>
     </div>`;
 
   const onChange = (e) => {

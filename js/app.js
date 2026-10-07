@@ -3,7 +3,7 @@
 
 import { setDigits } from './dates.js';
 import { icon } from './icons.js';
-import { isIOS, isStandalone, onNotificationOpen, registerServiceWorker, syncSchedule } from './push.js';
+import { checkForUpdate, isIOS, isStandalone, onNotificationOpen, registerServiceWorker, syncSchedule } from './push.js';
 import { buildSchedule } from './schedule.js';
 import { onChange, persistStorage, state } from './store.js';
 import { $, esc, toast } from './ui.js';
@@ -198,6 +198,7 @@ document.addEventListener('visibilitychange', () => {
   if (current?.tick) route();
   syncSchedule();
   scheduleInApp();
+  checkForUpdate();
 });
 
 registerServiceWorker();
