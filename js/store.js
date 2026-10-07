@@ -19,6 +19,9 @@ export const DEFAULTS = {
     digits: 'arab',
     theme: 'auto',
     textScale: 1,
+    fontText: 'amiri', // adhkar text: amiri | plex | tajawal
+    fontUi: 'plex', // interface: plex | tajawal | amiri
+    textBold: true,
     haptics: true,
     quranGoal: 5,
     notify: {

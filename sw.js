@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline,
 // and shows the reminders that push/cron.php sends.
 
-const VERSION = 'v6'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v7'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const FILES = [
   './',
@@ -43,6 +43,10 @@ const FILES = [
   'fonts/amiri-regular.woff2',
   'fonts/amiri-bold.woff2',
   'fonts/kfgqpc-hafs.woff2',
+  'fonts/tajawal-arabic-400.woff2',
+  'fonts/tajawal-arabic-700.woff2',
+  'fonts/tajawal-latin-400.woff2',
+  'fonts/tajawal-latin-700.woff2',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',

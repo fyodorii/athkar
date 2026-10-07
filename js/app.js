@@ -2,6 +2,7 @@
 // shown inside the app while it is open.
 
 import { setDigits } from './dates.js';
+import { FONTS } from './ui.js';
 import { icon } from './icons.js';
 import { checkForUpdate, isIOS, isStandalone, onNotificationOpen, registerServiceWorker, syncSchedule } from './push.js';
 import { buildSchedule } from './schedule.js';
@@ -84,6 +85,11 @@ function applyTheme() {
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#08201d' : '#0b3b34');
   setDigits(state.settings.digits);
+  const s = state.settings;
+  const root = document.documentElement.style;
+  root.setProperty('--font-text', FONTS[s.fontText] || FONTS.amiri);
+  root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.plex);
+  root.setProperty('--text-weight', s.textBold ? '700' : '400');
 }
 media.addEventListener?.('change', applyTheme);
 

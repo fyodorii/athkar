@@ -4,6 +4,14 @@ import { icon } from './icons.js';
 import { state } from './store.js';
 import { APP_NAME } from './config.js';
 
+// Font stacks the user can pick in the settings (each falls back for missing glyphs such as ﷺ).
+export const FONTS = {
+  amiri: "'Amiri', serif",
+  plex: "'Plex', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif",
+  tajawal: "'Tajawal', 'Plex', -apple-system, 'SF Arabic', system-ui, sans-serif",
+};
+export const FONT_NAMES = { amiri: 'الأميري', plex: 'IBM Plex', tajawal: 'Tajawal' };
+
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 

@@ -7,7 +7,7 @@ import { iqamaTime, METHODS, PRAYER_NAMES } from '../prayer.js';
 import { disablePush, enablePush, isIOS, isStandalone, pushActive, pushSupported, sendTest, syncSchedule } from '../push.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
-import { $, $$, copyText, esc, openSheet, pageHeader, toast, toggle } from '../ui.js';
+import { $, $$, copyText, esc, FONT_NAMES, FONTS, openSheet, pageHeader, toast, toggle } from '../ui.js';
 import { widgetScript, WIDGET_STYLES } from '../widget.js';
 import { APP_VERSION } from '../config.js';
 import { dailyFor } from '../daily-data.js';
@@ -40,9 +40,19 @@ export function render(view) {
         <div class="seg-mini" data-theme>
           ${[['auto', 'تلقائي'], ['light', 'فاتح'], ['dark', 'داكن']].map(([v, l]) => `<button class="${s.theme === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
         </div></div>
+      <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">خط الأذكار</span>
+        <div class="seg-mini" data-font-text>
+          ${Object.entries(FONT_NAMES).map(([v, l]) => `<button class="${s.fontText === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v].replaceAll('"', "'")}">${l}</button>`).join('')}
+        </div></div>
+      <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">خط عريض للأذكار</span>${toggle('textBold', s.textBold)}</div>
       <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">حجم خط الأذكار</span>
         <input type="range" min="0.85" max="1.5" step="0.05" value="${s.textScale}" data-scale></div>
       <p class="sample amiri" data-sample style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
+      <div class="row"><span class="row-icon">${icon('palette', 20)}</span><span class="row-label">خط الواجهة</span>
+        <div class="seg-mini" data-font-ui>
+          ${Object.entries(FONT_NAMES).map(([v, l]) => `<button class="${s.fontUi === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v].replaceAll('"', "'")}">${l}</button>`).join('')}
+        </div></div>
+      <p class="hint">آيات القرآن تبقى بخط مصحف المدينة.</p>
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
       <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">الأرقام العربية (١٢٣)</span>${toggle('digits', s.digits === 'arab')}</div>
       <div class="row"><span class="row-icon">${icon('calendar', 20)}</span><span class="row-label">تعديل التاريخ الهجري</span>
@@ -69,6 +79,7 @@ export function render(view) {
     if (t.name === 'clock24') s.clock24 = t.checked;
     if (t.name === 'digits') s.digits = t.checked ? 'arab' : 'latn';
     if (t.name === 'haptics') s.haptics = t.checked;
+    if (t.name === 'textBold') s.textBold = t.checked;
     if (t.matches('[data-scale]')) s.textScale = Number(t.value);
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {
@@ -93,6 +104,13 @@ export function render(view) {
     if (e.target.matches('[data-scale]')) $('[data-sample]', view).style.fontSize = `calc(1.3rem * ${e.target.value})`;
   };
   const onClick = (e) => {
+    const ft = e.target.closest('[data-font-text] [data-v], [data-font-ui] [data-v]');
+    if (ft) {
+      if (ft.closest('[data-font-text]')) s.fontText = ft.dataset.v;
+      else s.fontUi = ft.dataset.v;
+      save();
+      return render(view);
+    }
     const th = e.target.closest('[data-theme] [data-v]');
     if (th) {
       s.theme = th.dataset.v;

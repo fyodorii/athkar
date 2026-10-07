@@ -3,7 +3,7 @@
 export const PUSH_URL = location.hostname.endsWith('github.io') ? 'https://www.al-amen.com/adhkar/push/' : 'push/';
 
 // Shown in the settings; raise it with VERSION in sw.js on every release.
-export const APP_VERSION = 6;
+export const APP_VERSION = 7;
 
 // Shown on the widget and at the end of shared adhkar.
 export const APP_NAME = 'أذكار ومواقيت';

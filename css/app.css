@@ -8,6 +8,10 @@
 @font-face { font-family: 'Plex'; src: url('../fonts/plex-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+2212; }
 @font-face { font-family: 'Amiri'; src: url('../fonts/amiri-regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Amiri'; src: url('../fonts/amiri-bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Tajawal'; src: url('../fonts/tajawal-arabic-400.woff2') format('woff2'); font-weight: 400; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+200C-200E, U+FB50-FDFF, U+FE70-FEFC; }
+@font-face { font-family: 'Tajawal'; src: url('../fonts/tajawal-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+2212; }
+@font-face { font-family: 'Tajawal'; src: url('../fonts/tajawal-arabic-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+200C-200E, U+FB50-FDFF, U+FE70-FEFC; }
+@font-face { font-family: 'Tajawal'; src: url('../fonts/tajawal-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+2212; }
 /* King Fahd Complex Uthmanic Hafs font, made for its Uthmani text (verses are shown only in it). */
 @font-face { font-family: 'KFGQPC Hafs'; src: url('../fonts/kfgqpc-hafs.woff2') format('woff2'); font-display: swap; }
 
@@ -35,6 +39,10 @@
   --shadow-lg: 0 20px 50px -20px rgba(8, 42, 37, 0.45);
   --tab-bg: rgba(255, 253, 248, 0.82);
   --radius: 22px;
+  /* Fonts chosen in the settings (set by app.js): interface, adhkar text, its weight. */
+  --font-ui: 'Plex', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif;
+  --font-text: 'Amiri', serif;
+  --text-weight: 700;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --tabs-h: calc(64px + var(--safe-bottom));
@@ -74,7 +82,7 @@ body {
   min-height: 100dvh;
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Plex', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 16px;
   line-height: 1.6;
   overscroll-behavior-y: none;
@@ -87,7 +95,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .ic { flex-shrink: 0; display: block; }
 .muted { color: var(--ink-3); }
 .center { text-align: center; display: flex; flex-direction: column; align-items: center; }
-.amiri { font-family: 'Amiri', serif; }
+.amiri { font-family: var(--font-text); }
 [hidden] { display: none !important; }
 
 /* ---------- Layout ---------- */
@@ -473,7 +481,7 @@ select, input[type='time'] {
 
 .daily { background: linear-gradient(135deg, var(--card) 0%, var(--card-2) 100%); position: relative; overflow: hidden; }
 .daily .card-head h2 { color: var(--gold); font-size: 15px; }
-.daily-text { font-family: 'Amiri', serif; font-size: 24px; line-height: 1.8; margin: 4px 0; font-weight: 700; }
+.daily-text { font-family: var(--font-text); font-size: 24px; line-height: 1.8; margin: 4px 0; font-weight: 700; }
 .daily-note { margin: 0; color: var(--ink-2); font-size: 14px; }
 
 .foot-links { display: flex; gap: 10px; }
@@ -523,7 +531,7 @@ select, input[type='time'] {
 .dhikr.quran { background: linear-gradient(180deg, var(--gold-soft), transparent 140px), var(--card); box-shadow: var(--shadow), inset 0 0 0 1px var(--gold-soft); }
 .dhikr-title { margin: 0 0 6px; font-size: 14px; font-weight: 700; color: var(--gold); }
 .dhikr-text {
-  font-family: 'Amiri', serif;
+  font-family: var(--font-text);
   font-size: calc(1.36rem * var(--scale, 1));
   line-height: 2.05;
   white-space: pre-line;
@@ -580,7 +588,7 @@ select, input[type='time'] {
 .mine.flash { animation: flash 1.6s ease; }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: var(--shadow); } }
 .mine-body { flex: 1; min-width: 0; padding-left: 20px; }
-.mine-text { margin: 0 0 8px; font-family: 'Amiri', serif; font-size: 20px; line-height: 1.85; }
+.mine-text { margin: 0 0 8px; font-family: var(--font-text); font-size: 20px; line-height: 1.85; }
 .mine-meta { display: flex; gap: 6px; flex-wrap: wrap; }
 .mine-count { position: relative; width: 64px; height: 64px; display: grid; place-items: center; color: var(--primary); }
 .mine-count .ring { position: absolute; inset: 0; }
@@ -661,14 +669,14 @@ select, input[type='time'] {
 .notes { display: grid; gap: 12px; }
 .note { position: relative; background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); cursor: pointer; }
 .note h3 { margin: 0 0 4px; font-size: 15.5px; color: var(--primary); }
-.note-text { margin: 0; font-family: 'Amiri', serif; font-size: 20px; line-height: 1.9; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.note-text { margin: 0; font-family: var(--font-text); font-size: 20px; line-height: 1.9; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 .note-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12.5px; color: var(--ink-3); }
 .note-pin { position: absolute; top: 12px; left: 14px; color: var(--gold); }
 .note.saved { cursor: default; }
 .note.saved.quran { box-shadow: var(--shadow), inset 0 0 0 1px var(--gold-soft); }
 .saved-cat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--tone); background: var(--tone-soft); border-radius: 99px; padding: 1px 10px; margin-bottom: 6px; }
 .note-full h2 { margin: 0 0 6px; font-size: 18px; color: var(--primary); }
-.note-full-text { font-family: 'Amiri', serif; font-size: 24px; line-height: 2; white-space: pre-line; margin: 0 0 10px; user-select: text; -webkit-user-select: text; }
+.note-full-text { font-family: var(--font-text); font-size: 24px; line-height: 2; white-space: pre-line; margin: 0 0 10px; user-select: text; -webkit-user-select: text; }
 
 .empty { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 36px 20px 20px; color: var(--ink-2); }
 .empty-art { width: 92px; height: 92px; border-radius: 30px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); margin-bottom: 8px; }
@@ -755,7 +763,7 @@ select, input[type='time'] {
 .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .sheet-head h3 { margin: 0; font-size: 18px; }
 .sheet-actions { display: grid; gap: 8px; margin-top: 14px; }
-.sheet-preview { font-family: 'Amiri', serif; font-size: 19px; line-height: 1.8; margin: 0 0 10px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sheet-preview { font-family: var(--font-text); font-size: 19px; line-height: 1.8; margin: 0 0 10px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .confirm-text { font-size: 17px; font-weight: 600; text-align: center; margin: 14px 0 4px; }
 .menu { display: grid; background: var(--bg-2); border-radius: 18px; overflow: hidden; }
 .menu button { display: flex; align-items: center; gap: 12px; padding: 14px 16px; font-size: 16px; font-weight: 600; text-align: right; }
@@ -777,7 +785,7 @@ select, input[type='time'] {
   font-size: 16px;
   color: var(--ink);
 }
-.field textarea { font-family: 'Amiri', serif; font-size: 20px; line-height: 1.8; resize: vertical; min-height: 110px; }
+.field textarea { font-family: var(--font-text); font-size: 20px; line-height: 1.8; resize: vertical; min-height: 110px; }
 .field input:focus, .field textarea:focus { box-shadow: 0 0 0 2px var(--primary); }
 
 /* ---------- Toast ---------- */
@@ -862,7 +870,7 @@ select, input[type='time'] {
 [data-theme='dark'] .tc-advice { --tc: #f08a80; }
 [data-theme='dark'] .tc-dhikr { --tc: #949cf5; }
 .tc-head { position: relative; display: flex; align-items: center; gap: 6px; color: var(--tc); font-weight: 700; font-size: 14px; }
-.tc-text { position: relative; flex: 1; margin: 8px 0 4px; font-family: 'Amiri', serif; font-size: 22px; line-height: 1.85; font-weight: 700; }
+.tc-text { position: relative; flex: 1; margin: 8px 0 4px; font-family: var(--font-text); font-size: 22px; line-height: 1.85; font-weight: 700; }
 .tc-advice .tc-text { font-family: inherit; font-size: 17px; font-weight: 600; line-height: 1.8; }
 .tc-ayah .tc-text { text-align: center; }
 .tc-foot { position: relative; display: flex; align-items: center; justify-content: space-between; color: var(--ink-3); }
@@ -958,7 +966,7 @@ select, input[type='time'] {
 .kp-ring small { font-size: 12px; opacity: 0.75; }
 .kp-info { display: grid; gap: 2px; }
 .kp-info small { opacity: 0.75; }
-.kp-info b { font-size: 22px; font-family: 'Amiri', serif; }
+.kp-info b { font-size: 22px; font-family: var(--font-text); }
 .kp-info span { font-size: 14px; opacity: 0.85; }
 .kp-info .link { color: var(--gold-2); display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; justify-self: start; }
 .wird.done { box-shadow: var(--shadow), inset 0 0 0 2px var(--primary); }
@@ -966,7 +974,7 @@ select, input[type='time'] {
 .wird-range > div { flex: 1; display: grid; text-align: center; padding: 10px 6px; border-radius: 16px; background: var(--bg-2); }
 .wird-range small { color: var(--ink-3); font-size: 12px; }
 .wird-range b { font-size: 17px; }
-.wird-range span { font-family: 'Amiri', serif; font-size: 17px; color: var(--primary); }
+.wird-range span { font-family: var(--font-text); font-size: 17px; color: var(--primary); }
 .wird-range i { color: var(--ink-3); }
 .bar.light { background: var(--bg-2); margin: 0; }
 .bar.light i { background: var(--primary); }
@@ -1060,18 +1068,18 @@ body:has(.mini:not([hidden])) .view { padding-bottom: calc(var(--tabs-h) + 96px)
 .pick-cat summary small { color: var(--ink-3); }
 .pick-icon { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--tone-soft); color: var(--tone); }
 .pick-cat .btn { min-height: 40px; margin-bottom: 6px; }
-.pick-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); font-family: 'Amiri', serif; font-size: 17px; line-height: 1.8; }
+.pick-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); font-family: var(--font-text); font-size: 17px; line-height: 1.8; }
 .pick-item input { margin-top: 8px; width: 20px; height: 20px; accent-color: var(--primary); flex-shrink: 0; }
-.pick-item small { display: block; font-family: 'Plex', sans-serif; font-size: 12px; color: var(--ink-3); }
+.pick-item small { display: block; font-family: var(--font-ui); font-size: 12px; color: var(--ink-3); }
 .sheet-actions.sticky { position: sticky; bottom: calc(var(--safe-bottom) * -1 - 18px); background: var(--card); padding: 10px 0 4px; }
-.menu.phrases button { font-family: 'Amiri', serif; font-size: 18px; font-weight: 700; }
+.menu.phrases button { font-family: var(--font-text); font-size: 18px; font-weight: 700; }
 .menu.phrases button span { flex: 1; }
 .menu.phrases button.on { color: var(--primary); background: var(--primary-soft); }
 .new-phrase { margin-top: 14px; }
 
 /* ---------- Worship: diary ---------- */
 
-.diary textarea { width: 100%; border: 0; outline: 0; border-radius: 14px; background: var(--bg-2); padding: 12px 14px; font-family: 'Amiri', serif; font-size: 19px; line-height: 1.8; color: var(--ink); resize: vertical; }
+.diary textarea { width: 100%; border: 0; outline: 0; border-radius: 14px; background: var(--bg-2); padding: 12px 14px; font-family: var(--font-text); font-size: 19px; line-height: 1.8; color: var(--ink); resize: vertical; }
 .diary textarea:focus { box-shadow: 0 0 0 2px var(--primary); }
 
 /* ---------- Tasbeeh: full screen ---------- */
@@ -1109,7 +1117,7 @@ body[data-tab='tasbeeh'] { background: #04201b; }
   max-width: 680px;
   min-height: 0;
   padding: 10px 6px;
-  font-family: 'Amiri', serif;
+  font-family: var(--font-text);
   font-weight: 700;
   line-height: 1.6;
   text-align: center;
@@ -1184,12 +1192,12 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .phrase-row + .phrase-row, .phrase-row + .phrase-edit, .phrase-edit + .phrase-row { border-top: 1px solid var(--line); }
 .phrase-row.on { background: var(--primary-soft); }
 .phrase-row.on .phrase-pick { color: var(--primary); }
-.phrase-pick { flex: 1; display: flex; align-items: center; gap: 10px; padding: 12px 14px; font-family: 'Amiri', serif; font-size: 18px; font-weight: 700; text-align: right; }
+.phrase-pick { flex: 1; display: flex; align-items: center; gap: 10px; padding: 12px 14px; font-family: var(--font-text); font-size: 18px; font-weight: 700; text-align: right; }
 .phrase-pick .ic { color: var(--primary); }
 .phrase-pick span { flex: 1; }
 .danger-ic { color: var(--danger); }
 .phrase-edit { display: grid; gap: 8px; padding: 10px 12px; background: var(--card); }
-.phrase-edit textarea { width: 100%; border: 0; outline: 0; border-radius: 12px; background: var(--bg-2); padding: 10px 12px; font-family: 'Amiri', serif; font-size: 18px; color: var(--ink); box-shadow: 0 0 0 2px var(--primary); }
+.phrase-edit textarea { width: 100%; border: 0; outline: 0; border-radius: 12px; background: var(--bg-2); padding: 10px 12px; font-family: var(--font-text); font-size: 18px; color: var(--ink); box-shadow: 0 0 0 2px var(--primary); }
 .phrase-edit div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .phrase-edit .btn { min-height: 42px; }
 
@@ -1215,3 +1223,9 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 
 .ends .iqama { margin-bottom: 6px; color: #fff; }
 .ends .iqama b { color: var(--gold-2); }
+
+/* Weight of the adhkar text (bold or regular, from the settings); verses keep the mushaf font. */
+.dhikr-text, .mine-text, .note-text, .note-full-text, .daily-text, .tc-text, .tsb-phrase, .sheet-preview,
+.pick-item, .phrase-pick, .menu.phrases button, .sample, .field textarea, .diary textarea { font-weight: var(--text-weight); }
+.tc-advice .tc-text { font-family: var(--font-ui); }
+.hafs, .dhikr-text.hafs, .mine-text.hafs, .note-text.hafs, .tc-text .hafs { font-family: 'KFGQPC Hafs', 'Amiri', serif; font-weight: 400; }

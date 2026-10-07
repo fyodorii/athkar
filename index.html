@@ -20,8 +20,15 @@
     <script>
       // Set the theme before the first paint so dark mode never flashes white.
       try {
-        var t = (JSON.parse(localStorage.getItem('adhkar-app:v1') || '{}').settings || {}).theme || 'auto';
+        var st = JSON.parse(localStorage.getItem('adhkar-app:v1') || '{}').settings || {};
+        var t = st.theme || 'auto';
         if (t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+        // The chosen fonts, before the first paint (same stacks as FONTS in js/ui.js).
+        var f = { amiri: "'Amiri', serif", plex: "'Plex', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif", tajawal: "'Tajawal', 'Plex', -apple-system, 'SF Arabic', system-ui, sans-serif" };
+        var r = document.documentElement.style;
+        if (f[st.fontText]) r.setProperty('--font-text', f[st.fontText]);
+        if (f[st.fontUi]) r.setProperty('--font-ui', f[st.fontUi]);
+        if (st.textBold === false) r.setProperty('--text-weight', '400');
       } catch (e) {}
     </script>
   </head>
