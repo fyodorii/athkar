@@ -42,6 +42,7 @@ export const DEFAULTS = {
       duhaDelay: 30,
       midnight: false,
       prayerEnd: 0,
+      nahy: false,
       kahf: true,
       kahfTime: '09:00',
       mulk: false,

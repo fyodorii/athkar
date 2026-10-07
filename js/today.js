@@ -1,6 +1,6 @@
 // "Now" at the chosen location: today's date, prayer times and the next prayer.
 
-import { addDays, dateAt, dayKey, dayTimes, prayerEnd, tzOffset } from './prayer.js';
+import { addDays, dateAt, dayKey, dayTimes, forbiddenTimes, prayerEnd, tzOffset } from './prayer.js';
 import { hijri } from './dates.js';
 import { state } from './store.js';
 
@@ -45,7 +45,8 @@ export function today(now = new Date()) {
       if (t < end.at) current = { ...p, name: isFriday && p.key === 'dhuhr' ? 'الجمعة' : p.name, end };
     }
   }
-  return { ...cache.value, next, prev, current, weekday, isFriday };
+  const forbidden = forbiddenTimes(times).find((f) => t >= f.from.at && t < f.to.at) || null;
+  return { ...cache.value, next, prev, current, forbidden, weekday, isFriday };
 }
 
 // Current wall-clock time at the location as decimal hours (for the big clock).

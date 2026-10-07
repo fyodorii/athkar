@@ -5,7 +5,7 @@ import { wirdDone } from './adhkar.js';
 import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, gregText, hijriText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
-import { METHODS, PRAYERS } from '../prayer.js';
+import { forbiddenTimes, METHODS, PRAYER_END, PRAYERS } from '../prayer.js';
 import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
@@ -98,6 +98,8 @@ export function render(view) {
     </ul>
   </section>
 
+  ${nahyCard(info)}
+
   ${wirdSuggestion(info)}
 
   <section class="quick">
@@ -188,16 +190,17 @@ function prayerRow(info, k) {
   const s = state.settings;
   const t = info.times[k];
   const isNext = info.next.key === k && info.next.at === t.at;
-  const passed = t.at <= Date.now() && !isNext;
+  const isCurrent = info.current?.key === k && info.current.at === t.at;
+  const passed = t.at <= Date.now() && !isNext && !isCurrent;
   const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : t.name;
   const c = clock(t.hours, s.clock24);
   const bell =
     k === 'sunrise'
       ? '<span class="bell-space"></span>'
       : `<button class="bell ${s.notify.prayers[k] ? 'on' : ''}" data-bell="${k}" aria-label="تنبيه ${name}">${icon(s.notify.prayers[k] ? 'bell' : 'bellOff', 18)}</button>`;
-  return `<li class="prayer ${isNext ? 'next' : ''} ${passed ? 'passed' : ''} ${k === 'sunrise' ? 'minor' : ''}">
+  return `<li class="prayer ${isNext ? 'next' : ''} ${isCurrent ? 'current' : ''} ${passed ? 'passed' : ''} ${k === 'sunrise' ? 'minor' : ''}">
     <span class="p-icon">${icon(PRAYER_ICONS[k], 20)}</span>
-    <span class="p-name">${name}${isNext ? '<em>القادمة</em>' : ''}</span>
+    <span class="p-name"><span>${name}${isNext ? '<em>القادمة</em>' : isCurrent ? '<em class="now">وقتها الآن</em>' : ''}</span><small class="p-end">${endLabel(info, k)}</small></span>
     <span class="p-time">${c.time}<small>${c.period}</small></span>
     ${bell}
   </li>`;
@@ -244,14 +247,28 @@ function worshipCard(info) {
 
 // "The time for Dhuhr ends in 01:23:45", or what time it is when no prayer is due.
 function endsText(info) {
+  const f = info.forbidden;
+  const nahy = f ? `<span class="nahy">${icon('info', 15)} وقت نهي عن النافلة (${esc(f.name)}) حتى <b>${clockText(f.to.hours, state.settings.clock24)}</b></span>` : '';
+  return currentText(info) + nahy;
+}
+
+function currentText(info) {
   const now = Date.now();
+  const h24 = state.settings.clock24;
   const c = info.current;
-  if (c) {
-    const left = c.end.at - now;
-    return `<span class="${left < 20 * 60000 ? 'warn' : ''}">${icon('clock', 15)} يخرج وقت ${esc(c.name)} بعد <b>${countdown(left)}</b> (${clockText(c.end.hours, state.settings.clock24)})</span>`;
-  }
   const t = info.times;
-  if (now >= t.sunrise.at && now < t.dhuhr.at) return `<span>${icon('sun', 15)} وقت الضحى — ${now < t.duha.at ? `يبدأ ${clockText(t.duha.hours, state.settings.clock24)}` : 'صلِّ ركعتي الضحى'}</span>`;
+  if (c) {
+    // Asr has a chosen time (until a shadow is twice an object) before its time of need.
+    const chosen = c.key === 'asr' && state.settings.asr === 1 && now < t.asr2.at;
+    const end = chosen ? t.asr2 : c.end;
+    const left = end.at - now;
+    const label = chosen ? 'وقت الاختيار للعصر' : c.key === 'asr' && state.settings.asr === 1 ? 'وقت الضرورة للعصر' : `وقت ${esc(c.name)}`;
+    return `<span class="${left < 20 * 60000 ? 'warn' : ''}">${icon('clock', 15)} يخرج ${label} بعد <b>${countdown(left)}</b> (${clockText(end.hours, h24)})</span>`;
+  }
+  if (now >= t.sunrise.at && now < t.dhuhr.at) {
+    if (info.forbidden?.key === 'zawal') return `<span>${icon('sun', 15)} انتهى وقت الضحى، والظهر ${clockText(t.dhuhr.hours, h24)}</span>`;
+    return `<span>${icon('sun', 15)} وقت الضحى — ${now < t.duha.at ? `يبدأ ${clockText(t.duha.hours, h24)}` : 'صلِّ ركعتي الضحى'}</span>`;
+  }
   return `<span>${icon('stars', 15)} ${now >= t.lastThird.at - 86400000 || now >= t.lastThird.at ? 'الثلث الأخير من الليل — وقت نزول واستجابة' : 'بعد منتصف الليل'}</span>`;
 }
 
@@ -285,4 +302,37 @@ function wirdSuggestion(info) {
       <span>${finished ? 'تقبّل الله منك' : done ? `قرأت ${num(done)} من ${num(all)}` : esc(cat.subtitle)}</span></div>
     <span class="suggest-ring tone-${cat.tone}">${ring(done / all, 40, 4)}</span>
   </a>`;
+}
+
+// "Until 6:14 AM" under each prayer: when its time runs out. Asr shows its chosen time
+// (until a shadow is twice an object) and its time of need (until sunset).
+function endLabel(info, k) {
+  const h24 = state.settings.clock24;
+  const t = info.times;
+  if (k === 'sunrise') return 'نهاية وقت الفجر';
+  if (k === 'asr' && state.settings.asr === 1 && t.asr2.at > t.asr.at) {
+    return `الاختيار حتى ${clockText(t.asr2.hours, h24)} • الضرورة حتى ${clockText(t.maghrib.hours, h24)}`;
+  }
+  return `يخرج وقتها ${clockText(t[PRAYER_END[k]].hours, h24)}`;
+}
+
+function nahyCard(info) {
+  const h24 = state.settings.clock24;
+  const now = Date.now();
+  return `<section class="card nahy-card">
+    <div class="card-head"><h2>${icon('info', 18)} أوقات النهي</h2><small class="muted">عن صلاة النافلة</small></div>
+    <ul class="nahy-list">
+      ${forbiddenTimes(info.times)
+        .map((f) => {
+          const on = now >= f.from.at && now < f.to.at;
+          const past = now >= f.to.at;
+          return `<li class="${on ? 'on' : ''} ${past ? 'past' : ''}">
+            <div><b>${esc(f.name)}${on ? '<em>الآن</em>' : ''}</b><small>${esc(f.desc)}</small></div>
+            <span class="nahy-time">${clockText(f.from.hours, h24)}<i>←</i>${clockText(f.to.hours, h24)}</span>
+          </li>`;
+        })
+        .join('')}
+    </ul>
+    <p class="hint">ويُستثنى منها قضاء الفريضة الفائتة، وذوات الأسباب كتحية المسجد وسنة الوضوء على الراجح من أقوال أهل العلم.</p>
+  </section>`;
 }

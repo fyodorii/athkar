@@ -30,6 +30,7 @@ export const PRAYER_NAMES = {
   isha: 'العشاء',
   midnight: 'منتصف الليل',
   lastThird: 'الثلث الأخير',
+  asr2: 'مصير ظل الشيء مثليه',
 };
 
 // Times for one day as decimal hours in the location's time zone.
@@ -84,6 +85,8 @@ export function solarTimes(year, month, day, lat, lng, tz, opts) {
     sunrise: angleTime(0.833, 6 / 24, true),
     dhuhr: midDay(12 / 24),
     asr: asrTime(opts.asr || 1, 13 / 24),
+    // A shadow twice an object's length: the end of Asr's chosen time (hadith of Jibril).
+    asr2: asrTime(2, 13 / 24),
     maghrib: angleTime(0.833, 18 / 24),
     isha: opts.ishaMinutes ? 0 : angleTime(opts.isha, 18 / 24),
   };
@@ -170,6 +173,19 @@ export function dayTimes(day, settings, isRamadan = false) {
 // When each obligatory prayer's time runs out: Fajr at sunrise, Dhuhr at Asr, Asr at
 // Maghrib, Maghrib at Isha, and Isha at the middle of the night (Muslim, from Ibn ʿAmr).
 export const PRAYER_END = { fajr: 'sunrise', dhuhr: 'asr', asr: 'maghrib', maghrib: 'isha', isha: 'midnight' };
+
+// The times voluntary prayer is forbidden: after Fajr until the sun is a spear's length
+// up, when the sun stands at its height until it passes the meridian (taken as the 10
+// minutes before Dhuhr), and after Asr until sunset.
+export const ZAWAL_MINUTES = 10;
+export function forbiddenTimes(times) {
+  const zawal = { hours: times.dhuhr.hours - ZAWAL_MINUTES / 60, at: times.dhuhr.at - ZAWAL_MINUTES * 60000 };
+  return [
+    { key: 'fajr', name: 'بعد الفجر', desc: 'من صلاة الفجر حتى تطلع الشمس وترتفع قيد رمح', from: times.fajr, to: times.duha },
+    { key: 'zawal', name: 'قيام الشمس', desc: 'حين تتوسط الشمس كبد السماء حتى تزول، قُبيل الظهر', from: zawal, to: times.dhuhr },
+    { key: 'asr', name: 'بعد العصر', desc: 'من صلاة العصر حتى تغرب الشمس', from: times.asr, to: times.maghrib },
+  ];
+}
 export function prayerEnd(times, key) {
   return times[PRAYER_END[key]];
 }

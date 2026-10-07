@@ -1,7 +1,7 @@
 // The list of reminders for the coming days, worked out on the device. The server
 // (push/cron.php) only sends each one at its time, so it needs no prayer-time code.
 
-import { addDays, dateAt, dayTimes, PRAYER_NAMES, prayerEnd } from './prayer.js';
+import { addDays, dateAt, dayTimes, forbiddenTimes, PRAYER_NAMES, prayerEnd } from './prayer.js';
 import { PAGES } from './quran-data.js';
 import { dailyPages } from './khatma.js';
 import { clockText, hijri, minutesText, num } from './dates.js';
@@ -65,10 +65,12 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
         add(t[k].at + n.afterAdhan * 60000, `هل صليت ${name}؟`, 'أقم صلاتك، ولا تنسَ أذكار ما بعد الصلاة', '#/worship', `after-${k}`);
       }
       if (n.prayerEnd > 0) {
-        const end = prayerEnd(t, k);
+        // For Asr, warn before its chosen time ends rather than at sunset.
+        const chosenAsr = k === 'asr' && s.asr === 1 && t.asr2.at > t.asr.at;
+        const end = chosenAsr ? t.asr2 : prayerEnd(t, k);
         add(
           end.at - n.prayerEnd * 60000,
-          `اقترب خروج وقت صلاة ${name}`,
+          chosenAsr ? 'اقترب خروج وقت الاختيار للعصر' : `اقترب خروج وقت صلاة ${name}`,
           `يخرج وقتها بعد ${minutesText(n.prayerEnd)}، الساعة ${clockText(end.hours, s.clock24)} — إن لم تصلِّها فبادر`,
           '#/home',
           `end-${k}`
@@ -77,6 +79,10 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
     }
     if (n.duha) {
       add(t.sunrise.at + Math.max(15, n.duhaDelay) * 60000, 'صلاة الضحى', '«صلاة الأوابين حين ترمض الفصال» — ركعتان تجزئان عن صدقة كل مفاصلك', '#/worship', 'duha');
+    }
+    if (n.nahy) {
+      const z = forbiddenTimes(t)[1];
+      add(z.from.at, 'دخل وقت النهي', `قيام الشمس حتى الظهر (${clockText(t.dhuhr.hours, s.clock24)}) — لا تُصلَّ فيه نافلة مطلقة`, '#/home', 'nahy');
     }
     if (n.midnight) add(t.midnight.at, 'منتصف الليل', 'آخر وقت صلاة العشاء، وأوتر قبل أن تنام إن خشيت ألا تقوم', '#/home', 'midnight');
     if (n.sunrise) add(t.sunrise.at, 'الشروق', 'انتهى وقت صلاة الفجر', '#/home', 'sunrise');

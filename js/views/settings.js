@@ -327,6 +327,7 @@ export function renderNotify(view) {
         <div class="row"><span class="row-label">صلاة الضحى</span>${toggle('duha', n.duha)}</div>
         ${n.duha ? `<div class="row sub"><span class="row-label">بعد الشروق بـ</span>${select('duhaDelay', [15, 30, 60, 90, 120, 180], n.duhaDelay, (v) => (v >= 60 ? (v === 60 ? 'ساعة' : v === 120 ? 'ساعتين' : v === 180 ? '٣ ساعات' : 'ساعة ونصف') : minutesText(v)))}</div>` : ''}
         <div class="row"><span class="row-label">منتصف الليل<small>آخر وقت العشاء</small></span>${toggle('midnight', n.midnight)}</div>
+        <div class="row"><span class="row-label">وقت النهي قبل الظهر<small>عند قيام الشمس، قبل الظهر بـ١٠ دقائق</small></span>${toggle('nahy', n.nahy)}</div>
         <div class="row"><span class="row-label">الثلث الأخير من الليل<small>لقيام الليل والدعاء</small></span>${toggle('lastThird', n.lastThird)}</div>
       </div>
       <div class="group">
