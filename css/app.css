@@ -1153,3 +1153,38 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .wg-s ul li span { opacity: 0.8; }
 .wg-gallery .wg-lock { grid-row: auto; grid-column: auto; }
 .view-tasbeeh.enter { animation: none; }
+
+/* ---------- Morning, evening and sleep wirds ---------- */
+
+.wird-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 6px; }
+.wird-card { display: grid; justify-items: center; gap: 4px; padding: 14px 6px 12px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); text-align: center; transition: transform 0.15s; }
+.wird-card:active { transform: scale(0.96); }
+.wird-card b { font-size: 16px; }
+.wird-card small { font-size: 12px; color: var(--ink-3); }
+.wc-ring { position: relative; width: 46px; height: 46px; display: grid; place-items: center; color: var(--tone); }
+.wc-ring .ring { position: absolute; inset: 0; }
+.wc-ring i { position: relative; display: grid; place-items: center; }
+.section-title.small { font-size: 15px; margin: 18px 0 10px; }
+.dhikr-title { display: flex; align-items: center; gap: 8px; }
+.dhikr-no { min-width: 24px; height: 24px; padding: 0 6px; border-radius: 8px; display: grid; place-items: center; background: var(--bg-2); color: var(--ink-2); font-size: 12px; font-weight: 700; }
+.dhikr-text.hafs { font-size: calc(1.5rem * var(--qscale, 1)); line-height: 2.15; }
+.dhikr-text.hafs .before { font-family: 'KFGQPC Hafs', 'Amiri', serif; font-size: 0.85em; }
+.dhikr-note { display: flex; gap: 6px; align-items: flex-start; margin: 8px 0 0; padding: 6px 10px; border-radius: 12px; background: var(--gold-soft); color: var(--ink-2); font-size: 13px; line-height: 1.7; }
+.dhikr-note .ic { color: var(--gold); margin-top: 3px; }
+.suggest-ring { position: relative; width: 40px; height: 40px; color: var(--tone); }
+.suggest.done .suggest-icon { background: var(--primary); color: var(--primary-ink); }
+
+/* ---------- Tasbeeh list editor ---------- */
+
+.phrase-row { display: flex; align-items: center; gap: 2px; padding-left: 6px; }
+.phrase-row + .phrase-row, .phrase-row + .phrase-edit, .phrase-edit + .phrase-row { border-top: 1px solid var(--line); }
+.phrase-row.on { background: var(--primary-soft); }
+.phrase-row.on .phrase-pick { color: var(--primary); }
+.phrase-pick { flex: 1; display: flex; align-items: center; gap: 10px; padding: 12px 14px; font-family: 'Amiri', serif; font-size: 18px; font-weight: 700; text-align: right; }
+.phrase-pick .ic { color: var(--primary); }
+.phrase-pick span { flex: 1; }
+.danger-ic { color: var(--danger); }
+.phrase-edit { display: grid; gap: 8px; padding: 10px 12px; background: var(--card); }
+.phrase-edit textarea { width: 100%; border: 0; outline: 0; border-radius: 12px; background: var(--bg-2); padding: 10px 12px; font-family: 'Amiri', serif; font-size: 18px; color: var(--ink); box-shadow: 0 0 0 2px var(--primary); }
+.phrase-edit div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.phrase-edit .btn { min-height: 42px; }

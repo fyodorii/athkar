@@ -348,7 +348,7 @@ export function renderNotify(view) {
         ${n.sleep ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="sleepTime" value="${esc(n.sleepTime)}"></div>` : ''}
         <div class="row"><span class="row-label">الصلاة على النبي ﷺ<small>من ٩ صباحاً إلى ٩ مساءً</small></span>${toggle('salawat', n.salawat)}</div>
         ${n.salawat ? `<div class="row sub"><span class="row-label">كل</span>${select('salawatHours', [1, 2, 3, 4, 6], n.salawatHours, (v) => (v === 1 ? 'ساعة' : v === 2 ? 'ساعتين' : `${num(v)} ساعات`))}</div>` : ''}
-        <p class="hint">التنبيه يفتح «أذكاري». ولكل ذكر فيها تذكيره الخاص بالوقت الذي تختاره.</p>
+        <p class="hint">ولكل ذكر في «أذكاري» تذكيره الخاص بالوقت الذي تختاره.</p>
       </div>
       <div class="group">
         <h4>تذكيرات أخرى</h4>

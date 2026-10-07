@@ -56,7 +56,7 @@ export const DEFAULTS = {
   custom: [],
   notebook: [],
   saved: [],
-  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, phrases: [], fontSize: 40 },
+  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40 },
   khatma: { page: 0, days: 30, start: '', done: 0, log: {} },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,

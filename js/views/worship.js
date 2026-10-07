@@ -1,6 +1,7 @@
 // Worship tracker: a daily checklist of prayers, voluntary prayers, Quran, adhkar and
 // good deeds, with the last week at a glance and a streak for the five prayers.
 
+import { CATEGORY_BY_ID } from '../adhkar-data.js';
 import { hijriText, num, WEEKDAYS } from '../dates.js';
 import { icon } from '../icons.js';
 import { addDays, dayKey } from '../prayer.js';
@@ -40,9 +41,9 @@ const GROUPS = [
     title: 'الأذكار',
     icon: 'beads',
     items: [
-      { id: 'morning', name: 'أذكار الصباح', type: 'check' },
-      { id: 'evening', name: 'أذكار المساء', type: 'check' },
-      { id: 'sleep', name: 'أذكار النوم', type: 'check' },
+      { id: 'morning', name: 'أذكار الصباح', type: 'check', auto: 'morning' },
+      { id: 'evening', name: 'أذكار المساء', type: 'check', auto: 'evening' },
+      { id: 'sleep', name: 'أذكار النوم', type: 'check', auto: 'sleep' },
       { id: 'istighfar', name: 'الاستغفار مائة مرة', type: 'check' },
     ],
   },
@@ -72,8 +73,16 @@ const goalOf = (item) => (item.goal === 'quranGoal' ? state.settings.quranGoal |
 
 const record = (key) => (state.worship[key] ??= {});
 
+// Morning, evening and sleep adhkar count as done once finished in their counter today.
+function autoDone(item, key) {
+  if (!item.auto || state.progress.day !== key) return false;
+  const c = state.progress.counts;
+  return CATEGORY_BY_ID[item.auto].items.every((x) => (c[x.id] || 0) >= x.count);
+}
+
 const value = (item, key) => {
-  return state.worship[key]?.[item.id] || 0;
+  const v = state.worship[key]?.[item.id] || 0;
+  return item.type === 'check' && !v && autoDone(item, key) ? 1 : v;
 };
 
 const isDone = (item, key) => {
@@ -230,6 +239,7 @@ export function render(view) {
     if (c) {
       const item = allItems().find((x) => x.id === c.dataset.check);
       const r = record(selected);
+      if (!r[item.id] && autoDone(item, selected)) return toast('سُجّلت تلقائياً لأنك أتممتها في عدّاد الأذكار');
       r[item.id] = r[item.id] ? 0 : 1;
       save();
       haptic();

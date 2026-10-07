@@ -1,6 +1,7 @@
 // Home: live clock, Hijri and Gregorian dates, next prayer countdown and today's times.
 
-import { DAILY } from '../adhkar-data.js';
+import { CATEGORY_BY_ID, DAILY } from '../adhkar-data.js';
+import { wirdDone } from './adhkar.js';
 import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, gregText, hijriText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
@@ -96,6 +97,8 @@ export function render(view) {
       }).join('')}
     </ul>
   </section>
+
+  ${wirdSuggestion(info)}
 
   <section class="quick">
     ${QUICK.map(([href, label, ic, tone]) => `<a class="quick-tile tone-${tone}" href="${href}">${icon(ic, 24)}<span>${label}</span></a>`).join('')}
@@ -265,4 +268,21 @@ function khatmaCard(info) {
     <span class="km-text"><b>${k.page >= PAGES ? 'أتممت الختمة' : p.done ? 'أتممت وردك اليوم ✓' : `وردك اليوم: ${num(p.size)} صفحة`}</b>
       <small>${k.page >= PAGES ? 'تقبّل الله منك' : `من ص ${num(p.from)} (${esc(p.fromInfo.surahName)}) إلى ص ${num(p.to)} (${esc(p.toInfo.surahName)})`}</small></span>
     ${icon('chevron', 18, 'muted')}</a>`;
+}
+
+// The adhkar for this time of day: morning until Asr, evening until Isha, then sleep.
+function wirdSuggestion(info) {
+  const now = Date.now();
+  const t = info.times;
+  const id = now >= t.fajr.at && now < t.asr.at ? 'morning' : now >= t.asr.at && now < t.isha.at ? 'evening' : 'sleep';
+  const cat = CATEGORY_BY_ID[id];
+  const done = wirdDone(cat);
+  const all = cat.items.length;
+  const finished = done === all;
+  return `<a class="suggest card ${finished ? 'done' : ''}" href="#/adhkar/${id}">
+    <div class="suggest-icon tone-${cat.tone}">${icon(finished ? 'check' : cat.icon, 26)}</div>
+    <div class="suggest-text"><b>${finished ? `أتممت ${cat.title}` : id === 'sleep' ? 'وِرد النوم' : `حان وقت ${cat.title}`}</b>
+      <span>${finished ? 'تقبّل الله منك' : done ? `قرأت ${num(done)} من ${num(all)}` : esc(cat.subtitle)}</span></div>
+    <span class="suggest-ring tone-${cat.tone}">${ring(done / all, 40, 4)}</span>
+  </a>`;
 }

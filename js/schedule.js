@@ -81,12 +81,12 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
     if (n.midnight) add(t.midnight.at, 'منتصف الليل', 'آخر وقت صلاة العشاء، وأوتر قبل أن تنام إن خشيت ألا تقوم', '#/home', 'midnight');
     if (n.sunrise) add(t.sunrise.at, 'الشروق', 'انتهى وقت صلاة الفجر', '#/home', 'sunrise');
     if (n.morning) {
-      add(t.fajr.at + n.morningDelay * 60000, 'أذكار الصباح ☀️', '«أصبحنا وأصبح الملك لله…» حصّن يومك بأذكار الصباح', '#/mine', 'morning');
+      add(t.fajr.at + n.morningDelay * 60000, 'أذكار الصباح ☀️', '«أصبحنا وأصبح الملك لله…» حصّن يومك بأذكار الصباح', '#/adhkar/morning', 'morning');
     }
     if (n.evening) {
-      add(t.asr.at + n.eveningDelay * 60000, 'أذكار المساء 🌙', '«أمسينا وأمسى الملك لله…» حان وقت أذكار المساء', '#/mine', 'evening');
+      add(t.asr.at + n.eveningDelay * 60000, 'أذكار المساء 🌙', '«أمسينا وأمسى الملك لله…» حان وقت أذكار المساء', '#/adhkar/evening', 'evening');
     }
-    if (n.sleep) add(atClock(day, n.sleepTime, t), 'أذكار النوم', '«باسمك اللهم أموت وأحيا» — لا تنسَ أذكار النوم', '#/mine', 'sleep');
+    if (n.sleep) add(atClock(day, n.sleepTime, t), 'أذكار النوم', '«باسمك اللهم أموت وأحيا» — لا تنسَ أذكار النوم', '#/adhkar/sleep', 'sleep');
     if (n.lastThird) {
       add(t.lastThird.at, 'الثلث الأخير من الليل', '«ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر…»', '#/home', 'last-third');
     }

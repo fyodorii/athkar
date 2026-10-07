@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline,
 // and shows the reminders that push/cron.php sends.
 
-const VERSION = 'v2'; // raise on every release so phones fetch the new files
+const VERSION = 'v3'; // raise on every release so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const FILES = [
   './',
@@ -26,6 +26,7 @@ const FILES = [
   'js/today.js',
   'js/ui.js',
   'js/widget.js',
+  'js/wird-data.js',
   'js/views/adhkar.js',
   'js/views/home.js',
   'js/views/notebook.js',
