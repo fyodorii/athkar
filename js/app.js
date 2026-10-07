@@ -15,6 +15,8 @@ import * as notebook from './views/notebook.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as quran from './views/quran.js';
+import * as tools from './views/tools.js';
+import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
 const TABS = [
@@ -37,6 +39,10 @@ const ROUTES = [
   [/^#\/tasbeeh$/, 'tasbeeh', (v) => adhkar.renderTasbeeh(v)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/qibla$/, 'qibla', (v) => qibla.render(v)],
+  [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
+  [/^#\/qailulah$/, 'tools', (v) => tools.renderQailulah(v)],
+  [/^#\/walk$/, 'tools', (v) => tools.renderWalk(v)],
+  [/^#\/focus$/, 'tools', (v) => tools.renderFocus(v)],
   [/^#\/notebook(?:\/(saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)],
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
@@ -196,6 +202,7 @@ onChange(() => {
 
 setInterval(() => {
   if (document.visibilityState !== 'visible') return;
+  checkTimers();
   if (current?.tick?.() === 'rerender') route();
 }, 1000);
 
@@ -205,6 +212,9 @@ document.addEventListener('visibilitychange', () => {
   syncSchedule();
   scheduleInApp();
   checkForUpdate();
+  checkTimers();
+  // The screen lock is dropped when the app is hidden; take it again for a running timer.
+  if (anyTimerRunning()) keepAwake(true);
 });
 
 registerServiceWorker();

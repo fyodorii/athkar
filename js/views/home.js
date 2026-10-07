@@ -20,7 +20,10 @@ const QUICK = [
   ['#/ruqyah', 'الرقية', 'book', 'teal'],
   ['#/radio', 'الإذاعة', 'radio', 'indigo'],
   ['#/tasbeeh', 'السبحة', 'beads', 'amber'],
-  ['#/qibla', 'القبلة', 'compass', 'teal'],
+  ['#/qailulah', 'القيلولة', 'moon', 'teal'],
+  ['#/walk', 'المشي الياباني', 'stars', 'amber'],
+  ['#/focus', '١٠ دقائق', 'clock', 'rose'],
+  ['#/tools', 'الأدوات', 'widget', 'indigo'],
 ];
 
 // Rows under the five prayers: Duha, the middle of the night and its last third.
@@ -133,7 +136,11 @@ export function render(view) {
     tick() {
       const c2 = bigClock();
       const info2 = today();
-      if (info2.key !== info.key || info2.next.at !== info.next.at) return 'rerender';
+      // Redraw when the day, the next prayer, the running prayer or a forbidden time changes.
+      const same = (a, b) => (a && a.at) === (b && b.at);
+      if (info2.key !== info.key || info2.next.at !== info.next.at || !same(info2.current, info.current) || info2.forbidden?.key !== info.forbidden?.key) {
+        return 'rerender';
+      }
       $('[data-clock]', view).textContent = c2.time;
       $('[data-sec]', view).textContent = c2.sec;
       const p = $('[data-period]', view);
@@ -288,7 +295,7 @@ function khatmaCard(info) {
   return `<a class="card khatma-mini" href="#/quran">
     <span class="km-ring">${ring(k.page / PAGES, 52, 5)}<b>${num(Math.floor((k.page / PAGES) * 100))}٪</b></span>
     <span class="km-text"><b>${k.page >= PAGES ? 'أتممت الختمة' : p.done ? 'أتممت وردك اليوم ✓' : `وردك اليوم: ${num(p.size)} صفحة`}</b>
-      <small>${k.page >= PAGES ? 'تقبّل الله منك' : `من ص ${num(p.from)} (${esc(p.fromInfo.surahName)}) إلى ص ${num(p.to)} (${esc(p.toInfo.surahName)})`}</small></span>
+      <small>${k.page >= PAGES ? 'تقبّل الله منك' : p.hizb ? `الحزب ${num(p.hizb.n)}: ${esc(p.hizb.name)}` : `من ص ${num(p.from)} (${esc(p.fromInfo.surahName)}) إلى ص ${num(p.to)} (${esc(p.toInfo.surahName)})`}</small></span>
     ${icon('chevron', 18, 'muted')}</a>`;
 }
 

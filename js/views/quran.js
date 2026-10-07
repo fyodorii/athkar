@@ -2,7 +2,7 @@
 
 import { GREG_MONTHS, hijriText, num, WEEKDAYS } from '../dates.js';
 import { icon } from '../icons.js';
-import { dailyPages, endDay, paceDiff, PLANS, readTo, startPlan, todayPortion } from '../khatma.js';
+import { AHZAB, dailyPages, endDay, hizbIndex, paceDiff, PLANS, readTo, startPlan, todayPortion } from '../khatma.js';
 import { addDays, dayKey } from '../prayer.js';
 import { JUZ, PAGES, pageInfo, SURAHS } from '../quran-data.js';
 import { onRadio, play, radioStatus, STATIONS, stationById, stop, toggle } from '../radio.js';
@@ -10,7 +10,7 @@ import { BASMALA, RUQYAH_DUAS, RUQYAH_VERSES } from '../ruqyah-data.js';
 import { syncSchedule } from '../push.js';
 import { isSaved, save, state, toggleSaved, uid } from '../store.js';
 import { today } from '../today.js';
-import { $, $$, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
+import { $, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
 
 const TABS = [
   ['#/quran', 'الختمة'],
@@ -43,7 +43,7 @@ export function renderKhatma(view) {
     </section>
     <div class="group">
       <h4>كيف تريد الختمة؟</h4>
-      ${planChips(k.days)}
+      ${planChips()}
       <h4>أين وصلت؟</h4>
       <button class="row" data-pos><span class="row-icon">${icon('bookmark', 20)}</span><span class="row-label">${k.page ? `بعد صفحة ${num(k.page)} — ${pageInfo(k.page).surahName}` : 'من البداية (سورة الفاتحة)'}</span><span class="row-value">تغيير</span></button>
       <button class="btn primary wide" data-start>${icon('check', 20)} ابدأ الختمة</button>
@@ -52,6 +52,9 @@ export function renderKhatma(view) {
   const khatmaBody = (t) => {
     const p = todayPortion(k, t.day);
     const info = pageInfo(Math.max(1, k.page));
+    // A hizb ends on the page where the next surah starts: name the surah just finished.
+    const endedHizb = k.mode === 'sahaba' && AHZAB.find((h) => h.to === k.page && h.to < PAGES);
+    if (endedHizb) info.surahName = SURAHS[endedHizb.last - 1][0];
     const pct = k.page / PAGES;
     const pace = paceDiff(k, t.day);
     const end = endDay(k);
@@ -74,16 +77,16 @@ export function renderKhatma(view) {
           ? `<section class="finish show">${icon('check', 28)}<b>أتممت الختمة</b><span>تقبّل الله منك. عدد ختماتك: ${num(k.done || 1)}</span>
               <button class="btn ghost on-dark" data-new>${icon('reset', 18)} ابدأ ختمة جديدة</button></section>`
           : `<section class="card wird ${p.done ? 'done' : ''}">
-              <div class="card-head"><h2>${icon('book', 18)} وردك اليوم</h2><span class="pill ${p.done ? '' : 'soft'}">${p.done ? 'تم بحمد الله' : `${num(p.size)} ${pagesWord(p.size)}`}</span></div>
+              <div class="card-head"><h2>${icon('book', 18)} ${p.hizb ? `حزب اليوم — الحزب ${num(p.hizb.n)}` : 'وردك اليوم'}</h2><span class="pill ${p.done ? '' : 'soft'}">${p.done ? 'تم بحمد الله' : `${num(p.size)} ${pagesWord(p.size)}`}</span></div>
               <div class="wird-range">
-                <div><small>من</small><b>صفحة ${num(p.from)}</b><span>${esc(p.fromInfo.surahName)}</span></div>
+                <div><small>من</small><b>${p.hizb ? `سورة ${esc(SURAHS[p.hizb.first - 1][0])}` : `صفحة ${num(p.from)}`}</b><span>${p.hizb ? `صفحة ${num(p.from)}` : esc(p.fromInfo.surahName)}</span></div>
                 <i>${icon('chevron', 22)}</i>
-                <div><small>إلى</small><b>صفحة ${num(p.to)}</b><span>${esc(p.toInfo.surahName)}</span></div>
+                <div><small>إلى آخر</small><b>${p.hizb ? `سورة ${esc(SURAHS[p.hizb.last - 1][0])}` : `صفحة ${num(p.to)}`}</b><span>${p.hizb ? `صفحة ${num(p.to)}` : esc(p.toInfo.surahName)}</span></div>
               </div>
               <div class="bar light"><i style="width:${Math.min(100, (p.read / p.size) * 100)}%"></i></div>
               <p class="hint">قرأت اليوم ${num(p.read)} من ${num(p.size)} • ${pace > 0 ? `متقدّم عن خطتك ${num(pace)} ${pagesWord(pace)}` : pace < 0 ? `متأخر عن خطتك ${num(-pace)} ${pagesWord(-pace)}` : 'على خطتك تماماً'}</p>
               <div class="wird-actions">
-                <button class="btn primary" data-wird ${p.done ? 'disabled' : ''}>${icon('check', 20)} قرأت وردي</button>
+                <button class="btn primary" data-wird ${p.done ? 'disabled' : ''}>${icon('check', 20)} ${p.hizb ? 'قرأت الحزب' : 'قرأت وردي'}</button>
                 <button class="btn ghost" data-plus="1">+١ صفحة</button>
                 <button class="btn ghost" data-plus="20">+جزء</button>
               </div>
@@ -91,8 +94,9 @@ export function renderKhatma(view) {
       }
 
       <section class="card">
-        <div class="card-head"><h2>${icon('calendar', 18)} خطتك</h2><span class="link">${esc(PLANS.find((x) => x[0] === k.days)?.[1] || `${num(k.days)} يوماً`)}</span></div>
-        <p class="hint">تختم بإذن الله يوم ${dayLabel(end)} (${hijriText(end, state.settings.hijriAdjust)})، بمعدل ${num(dailyPages(k, t.day))} ${pagesWord(dailyPages(k, t.day))} يومياً. الختمات المكتملة: ${num(k.done || 0)}.</p>
+        <div class="card-head"><h2>${icon('calendar', 18)} خطتك</h2><span class="link">${sahaba() ? 'تحزيب الصحابة' : esc(PLANS.find((x) => x[0] === k.days)?.[1] || `${num(k.days)} يوماً`)}</span></div>
+        ${sahaba() ? ahzabList(t) : ''}
+        <p class="hint">تختم بإذن الله يوم ${dayLabel(end)} (${hijriText(end, state.settings.hijriAdjust)})، ${sahaba() ? 'بحزب كل يوم' : `بمعدل ${num(dailyPages(k, t.day))} ${pagesWord(dailyPages(k, t.day))} يومياً`}. الختمات المكتملة: ${num(k.done || 0)}.</p>
         <div class="week-bars">
           ${week
             .map((d) => {
@@ -105,15 +109,36 @@ export function renderKhatma(view) {
 
       <div class="group">
         <h4>كيف تريد الختمة؟ (يُعاد حساب الورد من موضعك الآن)</h4>
-        ${planChips(k.days)}
+        ${planChips()}
         <div class="row"><span class="row-icon">${icon('bell', 20)}</span><span class="row-label">تذكير بالورد يومياً<small>${state.settings.notify.enabled ? 'من إعدادات الإشعارات' : 'فعّل الإشعارات أولاً'}</small></span>
           <a class="link" href="#/settings/notify">${state.settings.notify.khatma ? num(state.settings.notify.khatmaTime) : 'إعداد'}</a></div>
         <button class="row danger-row" data-new><span class="row-icon">${icon('reset', 20)}</span><span class="row-label">بدء ختمة جديدة من الفاتحة</span></button>
       </div>`;
   };
 
-  const planChips = (days) => `
-    <div class="chips">${PLANS.map(([d, l]) => `<button class="chip-opt ${days === d ? 'on' : ''}" data-plan="${d}">${l}</button>`).join('')}
+  const sahaba = () => k.mode === 'sahaba';
+  // The seven ahzab with the day each falls on and whether it is read.
+  const ahzabList = (t) => {
+    const cur = hizbIndex(k, t.day);
+    const start = (() => {
+      const [y, m, d] = k.start.split('-').map(Number);
+      return { y, m, d };
+    })();
+    return `<ol class="ahzab">${AHZAB.map((h, i) => {
+      const day = addDays(start, i);
+      const done = k.page >= h.to;
+      return `<li class="${done ? 'done' : ''} ${i === cur ? 'today' : ''}">
+        <span class="ahzab-n">${done ? icon('check', 16) : num(h.n)}</span>
+        <div><b>${esc(h.name)}</b><small>${WEEKDAYS[new Date(Date.UTC(day.y, day.m - 1, day.d)).getUTCDay()]} • ص ${num(h.from)}–${num(h.to)}</small></div>
+        ${i === cur ? '<em>اليوم</em>' : ''}
+      </li>`;
+    }).join('')}</ol>
+    <p class="hint">«فمي بشوق»: كان الصحابة يحزّبون القرآن سبعة أحزاب، ثلاث سور، وخمساً، وسبعاً، وتسعاً، وإحدى عشرة، وثلاث عشرة، وحزب المفصّل من «ق» إلى آخره. رواه أبو داود وابن ماجه عن أوس بن حذيفة.</p>`;
+  };
+
+  const planChips = () => `
+    <div class="chips"><button class="chip-opt sahaba ${sahaba() ? 'on' : ''}" data-plan="sahaba">${icon('stars', 14)} تحزيب الصحابة (أسبوع)</button>
+      ${PLANS.map(([d, l]) => `<button class="chip-opt ${!sahaba() && k.days === d ? 'on' : ''}" data-plan="${d}">${l}</button>`).join('')}
       <button class="chip-opt" data-plan-custom>${icon('edit', 14)} مدة أخرى</button></div>`;
 
   draw();
@@ -122,16 +147,17 @@ export function renderKhatma(view) {
     const t = today();
     const plan = e.target.closest('[data-plan]');
     if (plan) {
-      const days = Number(plan.dataset.plan);
-      if (k.start) startPlan(days, k.page, t.day);
-      else k.days = days;
+      const mode = plan.dataset.plan === 'sahaba' ? 'sahaba' : 'pages';
+      const days = mode === 'sahaba' ? 7 : Number(plan.dataset.plan);
+      if (k.start) startPlan(days, k.page, t.day, mode);
+      else Object.assign(k, { days, mode });
       save();
       syncSchedule();
       return draw();
     }
     if (e.target.closest('[data-plan-custom]')) return customPlan(draw);
     if (e.target.closest('[data-start]')) {
-      startPlan(k.days, k.page, t.day);
+      startPlan(k.days, k.page, t.day, k.mode);
       save();
       syncSchedule();
       toast(`${icon('check', 18)} بدأت ختمتك، وفقك الله`);

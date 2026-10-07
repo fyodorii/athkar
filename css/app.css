@@ -1229,3 +1229,96 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .pick-item, .phrase-pick, .menu.phrases button, .sample, .field textarea, .diary textarea { font-weight: var(--text-weight); }
 .tc-advice .tc-text { font-family: var(--font-ui); }
 .hafs, .dhikr-text.hafs, .mine-text.hafs, .note-text.hafs, .tc-text .hafs { font-family: 'KFGQPC Hafs', 'Amiri', serif; font-weight: 400; }
+
+/* ---------- Khatma: the Companions' ahzab ---------- */
+
+.chip-opt.sahaba { display: inline-flex; align-items: center; gap: 4px; }
+.ahzab { list-style: none; margin: 8px 0 4px; padding: 0; display: grid; gap: 6px; }
+.ahzab li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--bg-2); }
+.ahzab li > div { flex: 1; display: grid; min-width: 0; }
+.ahzab b { font-size: 14.5px; }
+.ahzab small { font-size: 12px; color: var(--ink-3); }
+.ahzab-n { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--card); font-weight: 700; font-size: 13px; color: var(--ink-2); flex-shrink: 0; }
+.ahzab li.done { opacity: 0.6; }
+.ahzab li.done .ahzab-n { background: var(--primary); color: var(--primary-ink); }
+.ahzab li.today { background: var(--primary-soft); box-shadow: inset 0 0 0 1.5px var(--primary); }
+.ahzab em { font-style: normal; font-size: 11.5px; padding: 1px 8px; border-radius: 99px; background: var(--primary); color: var(--primary-ink); }
+
+/* ---------- Tools: qailulah ---------- */
+
+.t { unicode-bidi: isolate; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.nap-dial { display: grid; gap: 12px; }
+.nap-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.nap-svg .track { fill: none; stroke: var(--line); stroke-width: 2; }
+.nap-svg .horizon { stroke: var(--ink-3); stroke-width: 1.4; }
+.nap-svg .tick { stroke: var(--ink-3); stroke-width: 1.2; }
+.nap-svg .tick.major { stroke: var(--ink); stroke-width: 1.6; }
+.nap-svg .hnum { fill: var(--ink-3); font: 600 11px var(--font-ui); }
+.nap-svg .band-a { fill: none; stroke: var(--gold); stroke-width: 13; }
+.nap-svg .band-b { fill: none; stroke: var(--primary); stroke-width: 13; stroke-opacity: 0.4; }
+.nap-svg .meridian { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.5; }
+.nap-svg .lbl { fill: var(--ink); font: 700 13px var(--font-ui); }
+.nap-svg .lbl-s { fill: var(--ink-2); font: 600 12px var(--font-ui); }
+.nap-svg .sunpt { fill: var(--gold); stroke: var(--card); stroke-width: 3; }
+.nap-svg .halo { fill: var(--gold); opacity: 0.2; }
+.nap-status { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; }
+.nap-status .pill { flex-shrink: 0; }
+.pill.sun { background: var(--gold-soft); color: var(--gold); }
+.pill.shade { background: var(--primary-soft); color: var(--primary); }
+.pill.idle { background: var(--bg-2); color: var(--ink-2); }
+.pill.warn { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.nap-times { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.nap-times div { display: grid; padding: 8px 6px; border-radius: 12px; background: var(--bg-2); text-align: center; }
+.nap-times small { font-size: 11.5px; color: var(--ink-3); }
+.nap-times b { font-size: 14px; }
+.nap-times .z b { color: var(--gold); }
+.nap-windows { display: grid; gap: 12px; margin-bottom: 8px; }
+.nap-win { display: grid; gap: 4px; }
+.nap-win > small { display: flex; align-items: center; gap: 6px; color: var(--ink-3); font-size: 12px; }
+.nap-win > small i, .quotes h4 i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.nap-win.a > small i, .quotes .sw.a { background: var(--gold); }
+.nap-win.b > small i, .quotes .sw.b { background: var(--primary); opacity: 0.6; }
+.nap-win h3 { margin: 0; font-size: 19px; }
+.nap-range { font-size: 20px; }
+.nap-act { margin: 4px 0 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: 14px; }
+.nap-timer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.nap-timer > div { display: grid; flex: 1; min-width: 180px; }
+.nap-timer small { color: var(--ink-2); font-size: 13px; }
+.nap-left { font-size: 34px; direction: ltr; text-align: right; font-variant-numeric: tabular-nums; }
+.quotes { display: grid; gap: 10px; }
+.quotes h4 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.q { margin: 0; display: grid; gap: 2px; }
+.q + .q { border-top: 1px dashed var(--line); padding-top: 10px; }
+.q blockquote { margin: 0; font-family: var(--font-text); font-size: 19px; line-height: 1.8; }
+.q blockquote::before { content: '«'; }
+.q blockquote::after { content: '»'; }
+.q figcaption { font-size: 12.5px; color: var(--ink-3); }
+.grade + .grade { border-top: 1px solid var(--line); padding-top: 10px; }
+.grade-text { margin: 0; font-family: var(--font-text); font-size: 19px; }
+.nap-science { display: grid; gap: 10px; }
+.nap-science .card { display: grid; gap: 2px; margin: 0; }
+.nap-science b { font-size: 16px; }
+.nap-science p { margin: 0; font-size: 14px; line-height: 1.75; }
+.hafs-line { font-family: 'KFGQPC Hafs', 'Amiri', serif; font-size: 20px; color: var(--ink); }
+
+/* ---------- Tools: walk and ten-minute rule ---------- */
+
+.walk, .focus { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.walk-phase { padding: 8px 24px; border-radius: 99px; font-size: 20px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #ff4e50, #f9a623); }
+.walk.slow .walk-phase { background: linear-gradient(135deg, #43cea2, #185a9d); }
+.walk.done .walk-phase { background: linear-gradient(135deg, #f5af19, #f0c040); }
+.walk-ring, .focus-ring { position: relative; width: 220px; height: 220px; display: grid; place-items: center; color: #f9a623; }
+.walk.slow .walk-ring { color: #43cea2; }
+.focus-ring { color: var(--danger); }
+.walk-ring [data-ring], .focus-ring [data-ring] { position: absolute; inset: 0; }
+.walk-ring b, .focus-ring b { position: relative; font-size: 46px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.walk-round { margin: 0; color: var(--ink-2); }
+.walk-dots { display: flex; gap: 8px; }
+.walk-dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--bg-2); box-shadow: inset 0 0 0 2px var(--line); transition: transform 0.3s; }
+.walk-dots i.on { background: #43cea2; box-shadow: none; }
+.walk-dots i.now { background: #f9a623; box-shadow: none; transform: scale(1.3); }
+.walk .bar, .focus .bar { width: 100%; max-width: 360px; }
+.walk-actions { display: flex; gap: 10px; justify-content: center; }
+.walk-actions .btn { min-width: 120px; }
+.focus .field { width: 100%; text-align: right; }
+.focus .stats { max-width: 360px; }

@@ -65,6 +65,7 @@ const GROUPS = [
       { id: 'walk', name: 'المشي ٣٠ دقيقة', type: 'check' },
       { id: 'reading', name: 'القراءة ٣٠ دقيقة', type: 'check' },
       { id: 'puzzles', name: 'الألغاز والتمارين الذهنية', type: 'check' },
+      { id: 'qailulah', name: 'القيلولة', type: 'check' },
     ],
   },
 ];

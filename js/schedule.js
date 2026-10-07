@@ -88,6 +88,12 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
       const z = forbiddenTimes(t)[1];
       add(z.from.at, 'دخل وقت النهي', `قيام الشمس حتى الظهر (${clockText(t.dhuhr.hours, s.clock24)}) — لا تُصلَّ فيه نافلة مطلقة`, '#/home', 'nahy');
     }
+    if (n.qailulah) {
+      // The start of the sixth seasonal hour of the day, the hour before the zawal.
+      const zawal = t.dhuhr.at - (s.offsets.dhuhr || 0) * 60000;
+      const a0 = zawal - (t.maghrib.at - t.sunrise.at) / 12;
+      add(a0, 'وقت القيلولة', `نافذة ما قبل الزوال حتى ${clockText(t.dhuhr.hours - (s.offsets.dhuhr || 0) / 60, s.clock24)} — والقائلة: الاستراحة وسط النهار`, '#/qailulah', 'qailulah');
+    }
     if (n.midnight) add(t.midnight.at, 'منتصف الليل', 'آخر وقت صلاة العشاء، وأوتر قبل أن تنام إن خشيت ألا تقوم', '#/home', 'midnight');
     if (n.sunrise) add(t.sunrise.at, 'الشروق', 'انتهى وقت صلاة الفجر', '#/home', 'sunrise');
     if (n.morning) {

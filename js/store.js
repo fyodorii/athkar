@@ -49,6 +49,7 @@ export const DEFAULTS = {
       midnight: false,
       prayerEnd: 0,
       nahy: false,
+      qailulah: false,
       kahf: true,
       kahfTime: '09:00',
       mulk: false,
@@ -70,6 +71,7 @@ export const DEFAULTS = {
   worship: {},
   worshipCustom: [],
   diary: {},
+  tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };
 
