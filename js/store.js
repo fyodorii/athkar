@@ -27,6 +27,8 @@ export const DEFAULTS = {
     quranGoal: 5,
     prayerLayout: 'list', // list | grid (the prayer times on the home screen)
     appIcon: 'emerald', // icons/alt/<name>.png for the home screen
+    mushafMode: 'pages', // al-Kahf, al-Mulk, al-Baqarah: the mushaf's pages | continuous text
+    mushafInk: 'blue', // blue | black
     notify: {
       enabled: false,
       prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },

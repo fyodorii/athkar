@@ -1,8 +1,9 @@
 // Service worker: keeps the app on the device so it opens instantly and offline,
 // and shows the reminders that push/cron.php sends.
 
-const VERSION = 'v11'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v12'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
+const MUSHAF_CACHE = 'mushaf-fonts-v1'; // not named adhkar-…, so updates keep it
 const FILES = [
   './',
   'index.html',
@@ -16,6 +17,9 @@ const FILES = [
   'js/khatma.js',
   'js/hifz.js',
   'js/occasions.js',
+  'js/mushaf/kahf.js',
+  'js/mushaf/mulk.js',
+  'js/mushaf/baqarah.js',
   'js/sunnah.js',
   'js/surahs/kahf.js',
   'js/surahs/mulk.js',
@@ -97,6 +101,21 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== location.origin || url.pathname.includes('/push/')) return;
+  // The mushaf's page fonts never change: kept in their own cache across app updates and
+  // fetched once, only when their page is opened.
+  if (url.pathname.includes('/fonts/qpc/')) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(MUSHAF_CACHE);
+        const saved = await cache.match(request);
+        if (saved) return saved;
+        const res = await fetch(request);
+        if (res.ok) cache.put(request, res.clone());
+        return res;
+      })()
+    );
+    return;
+  }
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);

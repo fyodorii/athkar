@@ -1588,3 +1588,47 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .icon-pick img { width: 100%; max-width: 96px; height: auto; border-radius: 22%; box-shadow: var(--shadow); }
 .icon-pick.on img { outline: 3px solid var(--primary); outline-offset: 3px; }
 .icon-pick.on span { color: var(--primary); font-weight: 700; }
+
+/* ---------- The mushaf's pages (al-Kahf, al-Mulk, al-Baqarah) ---------- */
+
+.ink-dot { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6), 0 0 0 1px var(--line); }
+.ink-dot.blue { background: #1c4f9c; }
+.ink-dot.black { background: #1b1b1b; }
+.mp-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.mp-bar .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-2); }
+.mp-scroller {
+  --mp-ink: #1c4f9c;
+  --mp-paper: #fffcf3;
+  --mp-frame: #d8c08a;
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+  margin: 0 -16px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.mp-scroller::-webkit-scrollbar { display: none; }
+.mp-scroller[data-ink='black'] { --mp-ink: #1b1b1b; }
+[data-theme='dark'] .mp-scroller { --mp-ink: #9cc3ff; --mp-paper: #14171c; --mp-frame: #6b5a33; }
+[data-theme='dark'] .mp-scroller[data-ink='black'] { --mp-ink: #f1ede4; }
+.mp { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; padding: 0 12px; box-sizing: border-box; }
+.mp-sheet {
+  position: relative; container-type: inline-size; max-width: 520px; margin: 0 auto; padding: 10px 12px 8px;
+  border-radius: 16px; background: var(--mp-paper); color: var(--mp-ink);
+  box-shadow: var(--shadow), inset 0 0 0 1.5px var(--mp-frame), inset 0 0 0 4px var(--mp-paper), inset 0 0 0 5px var(--mp-frame);
+}
+.mp-top { display: flex; justify-content: space-between; padding: 2px 6px 6px; font-size: 13px; font-weight: 700; color: color-mix(in srgb, var(--mp-ink) 70%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--mp-frame) 60%, transparent); margin-bottom: 4px; }
+.mp-lines { visibility: hidden; }
+.mp.ready .mp-lines { visibility: visible; }
+.mp.ready .mp-wait { display: none; }
+.mp-wait { position: absolute; inset: 40% 0 auto; text-align: center; font-size: 13px; color: var(--ink-3); }
+.mp-l {
+  display: flex; justify-content: space-between; white-space: nowrap;
+  font-family: var(--pf), serif; font-size: 5.45cqw; line-height: 2.02; font-weight: 400;
+}
+.mp-l.c { justify-content: center; gap: 0.28em; }
+.mp-b { justify-content: center; font-family: 'qpc-bsml', serif; }
+.mp-h { display: grid; place-items: center; margin: 0.35em 0; height: 7.4cqw; }
+.mp-h span {
+  display: grid; place-items: center; width: 92%; height: 100%; border-radius: 999px; font-family: 'KFGQPC Hafs', 'Amiri', serif; font-size: 4.6cqw;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--mp-frame) 30%, transparent), transparent);
+  box-shadow: inset 0 0 0 1.5px var(--mp-frame);
+}
+.mp-num { display: grid; place-items: center; margin-top: 4px; font-size: 13px; color: color-mix(in srgb, var(--mp-ink) 75%, transparent); font-variant-numeric: tabular-nums; }
+.mp-num span { min-width: 34px; padding: 1px 10px; border-radius: 99px; text-align: center; box-shadow: inset 0 0 0 1px var(--mp-frame); }
