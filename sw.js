@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline,
 // and shows the reminders that push/cron.php sends.
 
-const VERSION = 'v12'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v13'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const MUSHAF_CACHE = 'mushaf-fonts-v1'; // not named adhkar-…, so updates keep it
 const FILES = [
@@ -110,7 +110,7 @@ self.addEventListener('fetch', (event) => {
         const saved = await cache.match(request);
         if (saved) return saved;
         const res = await fetch(request);
-        if (res.ok) cache.put(request, res.clone());
+        if (res.ok) event.waitUntil(cache.put(request, res.clone()));
         return res;
       })()
     );

@@ -639,7 +639,8 @@ function widgetPreview(id, theme) {
       const mins = Math.round(next.hours * 60) % 1440;
       const hh = s.clock24 ? Math.floor(mins / 60) : Math.floor(mins / 60) % 12 || 12;
       const c = `${String(hh).padStart(2, '0')}${String(mins % 60).padStart(2, '0')}`;
-      const short = AYAT_SHORT[info.day.d % AYAT_SHORT.length];
+      // The same ayah as the widget: chosen by the day's number.
+      const short = AYAT_SHORT[Math.floor(Date.UTC(info.day.y, info.day.m - 1, info.day.d) / 86400000) % AYAT_SHORT.length];
       return wrap('m', `<div class="wgp-ta">
         <div class="wgp-ta-r"><b class="ayah">${esc(short[0])}</b><span class="pill2"><em>${weekday(info.day)}</em><b>${num(info.day.d)}</b></span><small>${hijriNum}</small></div>
         <div class="wgp-ta-l"><b class="digits">${num(c.slice(0, 2))}<span>${num(c.slice(2))}</span></b><span>${esc(next.name)}</span></div></div>`);

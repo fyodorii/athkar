@@ -124,8 +124,10 @@ export function renderHifz(view) {
 
   draw();
 
-  const setDay = (d) => {
+  // `jump`: a new starting point (the furthest day becomes this one); the arrows only browse.
+  const setDay = (d, jump = false) => {
     h.day = Math.max(1, Math.min(HIFZ_DAYS, d));
+    h.max = jump ? h.day : Math.max(h.max || 1, h.day);
     h.on = true;
     save();
     draw();
@@ -133,10 +135,10 @@ export function renderHifz(view) {
 
   view.onclick = async (e) => {
     const b = e.target.closest('[data-begin]');
-    if (b) return setDay(Number(b.dataset.begin));
+    if (b) return setDay(Number(b.dataset.begin), true);
     const step = e.target.closest('[data-day-step]');
     if (step) return setDay(h.day + Number(step.dataset.dayStep));
-    if (e.target.closest('[data-pick-day]')) return pickDay(setDay);
+    if (e.target.closest('[data-pick-day]')) return pickDay((d) => setDay(d, true));
     const task = e.target.closest('[data-task]');
     if (task) {
       const before = partDone(h.day);
@@ -185,11 +187,11 @@ function pickDay(onPick) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         const face = Number(form.face.value);
-        // After face F, the next day memorizes F+1: day ⌈(F+1)/2⌉ while two faces a day.
+        // After face F, start on the day that memorizes face F+1.
         let day = Number(form.day.value) || 1;
         if (face > 0) {
           day = 1;
-          while (day < HIFZ_DAYS && (hifzDay(day).from ?? PAGES + 1) <= face) day++;
+          while (day < HIFZ_DAYS && (hifzDay(day).to ?? PAGES + 1) <= face) day++;
         }
         close();
         onPick(day);

@@ -10,7 +10,7 @@ import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
 import { todayPortion } from '../khatma.js';
-import { dayTasks, hifzDay, HIFZ_DAYS, isChecked, partDone } from '../hifz.js';
+import { advanceIfDone, dayTasks, hifzDay, HIFZ_DAYS, isChecked, partDone } from '../hifz.js';
 import { PAGES } from '../quran-data.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
 import { cyclePrayer, dayScore, prayerIcon, prayerStreak } from './worship.js';
@@ -330,7 +330,9 @@ function currentText(info) {
     if (info.forbidden?.key === 'zawal') return `<span>${icon('sun', 15)} انتهى وقت الضحى، والظهر ${clockText(t.dhuhr.hours, h24)}</span>`;
     return `<span>${icon('sun', 15)} وقت الضحى — ${now < t.duha.at ? `يبدأ ${clockText(t.duha.hours, h24)}` : 'صلِّ ركعتي الضحى'}</span>`;
   }
-  return `<span>${icon('stars', 15)} ${now >= t.lastThird.at - 86400000 || now >= t.lastThird.at ? 'الثلث الأخير من الليل — وقت نزول واستجابة' : 'بعد منتصف الليل'}</span>`;
+  // Before Fajr the night is last night's, whose last third began 24 hours before tonight's.
+  const third = now < t.fajr.at ? t.lastThird.at - 86400000 : t.lastThird.at;
+  return `<span>${icon('stars', 15)} ${now >= third ? 'الثلث الأخير من الليل — وقت نزول واستجابة' : 'بعد منتصف الليل'}</span>`;
 }
 
 function khatmaCard(info) {
@@ -352,6 +354,7 @@ function khatmaCard(info) {
 function hifzCard() {
   const h = state.hifz;
   if (!h.on) return '';
+  if (advanceIfDone(today().key)) save();
   const e = hifzDay(h.day);
   const tasks = dayTasks(h.day);
   const done = tasks.filter((x) => isChecked(h.day, x.id)).length;
@@ -419,7 +422,9 @@ function afterNext(info) {
   const all = [...FARD.map((k) => info.times[k]), ...FARD.map((k) => info.tomorrow[k])];
   const p = all.find((x) => x.at > info.next.at);
   if (!p) return '';
-  return `<span>ثم <b>${p.key === 'dhuhr' && info.isFriday && p.at === info.times.dhuhr.at ? 'الجمعة' : esc(p.name)}</b></span><span>${clockText(p.hours, state.settings.clock24)}</span>`;
+  // Dhuhr is «الجمعة» on Friday: today's on a Friday, tomorrow's on a Thursday.
+  const friday = p.at === info.tomorrow.dhuhr.at ? info.weekday === 4 : info.isFriday;
+  return `<span>ثم <b>${p.key === 'dhuhr' && friday ? 'الجمعة' : esc(p.name)}</b></span><span>${clockText(p.hours, state.settings.clock24)}</span>`;
 }
 
 // A small analog clock; its hands turn in tick().
@@ -483,7 +488,7 @@ function occasionCard() {
   if (!o) return '';
   return `<a class="card occ-mini" href="#/occasions">
     <span class="km-icon">${icon(o.icon, 24)}</span>
-    <span class="km-text"><small>${o.left < 0 ? 'المناسبة الحالية' : 'المناسبة القادمة'}</small><b>${esc(o.name)}</b><small>${rangeText(o.start, o.end)}</small></span>
+    <span class="km-text"><small>${o.left <= 0 ? 'المناسبة الحالية' : 'المناسبة القادمة'}</small><b>${esc(o.name)}</b><small>${rangeText(o.start, o.end)}</small></span>
     <span class="pill">${o.left < 0 ? 'الآن' : daysText(o.left)}</span></a>`;
 }
 

@@ -33,7 +33,7 @@
         // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
         // when the app is added to the home screen.
         var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;
-        if (/^[a-z]+$/.test(ic || '') && ic !== 'emerald') document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png';
+        if (['night', 'violet', 'sky', 'parchment', 'black', 'burgundy', 'gold'].indexOf(ic) >= 0) document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png';
       } catch (e) {}
     </script>
   </head>

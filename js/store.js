@@ -86,10 +86,14 @@ export const DEFAULTS = {
   worshipCustom: [],
   diary: {},
   hifz: { on: false, day: 1, checks: {} },
+  migrated: {}, // one-time data changes done
   surahs: {}, // kahf | mulk | baqarah → { ayah: where reading stopped, done: day finished }
   tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };
+
+// A copy of the defaults, so the state never shares objects with DEFAULTS.
+const fresh = () => JSON.parse(JSON.stringify(DEFAULTS));
 
 function merge(base, value) {
   if (Array.isArray(base)) return Array.isArray(value) ? value : base;
@@ -106,9 +110,9 @@ function merge(base, value) {
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    return merge(DEFAULTS, raw ? JSON.parse(raw) : {});
+    return merge(fresh(), raw ? JSON.parse(raw) : {});
   } catch (e) {
-    return merge(DEFAULTS, {});
+    return merge(fresh(), {});
   }
 }
 
@@ -125,6 +129,17 @@ const SEED = [
     ref: 'رواه البخاري',
   },
 ];
+// Istighfar was a «مائة مرة» checkbox (1) and is now a count: a ticked past day counts as 100.
+if (!state.migrated.istighfar) {
+  for (const day of Object.values(state.worship)) if (day && day.istighfar === 1) day.istighfar = 100;
+  state.migrated.istighfar = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
 if (state.seeded < SEED_VERSION) {
   const have = new Set(state.custom.map((c) => c.text));
   const now = Date.now();
@@ -194,7 +209,7 @@ export function exportData() {
 export function importData(text) {
   const data = JSON.parse(text);
   if (!data || data.app !== 'adhkar') throw new Error('ليس ملف نسخة احتياطية من التطبيق');
-  const merged = merge(DEFAULTS, data);
+  const merged = merge(fresh(), data);
   for (const k of Object.keys(DEFAULTS)) state[k] = merged[k];
   state.sync = { hash: '', at: 0 };
   save();

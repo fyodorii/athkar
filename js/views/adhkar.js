@@ -596,6 +596,8 @@ export function renderTasbeeh(view, mineId) {
   view.addEventListener('gestureend', onGestureEnd);
   document.addEventListener('keydown', onKey);
   return {
+    // After midnight the counts belong to a new day: draw the screen again for it.
+    tick: () => (today().key !== dayNow ? 'rerender' : undefined),
     destroy() {
       view.removeEventListener('click', guardClick, true);
       view.removeEventListener('click', onClick);
@@ -675,6 +677,7 @@ function choosePhrase(redraw) {
           const i = Number(del.dataset.del);
           if (!(await confirmSheet(`حذف «${short(list[i])}» من السبحة نهائياً؟`, { ok: 'حذف نهائي' }))) return;
           const [gone] = list.splice(i, 1);
+          editing = -1;
           if (gone === t.phrase) {
             t.phrase = list[0] || 'سبحان الله';
             t.count = 0;
@@ -690,15 +693,17 @@ function choosePhrase(redraw) {
         const text = form.text.value.trim();
         if (!text) return;
         const i = Number(form.dataset.save);
-        if (i < list.length) {
+        const isEdit = i < list.length;
+        if (!isEdit && list.includes(text)) return toast('هذا الذكر في السبحة من قبل');
+        if (isEdit) {
           if (list[i] === t.phrase) t.phrase = text;
           list[i] = text;
-        } else if (!list.includes(text)) list.push(text);
+        } else list.push(text);
         editing = -1;
         save();
         redraw();
         draw();
-        toast(`${icon('check', 18)} ${i < list.length ? 'حُفظ التعديل' : 'أُضيف إلى السبحة'}`);
+        toast(`${icon('check', 18)} ${isEdit ? 'حُفظ التعديل' : 'أُضيف إلى السبحة'}`);
       });
     },
     { title: 'أذكار السبحة' }

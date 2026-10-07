@@ -3,7 +3,7 @@
 // faces five times), «الربط» (the recent faces read once, 50 to 60 of them) and, from day 33,
 // «المراجعة» (the older faces in slices, finished every six days). It follows the user's
 // plan (plan.html) day by day.
-// state.hifz = { on, day: plan day 1–320, checks: { 'd<day>-<task>': 'YYYY-MM-DD' } }
+// state.hifz = { on, day: plan day 1–320, max: furthest day reached, checks: { 'd<day>-<task>': 'YYYY-MM-DD' } }
 
 import { PAGES, SURAHS } from './quran-data.js';
 import { state } from './store.js';
@@ -80,20 +80,26 @@ export function facesDone() {
 // Ticks a task (dated today) and marks «ورد الحفظ» / «ورد المراجعة» in the worship tracker.
 export function toggleTask(d, id, todayKey) {
   const key = taskKey(d, id);
+  const was = { hifz: partDone(d, 'new'), review: partDone(d, 'review') };
   if (h().checks[key]) delete h().checks[key];
   else h().checks[key] = todayKey;
   const r = (state.worship[todayKey] ??= {});
-  if (partDone(d, 'new')) r.hifz = 1;
-  if (dayTasks(d).some((x) => x.part === 'review') && partDone(d, 'review')) r.review = 1;
+  // Set when the part is finished; cleared only if this plan had set it (unticking a task).
+  for (const part of ['hifz', 'review']) {
+    const now = partDone(d, part === 'hifz' ? 'new' : 'review');
+    if (now) r[part] = 1;
+    else if (was[part]) r[part] = 0;
+  }
 }
 
 // A finished plan day moves on by itself once a new calendar day starts.
+// Only from the furthest day reached: going back to look at an earlier day stays there.
 export function advanceIfDone(todayKey) {
   const d = h().day;
-  if (d >= HIFZ_DAYS || !partDone(d)) return false;
+  if (d >= HIFZ_DAYS || d < (h().max || d) || !partDone(d)) return false;
   const last = dayTasks(d).map((x) => h().checks[taskKey(d, x.id)]).sort().pop();
   if (last >= todayKey) return false;
-  h().day = d + 1;
+  h().day = h().max = d + 1;
   return true;
 }
 

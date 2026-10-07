@@ -233,7 +233,7 @@ function occasionSheet(e) {
   openSheet(
     `<div class="occ-sheet">
        <span class="occ-ic">${icon(e.icon, 30)}</span>
-       <p class="occ-when"><b>${num(e.hijri.day)} ${HIJRI_MONTHS[e.hijri.month - 1]} ${num(e.hijri.year)} هـ</b><span>${rangeText(e.start, e.end)} • ${n < 0 ? 'جارية الآن' : daysText(n)}</span></p>
+       <p class="occ-when"><b>${num(e.hijri.day)} ${HIJRI_MONTHS[e.hijri.month - 1]} ${num(e.hijri.year)} هـ</b><span>${rangeText(e.start, e.end)} • ${daysBetween(t.day, e.end) < 0 ? 'انتهت' : n < 0 ? 'جارية الآن' : daysText(n)}</span></p>
        <p class="occ-text">${esc(e.text)}</p>
        ${e.ref ? `<small class="muted">${esc(e.ref)}</small>` : ''}
        <a class="btn ghost wide" href="#/calendar/${dayKey(e.start)}" data-close>${icon('calendar', 18)} عرضها في التقويم</a>

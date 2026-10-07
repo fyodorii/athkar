@@ -36,9 +36,12 @@ export function renderSurah(view, id) {
   const mark = (state.surahs[id] ??= { ayah: 0, done: '', page: 0 });
   let cleanup = null;
   let alive = true;
+  let drawn = 0; // which draw() a pending import belongs to
 
   const draw = () => {
     cleanup?.();
+    const gen = ++drawn;
+    const live = () => alive && gen === drawn;
     const pages = (state.settings.mushafMode || 'pages') === 'pages';
     const ink = state.settings.mushafInk || 'blue';
     view.innerHTML = `
@@ -53,7 +56,7 @@ export function renderSurah(view, id) {
       })}
       <div data-body><p class="center muted">جارٍ التحميل…</p></div>
       <button class="btn primary wide" data-done>${icon('check', 20)} ${mark.done === today().key ? 'قرأتها اليوم' : 'أتممت قراءتها'}</button>`;
-    cleanup = pages ? mushafPages(view, id, mark, () => alive) : continuous(view, id, mark, () => alive);
+    cleanup = pages ? mushafPages(view, id, mark, live) : continuous(view, id, mark, live);
   };
   draw();
 
@@ -179,7 +182,7 @@ function mushafPages(view, id, mark, alive) {
           // A few lines are denser than the rest: shrink just those to fit the page's width.
           requestAnimationFrame(() => {
             for (const l of el.querySelectorAll('.mp-l')) {
-              if (l.scrollWidth > l.clientWidth + 1) l.style.fontSize = `${(parseFloat(getComputedStyle(l).fontSize) * l.clientWidth) / l.scrollWidth - 0.2}px`;
+              if (l.scrollWidth > l.clientWidth + 1) l.style.fontSize = `${(parseFloat(window.getComputedStyle(l).fontSize) * l.clientWidth) / l.scrollWidth - 0.2}px`;
             }
           });
         })

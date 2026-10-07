@@ -120,6 +120,8 @@ const WUDU_KEY = 'adhkar-app-wudu';
 let wudu = { on: false, at: 0 };
 try { if (Keychain.contains(WUDU_KEY)) wudu = JSON.parse(Keychain.get(WUDU_KEY)); } catch (e) {}
 const query = args.queryParameters || {};
+// The link that runs this script again with ?wudu=1 (whether or not the URL already has a query).
+const wuduUrl = () => { const u = URLScheme.forRunningScript(); return u + (u.includes('?') ? '&' : '?') + 'wudu=1'; };
 if (query.wudu) {
   wudu = { on: !wudu.on, at: Date.now() };
   Keychain.set(WUDU_KEY, JSON.stringify(wudu));
@@ -338,7 +340,7 @@ if (family === 'accessoryInline') {
   } else if (style === 'wudu') {
     const r = middle(s);
     symbol(r, wudu.on ? 'drop.fill' : 'drop', 22, WHITE);
-    w.url = URLScheme.forRunningScript() + '?wudu=1';
+    w.url = wuduUrl();
   } else {
     text(s, next.name, Font.boldSystemFont(12), WHITE, 'center');
     text(s, clock(next.hours).replace(/ [صم]$/, ''), Font.boldRoundedSystemFont(14), WHITE, 'center');
@@ -357,7 +359,7 @@ if (family === 'accessoryInline') {
     line(w, sn.title, Font.boldSystemFont(15), WHITE);
     line(w, sn.sub, Font.systemFont(11), WHITE, 2);
   } else if (style === 'wudu') {
-    w.url = URLScheme.forRunningScript() + '?wudu=1';
+    w.url = wuduUrl();
     line(w, wudu.on ? 'على وضوء' : 'لست على وضوء', Font.boldSystemFont(15), WHITE);
     line(w, wudu.at ? 'منذ ' + clock(LOCAL(wudu.at).hours) : 'اضغط للتسجيل', Font.systemFont(12), WHITE);
   } else {
@@ -599,7 +601,7 @@ if (family === 'accessoryInline') {
 } else if (style === 'wudu') {
   // «متابعة الوضوء»: tap to record wudu (or that it is broken).
   background();
-  w.url = URLScheme.forRunningScript() + '?wudu=1' + (themeWord ? '&theme=' + encodeURIComponent(themeWord) : '');
+  w.url = wuduUrl() + (themeWord ? '&theme=' + encodeURIComponent(themeWord) : '');
   const since = wudu.at ? LOCAL(wudu.at) : null;
   const sinceText = since ? WEEKDAYS[since.wd] + ' ' + clock(since.hours) : 'اضغط لتسجيل وضوئك';
   const body = (stack) => {

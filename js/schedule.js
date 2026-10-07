@@ -139,8 +139,11 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
     if (n.fasting && (weekday === 0 || weekday === 3)) {
       add(atClock(day, n.fastingTime || '21:00', t), `غداً ${weekday === 0 ? 'الاثنين' : 'الخميس'}`, 'تذكير بصيام التطوع، وتُعرض الأعمال فيه على الله', '#/home', 'fasting');
     }
-    if (n.whiteDays && hijri(day, s.hijriAdjust).day === 12) {
-      add(atClock(day, n.whiteDaysTime || '21:00', t), 'الأيام البيض', `تبدأ غداً صيام الأيام البيض: ${num(13)} و${num(14)} و${num(15)} من الشهر`, '#/home', 'white-days');
+    const hd = hijri(day, s.hijriAdjust);
+    // In Dhu al-Hijjah the 13th is a day of Tashreeq (no fasting): only the 14th and 15th.
+    if (n.whiteDays && hd.day === (hd.month === 12 ? 13 : 12)) {
+      const white = hd.month === 12 ? `${num(14)} و${num(15)} (والثالث عشر من أيام التشريق لا يُصام)` : `${num(13)} و${num(14)} و${num(15)} من الشهر`;
+      add(atClock(day, n.whiteDaysTime || '21:00', t), 'الأيام البيض', `تبدأ غداً صيام الأيام البيض: ${white}`, '#/home', 'white-days');
     }
     if (n.occasions) {
       // The evening before an occasion begins.
@@ -148,7 +151,11 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
       for (const o of OCCASIONS) {
         if (h.month !== o.month || h.day !== o.from) continue;
         const one = o.from === o.to;
-        add(atClock(day, n.occasionsTime || '21:00', t), `${one ? 'غداً' : 'تبدأ غداً'}: ${o.name}`, o.text.replace(/\s+—.*$/, ''), '#/occasions', `occasion-${o.id}`);
+        // Ramadan and its last ten begin with tonight's prayer (Taraweeh, the night of the 21st):
+        // an hour before Maghrib, not at night.
+        if (o.id === 'ramadan' || o.id === 'lastTen') {
+          add(t.maghrib.at - 3600000, `${o.id === 'ramadan' ? 'يبدأ الليلة' : 'تبدأ الليلة'}: ${o.name}`, o.text.replace(/\s+—.*$/, ''), '#/occasions', `occasion-${o.id}`);
+        } else add(atClock(day, n.occasionsTime || '21:00', t), `${one ? 'غداً' : 'تبدأ غداً'}: ${o.name}`, o.text.replace(/\s+—.*$/, ''), '#/occasions', `occasion-${o.id}`);
       }
     }
     if (n.salawat) {
