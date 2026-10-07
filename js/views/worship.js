@@ -12,7 +12,8 @@ import { $, confirmSheet, esc, haptic, openSheet, pageHeader, ring, toast } from
 const FARD = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const FARD_NAMES = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
 
-// type: prayer (0 none / 1 prayed / 2 in congregation), check, or count (with a daily goal).
+// type: prayer (0 none / 1 prayed / 2 in congregation), check, or count (with a daily goal, or an
+// open count with goal 0 that is done from the first one).
 const GROUPS = [
   { title: 'الصلوات المفروضة', icon: 'mosque', items: FARD.map((id) => ({ id, name: FARD_NAMES[id], type: 'prayer' })) },
   {
@@ -44,7 +45,7 @@ const GROUPS = [
       { id: 'morning', name: 'أذكار الصباح', type: 'check', auto: 'morning' },
       { id: 'evening', name: 'أذكار المساء', type: 'check', auto: 'evening' },
       { id: 'sleep', name: 'أذكار النوم', type: 'check', auto: 'sleep' },
-      { id: 'istighfar', name: 'الاستغفار مائة مرة', type: 'check' },
+      { id: 'istighfar', name: 'الاستغفار', type: 'count', goal: 0, step: 1, unit: 'مرة', open: true },
     ],
   },
   {
@@ -88,7 +89,7 @@ const value = (item, key) => {
 
 const isDone = (item, key) => {
   const v = value(item, key);
-  return item.type === 'count' ? v >= goalOf(item) : v > 0;
+  return item.type === 'count' && goalOf(item) ? v >= goalOf(item) : v > 0;
 };
 
 function allItems() {
@@ -201,6 +202,11 @@ export function render(view) {
         <span class="row-label">${esc(x.name)}<small>${PRAYER_STATE[v]}</small></span>
         <span class="tick-box p${v}">${prayerIcon(v)}</span></button>`;
     }
+    if (x.open) {
+      return `<div class="track-row">
+        <span class="row-label">${esc(x.name)}<small>عدد مفتوح — ${timesText(v)} • <a href="#" data-enter="${x.id}">إدخال العدد</a></small></span>
+        <div class="stepper ${done ? 'done' : ''}" data-count="${x.id}" data-step="${x.step}"><button data-d="-1">−</button><b data-enter="${x.id}">${num(v)}</b><button data-d="1">+</button></div></div>`;
+    }
     if (x.type === 'count') {
       const goal = goalOf(x);
       return `<div class="track-row">
@@ -251,10 +257,16 @@ export function render(view) {
       const box = s.closest('[data-count]');
       const r = record(selected);
       const id = box.dataset.count;
-      r[id] = Math.max(0, Math.min(999, (r[id] || 0) + Number(s.dataset.d) * Number(box.dataset.step)));
+      const max = allItems().find((x) => x.id === id)?.open ? OPEN_MAX : 999;
+      r[id] = Math.max(0, Math.min(max, (r[id] || 0) + Number(s.dataset.d) * Number(box.dataset.step)));
       save();
       haptic();
       return draw();
+    }
+    const en = e.target.closest('[data-enter]');
+    if (en) {
+      e.preventDefault();
+      return enterCount(selected, en.dataset.enter, draw);
     }
     if (e.target.closest('[data-goal]')) {
       e.preventDefault();
@@ -280,6 +292,37 @@ export function render(view) {
       view.onclick = view.oninput = null;
     },
   };
+}
+
+const OPEN_MAX = 1000000;
+const timesText = (v) => (v === 0 ? 'لم تبدأ' : v === 1 ? 'مرة واحدة' : v === 2 ? 'مرتان' : v <= 10 ? `${num(v)} مرات` : `${num(v)} مرة`);
+
+// Types the day's count of an open-count item (istighfar), or adds to it in big steps.
+function enterCount(key, id, redraw) {
+  const r = record(key);
+  const adds = [10, 33, 100, 1000];
+  openSheet(
+    `<form class="form">
+       <label class="field"><span>العدد</span><input name="n" type="number" inputmode="numeric" min="0" max="${OPEN_MAX}" value="${r[id] || 0}"></label>
+       <div class="chips centered">${adds.map((n) => `<button type="button" class="chip-opt" data-add="${n}">+${num(n)}</button>`).join('')}</div>
+       <div class="sheet-actions"><button class="btn primary" type="submit">حفظ</button><button class="btn ghost" type="button" data-close>إلغاء</button></div>
+     </form>`,
+    (el, close) => {
+      const form = el.querySelector('form');
+      form.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-add]');
+        if (b) form.n.value = (Number(form.n.value) || 0) + Number(b.dataset.add);
+      });
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        r[id] = Math.max(0, Math.min(OPEN_MAX, Math.round(Number(form.n.value) || 0)));
+        save();
+        close();
+        redraw();
+      });
+    },
+    { title: 'الاستغفار — عدد مفتوح' }
+  );
 }
 
 function quranGoal(redraw) {

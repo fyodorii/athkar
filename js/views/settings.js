@@ -52,6 +52,7 @@ export function render(view) {
         <div class="seg-mini" data-font-ui>
           ${Object.entries(FONT_NAMES).map(([v, l]) => `<button class="${s.fontUi === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v].replaceAll('"', "'")}">${l}</button>`).join('')}
         </div></div>
+      <div class="row"><span class="row-icon">${icon('palette', 20)}</span><span class="row-label">خط عريض للواجهة</span>${toggle('uiBold', s.uiBold)}</div>
       <p class="hint">آيات القرآن تبقى بخط مصحف المدينة.</p>
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
       <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">الأرقام العربية (١٢٣)</span>${toggle('digits', s.digits === 'arab')}</div>
@@ -80,6 +81,7 @@ export function render(view) {
     if (t.name === 'digits') s.digits = t.checked ? 'arab' : 'latn';
     if (t.name === 'haptics') s.haptics = t.checked;
     if (t.name === 'textBold') s.textBold = t.checked;
+    if (t.name === 'uiBold') s.uiBold = t.checked;
     if (t.matches('[data-scale]')) s.textScale = Number(t.value);
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {

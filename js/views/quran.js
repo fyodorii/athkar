@@ -12,11 +12,13 @@ import { isSaved, save, state, toggleSaved, uid } from '../store.js';
 import { today } from '../today.js';
 import { $, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
 
-const TABS = [
+export const QURAN_TABS = [
   ['#/quran', 'الختمة'],
-  ['#/ruqyah', 'الرقية الشرعية'],
+  ['#/hifz', 'الحفظ'],
+  ['#/ruqyah', 'الرقية'],
   ['#/radio', 'الإذاعة'],
 ];
+const TABS = QURAN_TABS;
 
 const dayLabel = (d) => `${WEEKDAYS[new Date(Date.UTC(d.y, d.m - 1, d.d)).getUTCDay()]} ${num(d.d)} ${GREG_MONTHS[d.m - 1]}`;
 const pagesWord = (n) => (n === 1 ? 'صفحة' : n === 2 ? 'صفحتان' : n <= 10 ? 'صفحات' : 'صفحة');
@@ -30,7 +32,7 @@ export function renderKhatma(view) {
     const t = today();
     const started = !!k.start;
     view.innerHTML = `
-      ${pageHeader('القرآن الكريم', { sub: 'ختمتك، والرقية، والإذاعة' })}
+      ${pageHeader('القرآن الكريم', { sub: 'ختمتك، وحفظك، والرقية، والإذاعة' })}
       ${segmented(TABS, '#/quran')}
       ${started ? khatmaBody(t) : khatmaStart()}`;
   };
@@ -332,25 +334,31 @@ function duaCard(d) {
 
 // ---- Radio ----
 
+// The two live Saudi stations share the big player; a switch picks which one it shows.
+const LIVE = ['saudi', 'nidaa'];
+
 export function renderRadio(view) {
+  let hero = LIVE.includes(state.radio.station) ? state.radio.station : 'saudi';
   const draw = () => {
     const { status, station } = radioStatus();
-    const sel = state.radio.station;
-    const main = stationById('saudi');
+    if (LIVE.includes(station?.id)) hero = station.id;
+    const main = stationById(hero);
     const live = station && (status === 'playing' || status === 'loading');
+    const heroOn = station?.id === hero;
     view.innerHTML = `
-      ${pageHeader('القرآن الكريم', { sub: 'إذاعة القرآن الكريم والبث المباشر' })}
+      ${pageHeader('القرآن الكريم', { sub: 'إذاعة القرآن الكريم ونداء الإسلام والبث المباشر' })}
       ${segmented(TABS, '#/radio')}
-      <section class="radio-hero ${station?.id === 'saudi' && live ? 'live' : ''}">
+      <section class="radio-hero ${heroOn && live ? 'live' : ''}">
+        <div class="radio-switch">${LIVE.map((id) => `<button class="${id === hero ? 'on' : ''}" data-hero="${id}">${esc(stationById(id).name.replace('إذاعة ', ''))}</button>`).join('')}</div>
         <div class="radio-art">${icon('radio', 46)}<span class="wave"><i></i><i></i><i></i><i></i></span></div>
         <b>${esc(main.name)}</b>
         <span>${esc(main.sub)}</span>
-        <button class="radio-play" data-play="saudi" aria-label="تشغيل">${icon(station?.id === 'saudi' && live ? 'pause' : 'play', 34)}</button>
-        <small class="radio-status">${statusText(station?.id === 'saudi' ? status : 'stopped')}</small>
+        <button class="radio-play" data-play="${hero}" aria-label="تشغيل">${icon(heroOn && live ? 'pause' : 'play', 34)}</button>
+        <small class="radio-status">${statusText(heroOn ? status : 'stopped')}</small>
       </section>
       <div class="group list">
         <h4>محطات أخرى</h4>
-        ${STATIONS.slice(1)
+        ${STATIONS.filter((s) => !LIVE.includes(s.id))
           .map((s) => {
             const on = station?.id === s.id;
             return `<button class="row station ${on ? 'on' : ''}" data-play="${s.id}">
@@ -364,12 +372,19 @@ export function renderRadio(view) {
       </div>
       ${station ? `<button class="btn ghost wide" data-stop>${icon('close', 18)} إيقاف البث</button>` : ''}
       <p class="hint center">يستمر البث وأنت تتنقل في التطبيق، وتظهر أزرار التحكم في شاشة القفل. يحتاج اتصالاً بالإنترنت.</p>`;
-    void sel;
   };
   draw();
   const off = onRadio(draw);
 
   view.onclick = (e) => {
+    const h = e.target.closest('[data-hero]');
+    if (h) {
+      const { status, station } = radioStatus();
+      // Switching while one live station plays moves the playback to the other.
+      if (LIVE.includes(station?.id) && station.id !== h.dataset.hero && (status === 'playing' || status === 'loading')) return play(h.dataset.hero);
+      hero = h.dataset.hero;
+      return draw();
+    }
     const p = e.target.closest('[data-play]');
     if (p) {
       const { status, station } = radioStatus();

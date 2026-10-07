@@ -190,16 +190,9 @@ export function renderMine(view, focusId) {
     if (!card) return;
     const item = state.custom.find((c) => c.id === card.dataset.id);
     if (e.target.closest('[data-more]')) return customMenu(item, draw);
-    newDay(today().key);
-    item.today = (item.today || 0) + 1;
-    item.total = (item.total || 0) + 1;
-    save();
+    // Counting happens on the full-screen counter, so scrolling the list never adds a count.
     haptic();
-    card.outerHTML = mineCard(item);
-    if (item.today === item.target) {
-      haptic(30);
-      toast(`${icon('check', 18)} أتممت وردك اليومي من هذا الذكر`);
-    }
+    location.hash = `#/tasbeeh/${item.id}`;
   };
   view.addEventListener('click', onClick);
   return { destroy: () => view.removeEventListener('click', onClick) };
@@ -216,9 +209,10 @@ function mineCard(c) {
         <span class="pill soft">المجموع ${num(c.total || 0)}</span>
       </div>
     </div>
-    <div class="mine-count">
+    <div class="mine-count" role="button" aria-label="عُدّ هذا الذكر">
       ${ring(c.target ? Math.min(1, (c.today || 0) / c.target) : 0, 64, 5)}
       <span><b>${num(c.today || 0)}</b>${c.target ? `<small>/${num(c.target)}</small>` : ''}</span>
+      <em>${done ? 'تمّ' : 'عُدّ'}</em>
     </div>
     <button class="icon-btn ghost sm more" data-more aria-label="خيارات">${icon('more', 20)}</button>
   </article>`;
@@ -376,7 +370,29 @@ const T_TARGETS = [33, 99, 100, 1000, 0];
 const FONT_MIN = 22;
 const FONT_MAX = 110;
 
-export function renderTasbeeh(view) {
+// Backgrounds and dhikr colours for the tasbeeh screen; `light` backgrounds get dark controls.
+const T_BGS = [
+  { id: 'emerald', name: 'زمردي', css: '' },
+  { id: 'black', name: 'أسود', css: '#000' },
+  { id: 'night', name: 'كحلي', css: 'linear-gradient(170deg, #1d2b4f 0%, #0d1730 55%, #060b1a 100%)' },
+  { id: 'plum', name: 'بنفسجي', css: 'linear-gradient(170deg, #4a2a6b 0%, #2a1442 55%, #150823 100%)' },
+  { id: 'maroon', name: 'عنابي', css: 'linear-gradient(170deg, #6b2232 0%, #3d0f1b 55%, #1f060c 100%)' },
+  { id: 'brown', name: 'بني', css: 'linear-gradient(170deg, #5b4127 0%, #362414 55%, #1b1209 100%)' },
+  { id: 'gray', name: 'رمادي', css: 'linear-gradient(170deg, #3a3f45 0%, #202428 55%, #0f1113 100%)' },
+  { id: 'sand', name: 'رملي', css: 'linear-gradient(170deg, #f7efdc 0%, #ecdcb7 100%)', light: true },
+  { id: 'white', name: 'أبيض', css: '#fbfaf6', light: true },
+];
+const T_INKS = ['#ffffff', '#e3c27a', '#a7f3d0', '#bae6fd', '#fbcfe8', '#fde68a', '#0f5c4d', '#7a4b12', '#1e293b', '#000000'];
+const DIM_STEPS = [0, 30, 50, 70];
+const DIM_MAX = 85;
+const tsbBg = (t) => T_BGS.find((b) => b.id === t.bg) || T_BGS[0];
+
+// Istighfar has no fixed number: it is counted openly, and each one also goes to «عباداتي».
+export const isIstighfar = (text) => /[أا]ستغفر/.test(text || '');
+
+// With an id, the screen counts one of «أذكاري» towards its daily number instead of the
+// tasbeeh's own dhikr; the look (colours, sizes, dimming) is shared.
+export function renderTasbeeh(view, mineId) {
   const t = state.tasbeeh;
   const dayNow = today().key;
   if (t.day !== dayNow) {
@@ -385,49 +401,114 @@ export function renderTasbeeh(view) {
     save();
   }
   t.fontSize ||= 40;
+  t.counterSize ||= 1;
+  t.dim ||= 0;
   tasbeehList();
-  const frac = () => (t.target ? (t.count % t.target || (t.count ? t.target : 0)) / t.target : 0);
-  const roundText = () => (t.target ? `الدورة ${num(Math.ceil(t.count / t.target) || 1)} • الهدف ${num(t.target)}` : 'عدّ مفتوح بلا حد');
+  newDay(dayNow);
+  const mine = mineId ? state.custom.find((c) => c.id === mineId) : null;
+  if (mineId && !mine) {
+    location.replace('#/mine');
+    return null;
+  }
+  const box = mine || t; // whose text size is shown and changed (each dhikr of «أذكاري» keeps its own)
+  // What is counted: the tasbeeh's dhikr (in rounds of its target) or a dhikr of «أذكاري».
+  const src = mine
+    ? {
+        phrase: () => mine.text,
+        count: () => mine.today || 0,
+        target: () => mine.target || 0,
+        today: () => mine.today || 0,
+        total: () => mine.total || 0,
+        add() {
+          mine.today = (mine.today || 0) + 1;
+          mine.total = (mine.total || 0) + 1;
+        },
+        reset: () => (mine.today = 0),
+      }
+    : {
+        phrase: () => t.phrase,
+        count: () => t.count,
+        target: () => t.target,
+        today: () => t.today || 0,
+        total: () => t.total,
+        add() {
+          t.count += 1;
+          t.total += 1;
+          t.today = (t.today || 0) + 1;
+        },
+        reset: () => (t.count = 0),
+      };
+  const frac = () => {
+    const [c, n] = [src.count(), src.target()];
+    if (!n) return 0;
+    return mine ? Math.min(1, c / n) : (c % n || (c ? n : 0)) / n;
+  };
+  const roundText = () => {
+    const [c, n] = [src.count(), src.target()];
+    if (!n) return 'عدّ مفتوح بلا حد';
+    if (mine) return c >= n ? `أتممت وردك اليومي (${num(n)})` : `الهدف اليومي ${num(n)}`;
+    return `الدورة ${num(Math.ceil(c / n) || 1)} • الهدف ${num(n)}`;
+  };
 
   const draw = () => {
+    const bg = tsbBg(t);
+    const style = [bg.css && `background:${bg.css}`, t.ink && `--tsb-ink:${t.ink}`, `--tsb-scale:${t.counterSize}`].filter(Boolean).join(';');
     view.innerHTML = `
-      <section class="tsb" data-area>
+      <section class="tsb ${bg.light ? 'light' : ''}" data-area style="${style}">
         <header class="tsb-top" data-ui>
-          <a class="icon-btn glass" href="#/home" aria-label="خروج">${icon('back', 22)}</a>
+          <a class="icon-btn glass" href="${mine ? `#/mine/${mine.id}` : '#/home'}" aria-label="خروج">${icon('back', 22)}</a>
           <div class="tsb-tools">
             <button class="icon-btn glass" data-font="-6" aria-label="تصغير الذكر">${icon('minus', 20)}</button>
             <button class="icon-btn glass" data-font="6" aria-label="تكبير الذكر">${icon('plus', 20)}</button>
-            <button class="icon-btn glass" data-phrases aria-label="اختيار الذكر">${icon('beads', 20)}</button>
+            <button class="icon-btn glass" data-look aria-label="الألوان والحجم">${icon('palette', 20)}</button>
+            <button class="icon-btn glass ${t.dim ? 'on' : ''}" data-dim aria-label="تعتيم الصفحة">${icon('moon', 20)}</button>
+            ${mine ? '' : `<button class="icon-btn glass" data-phrases aria-label="اختيار الذكر">${icon('beads', 20)}</button>`}
             <button class="icon-btn glass" data-reset aria-label="تصفير">${icon('reset', 20)}</button>
           </div>
         </header>
-        <div class="tsb-phrase" data-phrase style="font-size:${t.fontSize}px">${esc(t.phrase)}</div>
+        ${mine ? `<p class="tsb-from">من أذكاري${mine.ref ? ` • ${esc(mine.ref)}` : ''}</p>` : ''}
+        <div class="tsb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(src.phrase())}</span></div>
         <div class="tsb-counter">
           <span data-ring>${ring(frac(), 250, 8)}</span>
-          <span class="tsb-num"><b data-count>${num(t.count)}</b><small data-round>${roundText()}</small></span>
+          <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
         </div>
         <p class="tsb-hint">اضغط في أي مكان للتسبيح • باعد بإصبعين لتكبير الذكر</p>
         <footer class="tsb-bottom" data-ui>
-          <div class="tsb-targets">${T_TARGETS.map((n) => `<button class="${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : '∞'}</button>`).join('')}</div>
-          <div class="tsb-stats"><span>اليوم <b data-today>${num(t.today || 0)}</b></span><span>المجموع <b data-total>${num(t.total)}</b></span></div>
+          ${mine ? '' : `<div class="tsb-targets">${T_TARGETS.map((n) => `<button class="${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : '∞'}</button>`).join('')}</div>`}
+          <div class="tsb-stats"><span>اليوم <b data-today>${num(src.today())}</b></span><span>المجموع <b data-total>${num(src.total())}</b></span></div>
         </footer>
+        <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
   };
-  draw();
+  // A dhikr of «أذكاري» starts at the largest size that shows it whole, until resized.
+  const fit = () => {
+    const el = $('[data-phrase]', view);
+    let size = 40;
+    el.style.fontSize = `${size}px`;
+    while (size > FONT_MIN && el.scrollHeight > el.clientHeight + 2) el.style.fontSize = `${(size -= 2)}px`;
+  };
+  const paint = () => {
+    draw();
+    if (mine && !mine.fontSize) fit();
+  };
+  paint();
 
   const tap = (x, y) => {
-    t.count += 1;
-    t.total += 1;
-    t.today = (t.today || 0) + 1;
+    src.add();
+    if (isIstighfar(src.phrase())) {
+      const r = (state.worship[dayNow] ??= {});
+      r.istighfar = (r.istighfar || 0) + 1;
+    }
     save();
-    const reached = t.target && t.count % t.target === 0;
+    const [c, n] = [src.count(), src.target()];
+    const reached = n && (mine ? c === n : c % n === 0);
     haptic(reached ? 40 : 10);
-    if (reached) toast(`${icon('check', 18)} أتممت ${num(t.target)} — ${esc(t.phrase)}`);
+    if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
     $('[data-ring]', view).innerHTML = ring(frac(), 250, 8);
-    $('[data-count]', view).textContent = num(t.count);
+    $('[data-count]', view).textContent = num(c);
     $('[data-round]', view).textContent = roundText();
-    $('[data-total]', view).textContent = num(t.total);
-    $('[data-today]', view).textContent = num(t.today);
+    $('[data-total]', view).textContent = num(src.total());
+    $('[data-today]', view).textContent = num(src.today());
     const counter = $('.tsb-num', view);
     counter.classList.remove('pop');
     void counter.offsetWidth;
@@ -442,18 +523,28 @@ export function renderTasbeeh(view) {
     }
   };
 
+  const shownSize = () => parseFloat($('[data-phrase]', view).style.fontSize) || 40;
   const setFont = (size) => {
-    t.fontSize = Math.round(Math.max(FONT_MIN, Math.min(FONT_MAX, size)));
-    $('[data-phrase]', view).style.fontSize = `${t.fontSize}px`;
+    box.fontSize = Math.round(Math.max(FONT_MIN, Math.min(FONT_MAX, size)));
+    $('[data-phrase]', view).style.fontSize = `${box.fontSize}px`;
   };
 
   const onClick = async (e) => {
     const f = e.target.closest('[data-font]');
     if (f) {
-      setFont(t.fontSize + Number(f.dataset.font));
+      setFont(shownSize() + Number(f.dataset.font));
       return save();
     }
     if (e.target.closest('[data-phrases]')) return choosePhrase(draw);
+    if (e.target.closest('[data-look]')) return tasbeehLook(paint, box);
+    if (e.target.closest('[data-dim]')) {
+      // Steps through the dimming levels; from a level set on the slider, to the next one up.
+      const next = DIM_STEPS.find((d) => d > t.dim);
+      t.dim = next ?? 0;
+      save();
+      paint();
+      return toast(t.dim ? `تعتيم ${num(t.dim)}٪` : 'بلا تعتيم');
+    }
     const n = e.target.closest('[data-t]');
     if (n) {
       t.target = Number(n.dataset.t);
@@ -461,10 +552,10 @@ export function renderTasbeeh(view) {
       return draw();
     }
     if (e.target.closest('[data-reset]')) {
-      if (await confirmSheet('تصفير العدّاد الحالي؟', { ok: 'تصفير', danger: false })) {
-        t.count = 0;
+      if (await confirmSheet(mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: 'تصفير', danger: false })) {
+        src.reset();
         save();
-        draw();
+        paint();
       }
       return;
     }
@@ -473,12 +564,12 @@ export function renderTasbeeh(view) {
   };
 
   // Pinch on iPhone (Safari's gesture events) resizes the dhikr text.
-  let base = t.fontSize;
+  let base = 40;
   let pinching = false;
   const onGestureStart = (e) => {
     e.preventDefault();
     pinching = true;
-    base = t.fontSize;
+    base = shownSize();
   };
   const onGestureChange = (e) => {
     e.preventDefault();
@@ -555,8 +646,7 @@ function choosePhrase(redraw) {
           <form class="form new-phrase" data-save="${list.length}">
             <label class="field"><span>ذكر جديد للسبحة</span><textarea name="text" rows="2" maxlength="160" placeholder="اكتب الذكر هنا"></textarea></label>
             <button class="btn primary" type="submit">${icon('plus', 18)} إضافة</button>
-          </form>
-          <button class="btn ghost wide" data-defaults>${icon('reset', 18)} استعادة الأذكار الافتراضية</button>`;
+          </form>`;
         if (editing >= 0 && editing < list.length) body.querySelector('.phrase-edit textarea')?.focus();
       };
       draw();
@@ -566,6 +656,7 @@ function choosePhrase(redraw) {
         if (pick) {
           t.phrase = list[Number(pick.dataset.i)];
           t.count = 0;
+          if (isIstighfar(t.phrase)) t.target = 0;
           save();
           close();
           return redraw();
@@ -582,7 +673,7 @@ function choosePhrase(redraw) {
         const del = e.target.closest('[data-del]');
         if (del) {
           const i = Number(del.dataset.del);
-          if (!(await confirmSheet(`حذف «${short(list[i])}» من السبحة؟`))) return;
+          if (!(await confirmSheet(`حذف «${short(list[i])}» من السبحة نهائياً؟`, { ok: 'حذف نهائي' }))) return;
           const [gone] = list.splice(i, 1);
           if (gone === t.phrase) {
             t.phrase = list[0] || 'سبحان الله';
@@ -590,12 +681,6 @@ function choosePhrase(redraw) {
           }
           save();
           redraw();
-          return draw();
-        }
-        if (e.target.closest('[data-defaults]')) {
-          for (const p of PHRASES) if (!list.includes(p)) list.push(p);
-          save();
-          toast(`${icon('check', 18)} أُعيدت الأذكار الافتراضية`);
           return draw();
         }
       });
@@ -617,5 +702,63 @@ function choosePhrase(redraw) {
       });
     },
     { title: 'أذكار السبحة' }
+  );
+}
+
+// Background, dhikr colour, sizes and dimming of the tasbeeh screen; changes show at once behind the sheet.
+function tasbeehLook(redraw, box = state.tasbeeh) {
+  const t = state.tasbeeh;
+  const val = (key) => (key === 'fontSize' ? box.fontSize || 40 : t[key]);
+  const shown = (key) => (key === 'counterSize' ? `${num(Math.round(t[key] * 100))}٪` : key === 'dim' ? `${num(t[key])}٪` : num(val(key)));
+  const slider = (key, label, min, max, step) => `
+    <label class="field range-field"><span>${label} <b data-out="${key}">${shown(key)}</b></span>
+      <input type="range" data-range="${key}" min="${min}" max="${max}" step="${step}" value="${val(key)}"></label>`;
+  openSheet(
+    `<div data-body></div>`,
+    (el) => {
+      const body = el.querySelector('[data-body]');
+      const draw = () => {
+        const bg = tsbBg(t);
+        body.innerHTML = `
+          <h4 class="sheet-sub">لون الخلفية</h4>
+          <div class="swatches">${T_BGS.map((b) => `<button class="swatch ${b.id === bg.id ? 'on' : ''}" data-bg="${b.id}" style="background:${b.css || 'linear-gradient(170deg, #0f5c4d, #04201b)'}" aria-label="${b.name}" title="${b.name}"></button>`).join('')}</div>
+          <h4 class="sheet-sub">لون الذكر</h4>
+          <div class="swatches">
+            <button class="swatch auto ${!t.ink ? 'on' : ''}" data-ink="" aria-label="تلقائي" title="تلقائي">${icon('reset', 16)}</button>
+            ${T_INKS.map((c) => `<button class="swatch ${t.ink === c ? 'on' : ''}" data-ink="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}
+          </div>
+          ${slider('fontSize', 'حجم الذكر', FONT_MIN, FONT_MAX, 1)}
+          ${slider('counterSize', 'حجم العدّاد', 0.6, 1.4, 0.05)}
+          ${slider('dim', 'تعتيم الصفحة', 0, DIM_MAX, 5)}
+          <button class="btn ghost wide" data-look-reset>${icon('reset', 18)} الألوان والأحجام الأصلية</button>`;
+      };
+      draw();
+      body.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-bg]');
+        const k = e.target.closest('[data-ink]');
+        if (b) t.bg = b.dataset.bg;
+        else if (k) t.ink = k.dataset.ink;
+        else if (e.target.closest('[data-look-reset]')) {
+          Object.assign(t, { bg: 'emerald', ink: '', counterSize: 1, dim: 0 });
+          if (box === t) t.fontSize = 40;
+          else delete box.fontSize;
+        }
+        else return;
+        haptic();
+        save();
+        redraw();
+        draw();
+      });
+      body.addEventListener('input', (e) => {
+        const r = e.target.closest('[data-range]');
+        if (!r) return;
+        const key = r.dataset.range;
+        (key === 'fontSize' ? box : t)[key] = Number(r.value);
+        body.querySelector(`[data-out="${key}"]`).textContent = shown(key);
+        save();
+        redraw();
+      });
+    },
+    { title: 'ألوان السبحة وحجمها' }
   );
 }

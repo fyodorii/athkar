@@ -5,6 +5,8 @@ import { state, save } from './store.js';
 
 export const STATIONS = [
   { id: 'saudi', name: 'إذاعة القرآن الكريم', sub: 'المملكة العربية السعودية — بث مباشر', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
+  // HLS from the Saudi Broadcasting Authority; Safari on the iPhone plays it in an <audio> element.
+  { id: 'nidaa', name: 'إذاعة نداء الإسلام', sub: 'من مكة المكرمة — بث مباشر', url: 'https://live.kwikmotion.com/sbrksanedaradiolive/srpksanedaradio/playlist.m3u8' },
   { id: 'tarateel', name: 'تلاوات خاشعة', sub: 'مختارات من القراء', url: 'https://qurango.net/radio/tarateel' },
   { id: 'sudais', name: 'عبدالرحمن السديس', sub: 'إمام الحرم المكي', url: 'https://qurango.net/radio/abdulrahman_alsudaes' },
   { id: 'shuraim', name: 'سعود الشريم', sub: 'إمام الحرم المكي', url: 'https://qurango.net/radio/saud_alshuraim' },

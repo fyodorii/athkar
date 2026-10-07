@@ -22,6 +22,7 @@ export const DEFAULTS = {
     fontText: 'amiri', // adhkar text: amiri | plex | tajawal
     fontUi: 'plex', // interface: plex | tajawal | amiri
     textBold: true,
+    uiBold: false,
     haptics: true,
     quranGoal: 5,
     notify: {
@@ -64,13 +65,14 @@ export const DEFAULTS = {
   custom: [],
   notebook: [],
   saved: [],
-  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40 },
+  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'emerald', ink: '', dim: 0 },
   khatma: { page: 0, days: 30, start: '', done: 0, log: {} },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},
   worshipCustom: [],
   diary: {},
+  hifz: { on: false, day: 1, checks: {} },
   tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };

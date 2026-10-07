@@ -10,14 +10,18 @@ import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
 import { todayPortion } from '../khatma.js';
+import { dayTasks, hifzDay, HIFZ_DAYS, isChecked, partDone } from '../hifz.js';
 import { PAGES } from '../quran-data.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
 import { cyclePrayer, dayScore, prayerIcon, prayerStreak } from './worship.js';
 
 const QUICK = [
   ['#/mine', 'أذكاري', 'heart', 'rose'],
+  ['#/notebook', 'أدعيتي', 'hand', 'teal'],
   ['#/quran', 'الختمة', 'quran', 'emerald'],
+  ['#/hifz', 'ورد الحفظ', 'bookmark', 'amber'],
   ['#/ruqyah', 'الرقية', 'book', 'teal'],
+  ['#/qibla', 'القبلة', 'kaaba', 'emerald'],
   ['#/radio', 'الإذاعة', 'radio', 'indigo'],
   ['#/tasbeeh', 'السبحة', 'beads', 'amber'],
   ['#/qailulah', 'القيلولة', 'moon', 'teal'],
@@ -110,6 +114,7 @@ export function render(view) {
   </section>
 
   ${khatmaCard(info)}
+  ${hifzCard()}
 
   ${worshipCard(info)}
 
@@ -296,6 +301,21 @@ function khatmaCard(info) {
     <span class="km-ring">${ring(k.page / PAGES, 52, 5)}<b>${num(Math.floor((k.page / PAGES) * 100))}٪</b></span>
     <span class="km-text"><b>${k.page >= PAGES ? 'أتممت الختمة' : p.done ? 'أتممت وردك اليوم ✓' : `وردك اليوم: ${num(p.size)} صفحة`}</b>
       <small>${k.page >= PAGES ? 'تقبّل الله منك' : p.hizb ? `الحزب ${num(p.hizb.n)}: ${esc(p.hizb.name)}` : `من ص ${num(p.from)} (${esc(p.fromInfo.surahName)}) إلى ص ${num(p.to)} (${esc(p.toInfo.surahName)})`}</small></span>
+    ${icon('chevron', 18, 'muted')}</a>`;
+}
+
+// Today's memorization wird, once the plan is started.
+function hifzCard() {
+  const h = state.hifz;
+  if (!h.on) return '';
+  const e = hifzDay(h.day);
+  const tasks = dayTasks(h.day);
+  const done = tasks.filter((x) => isChecked(h.day, x.id)).length;
+  const range = (a, b) => `${num(a)}–${num(b)}`;
+  return `<a class="card khatma-mini" href="#/hifz">
+    <span class="km-ring">${ring(done / tasks.length, 52, 5)}<b>${num(done)}/${num(tasks.length)}</b></span>
+    <span class="km-text"><b>${partDone(h.day) ? 'أتممت ورد الحفظ ✓' : `ورد الحفظ — اليوم ${num(h.day)} من ${num(HIFZ_DAYS)}`}</b>
+      <small>${e.from ? `حفظ الوجه ${range(e.from, e.to)}` : 'تثبيت'}${e.link ? ` • ربط ${range(e.link.from, e.link.to)}` : ''}${e.review ? ` • مراجعة ${range(e.review.from, e.review.to)}` : ''}</small></span>
     ${icon('chevron', 18, 'muted')}</a>`;
 }
 

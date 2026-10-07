@@ -15,6 +15,7 @@ import * as notebook from './views/notebook.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as quran from './views/quran.js';
+import * as hifz from './views/hifz.js';
 import * as tools from './views/tools.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
@@ -34,9 +35,10 @@ const ROUTES = [
   [/^#\/adhkar\/(morning|evening|sleep)$/, 'mine', (v, id) => adhkar.renderWird(v, id)],
   [/^#\/adhkar(?:\/[\w-]+)?$/, 'mine', (v) => adhkar.renderMine(v)], // old links
   [/^#\/quran$/, 'quran', (v) => quran.renderKhatma(v)],
+  [/^#\/hifz$/, 'quran', (v) => hifz.renderHifz(v)],
   [/^#\/ruqyah$/, 'quran', (v) => quran.renderRuqyah(v)],
   [/^#\/radio$/, 'quran', (v) => quran.renderRadio(v)],
-  [/^#\/tasbeeh$/, 'tasbeeh', (v) => adhkar.renderTasbeeh(v)],
+  [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/qibla$/, 'qibla', (v) => qibla.render(v)],
   [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
@@ -96,6 +98,7 @@ function applyTheme() {
   root.setProperty('--font-text', FONTS[s.fontText] || FONTS.amiri);
   root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.plex);
   root.setProperty('--text-weight', s.textBold ? '700' : '400');
+  root.setProperty('--ui-weight', s.uiBold ? '700' : '400');
 }
 media.addEventListener?.('change', applyTheme);
 
