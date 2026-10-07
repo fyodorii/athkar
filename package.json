@@ -1,0 +1,12 @@
+{
+  "name": "athkar",
+  "private": true,
+  "type": "module",
+  "description": "أذكار ومواقيت — تطبيق ويب للآيفون",
+  "scripts": {
+    "zip": "node scripts/package.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

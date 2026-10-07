@@ -1,0 +1,36 @@
+# Publishes the app to GitHub Pages as a preview: https://<owner>.github.io/<repo>/
+# One-time setup: Settings → Pages → Source "Deploy from a branch" → gh-pages / (root).
+# The app needs no build; its PHP scripts (push/) run only on the real site.
+name: Web preview (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy the app (without the server scripts and repository tooling)
+        run: |
+          mkdir dist
+          cp -r index.html manifest.webmanifest sw.js css fonts icons js dist/
+
+      - name: Publish to the gh-pages branch
+        working-directory: dist
+        run: |
+          git init -q -b gh-pages
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898299+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Web preview from ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages

@@ -22,7 +22,7 @@
 
 ## الرفع إلى الموقع
 
-1. شغّل `npm run zip:adhkar` في جذر المستودع، فيخرج `adhkar-web-app.zip`.
+1. شغّل `npm run zip` في جذر المستودع (Node 22 فأحدث)، فيخرج `adhkar-web-app.zip` وفيه التطبيق داخل مجلد `adhkar/`.
 2. في cPanel ← File Manager، ارفعه إلى `public_html` وفك ضغطه **مع الاستبدال**، فيصير التطبيق في
    `https://www.al-amen.com/adhkar/` (الملف المضغوط لا يحوي `push/data`، فلا تُمسح المفاتيح ولا الاشتراكات).
 3. عدّل `push/config.php` على الخادم: البريد، و`CRON_KEY` (نص عشوائي طويل).
@@ -75,7 +75,7 @@ Parameter، واللون بكلمة بعدها (مثل «دائرة ملكي»).
 
 ## المعاينة
 
-تُنشر مع معاينة GitHub Pages على `https://fyodorii.github.io/alamen-app/adhkar/`. الإشعارات فيها
+تُنشر على GitHub Pages عند كل دفع إلى `main` (`.github/workflows/pages.yml`) على `https://fyodorii.github.io/athkar/`، وتحتاج مرة واحدة: Settings ← Pages ← Deploy from a branch ← `gh-pages` / (root). الإشعارات فيها
 تستعمل خادم `al-amen.com/adhkar/push/` (انظر `js/config.js` و`ALLOWED_ORIGINS` في `push/config.php`).
 
 ## المحتوى

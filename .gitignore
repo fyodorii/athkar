@@ -1,0 +1,8 @@
+# Server data written by the push scripts on the site
+push/data/*.json
+push/data/*.lock
+push/data/subs/
+
+# The upload package (npm run zip)
+adhkar-web-app.zip
+node_modules/
