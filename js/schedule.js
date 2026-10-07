@@ -83,6 +83,12 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
         );
       }
     }
+    if (n.fajrInfo) {
+      // The coming Fajr: this morning's if the reminder is after midnight, else tomorrow's.
+      const at = atClock(day, n.fajrInfoTime || '23:00', t);
+      const f = at < t.fajr.at ? t : dayTimes(addDays(day, 1), s, isRamadan(addDays(day, 1), s.hijriAdjust));
+      add(at, 'موعد الفجر والشروق', `الفجر ${clockText(f.fajr.hours, s.clock24)} • الشروق ${clockText(f.sunrise.hours, s.clock24)}${s.iqama?.fajr ? ` • الإقامة ${clockText(f.fajr.hours + s.iqama.fajr / 60, s.clock24)}` : ''}`, '#/home', 'fajr-info');
+    }
     if (n.duha) {
       add(t.sunrise.at + Math.max(15, n.duhaDelay) * 60000, 'صلاة الضحى', '«صلاة الأوابين حين ترمض الفصال» — ركعتان تجزئان عن صدقة كل مفاصلك', '#/worship', 'duha');
     }

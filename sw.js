@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline,
 // and shows the reminders that push/cron.php sends.
 
-const VERSION = 'v10'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v11'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const FILES = [
   './',
@@ -16,6 +16,7 @@ const FILES = [
   'js/khatma.js',
   'js/hifz.js',
   'js/occasions.js',
+  'js/sunnah.js',
   'js/surahs/kahf.js',
   'js/surahs/mulk.js',
   'js/surahs/baqarah.js',
@@ -61,6 +62,14 @@ const FILES = [
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
+  'icons/alt/emerald.png',
+  'icons/alt/night.png',
+  'icons/alt/violet.png',
+  'icons/alt/sky.png',
+  'icons/alt/parchment.png',
+  'icons/alt/black.png',
+  'icons/alt/burgundy.png',
+  'icons/alt/gold.png',
 ];
 
 self.addEventListener('install', (event) => {

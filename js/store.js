@@ -25,6 +25,8 @@ export const DEFAULTS = {
     uiBold: false,
     haptics: true,
     quranGoal: 5,
+    prayerLayout: 'list', // list | grid (the prayer times on the home screen)
+    appIcon: 'emerald', // icons/alt/<name>.png for the home screen
     notify: {
       enabled: false,
       prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
@@ -33,6 +35,8 @@ export const DEFAULTS = {
       iqama: true,
       sunrise: false,
       sunriseBefore: 0, // minutes before sunrise (0 = at sunrise), to catch Fajr in time
+      fajrInfo: false, // at a set hour (say 11 pm): when the coming Fajr and sunrise are
+      fajrInfoTime: '23:00',
       before: 10,
       morning: true,
       morningDelay: 30,

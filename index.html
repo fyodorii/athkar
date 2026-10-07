@@ -30,6 +30,10 @@
         if (f[st.fontUi]) r.setProperty('--font-ui', f[st.fontUi]);
         if (st.textBold === false) r.setProperty('--text-weight', '400');
         if (st.uiBold) r.setProperty('--ui-weight', '700');
+        // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
+        // when the app is added to the home screen.
+        var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;
+        if (/^[a-z]+$/.test(ic || '') && ic !== 'emerald') document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png';
       } catch (e) {}
     </script>
   </head>

@@ -16,6 +16,7 @@ import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
 import { cyclePrayer, dayScore, prayerIcon, prayerStreak } from './worship.js';
 import { daysText, nextOccasion, rangeText } from './calendar.js';
 import { quickSurahs } from './surah.js';
+import { sinceText, sunnahNow } from '../sunnah.js';
 
 const QUICK = [
   ['#/mine', 'أذكاري', 'heart', 'rose'],
@@ -76,6 +77,7 @@ export function render(view) {
       <span class="t" data-clock>${c.time}</span><span class="s" data-sec>${c.sec}</span>${c.period ? `<span class="p" data-period>${c.period}</span>` : ''}
     </div>
     <div class="hero-dates">
+      <span class="hero-moon" title="القمر الليلة">${moonPhase(hijri(info.day, s.hijriAdjust).day)}</span>
       <div class="hijri">${icon('moon', 16)}<span><b>${weekday(info.day)}</b> ${hijriText(info.day, s.hijriAdjust)}</span></div>
       <div class="greg">${icon('calendar', 15)}<span>${gregText(info.day)}</span></div>
     </div>
@@ -135,6 +137,7 @@ export function render(view) {
   </div>`;
 
   setHands(view);
+  let lastTile = periodTile(info);
   view.addEventListener('click', onClick);
   const cards = $('[data-cards]', view);
   cards.addEventListener('scroll', () => {
@@ -158,9 +161,8 @@ export function render(view) {
       $('[data-progress]', view).style.width = `${progress(info2)}%`;
       $('[data-ends]', view).innerHTML = endsText(info2);
       setHands(view);
-      const tile = $('[data-period-tile]', view);
       const p2 = periodTile(info2);
-      if (tile.innerHTML !== p2) tile.innerHTML = p2;
+      if (p2 !== lastTile) $('[data-period-tile]', view).innerHTML = lastTile = p2;
     },
     destroy() {
       view.removeEventListener('click', onClick);
@@ -168,6 +170,12 @@ export function render(view) {
   };
 
   function onClick(e) {
+    if (e.target.closest('[data-playout]')) {
+      s.prayerLayout = s.prayerLayout === 'grid' ? 'list' : 'grid';
+      save();
+      $('[data-prayers]', view).outerHTML = prayersCard(today());
+      return;
+    }
     const nav = e.target.closest('[data-pday]');
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);
@@ -231,6 +239,28 @@ function prayerRow(info, k) {
     <span class="p-time"><span>${c.time}<small>${c.period}</small></span>${iq ? `<small class="p-iqama">الإقامة ${clockText(iq.hours, s.clock24)}</small>` : ''}</span>
     ${bell}
   </li>`;
+}
+
+// One prayer as a card (the grid layout): name, time, and its iqama (for sunrise, the ishraq).
+function prayerCell(info, k) {
+  const s = state.settings;
+  const t = info.times[k];
+  const isNext = info.next.key === k && info.next.at === t.at;
+  const isCurrent = info.current?.key === k && info.current.at === t.at;
+  const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : t.name;
+  const c = clock(t.hours, s.clock24);
+  const sub =
+    k === 'sunrise'
+      ? `الإشراق ${clockText(info.times.duha.hours, s.clock24)}`
+      : s.iqama?.[k]
+        ? `الإقامة ${clockText(iqamaTime(info.times, k, s.iqama).hours, s.clock24)}`
+        : '';
+  return `<div class="pcell ${isNext ? 'next' : ''} ${isCurrent ? 'current' : ''}">
+    <span class="pcell-ic">${icon(PRAYER_ICONS[k], 20)}</span>
+    <b class="pcell-name">${name}${isNext ? '<em>القادمة</em>' : isCurrent ? '<em class="now">الآن</em>' : ''}</b>
+    <b class="pcell-time">${c.time}<small>${c.period}</small></b>
+    <small class="pcell-sub">${sub}</small>
+  </div>`;
 }
 
 function todayCard(kind, label, ic, html, ref) {
@@ -361,20 +391,20 @@ function prayersCard(info) {
     shown = { day, times, next: {}, current: null, isFriday: wd === 5, other: true };
   }
   const d = shown.day;
+  const grid = s.prayerLayout === 'grid';
   const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
   return `<section class="card prayers" data-prayers>
     <div class="card-head">
       <h2>مواقيت الصلاة</h2>
-      <a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a>
+      <span class="ph-tools"><a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a>
+        <button class="icon-btn ghost sm" data-playout aria-label="${grid ? 'قائمة' : 'بطاقات'}">${icon(grid ? 'rows' : 'grid', 18)}</button></span>
     </div>
     <div class="pday">
       <button class="icon-btn ghost sm flip" data-pday="-1" aria-label="اليوم السابق">${icon('chevron', 20)}</button>
       <button class="pday-label ${dayOffset ? 'other' : ''}" data-pday="0"><b>${label}</b><small>${weekday(d)}، ${num(d.d)} ${GREG_MONTHS[d.m - 1]} • ${hijriText(d, s.hijriAdjust)}</small></button>
       <button class="icon-btn ghost sm" data-pday="1" aria-label="اليوم التالي">${icon('chevron', 20)}</button>
     </div>
-    <ul class="prayer-list">
-      ${PRAYERS.map((k) => prayerRow(shown, k)).join('')}
-    </ul>
+    ${grid ? `<div class="prayer-grid">${PRAYERS.map((k) => prayerCell(shown, k)).join('')}</div>` : `<ul class="prayer-list">${PRAYERS.map((k) => prayerRow(shown, k)).join('')}</ul>`}
     <ul class="extra-times">
       ${EXTRA.map((k) => {
         const c2 = clock(shown.times[k].hours, s.clock24);
@@ -416,29 +446,35 @@ function setHands(view) {
   set('[data-hs]', s * 6);
 }
 
-// What part of the day it is now: "بعد صلاة الظهر", "وقت الضحى", "الثلث الأخير من الليل"…
+// The moon as it looks on this Hijri day: lit from the right while waxing, from the left
+// while waning (a crescent, half, gibbous or full moon).
+function moonPhase(hday) {
+  const p = Math.min(1, Math.max(0, (hday - 1) / 29.53));
+  const r = 20;
+  const k = Math.cos(2 * Math.PI * p); // 1 at the new moon, -1 at the full moon
+  const rx = Math.abs(k) * r;
+  const waxing = p < 0.5;
+  // The lit limb (a half circle), then the terminator (half an ellipse) back to the top.
+  const limb = waxing ? 1 : 0;
+  const term = waxing ? (k > 0 ? 0 : 1) : k > 0 ? 1 : 0;
+  const d = `M24 ${24 - r} A${r} ${r} 0 0 ${limb} 24 ${24 + r} A${rx.toFixed(2)} ${r} 0 0 ${term} 24 ${24 - r}Z`;
+  return `<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="24" r="${r}" class="moon-dark"/><path d="${d}" class="moon-lit"/></svg>`;
+}
+
+const NOW_ICONS = {
+  qiyam: 'stars', witr: 'moon', morning: 'sunrise', sunrise: 'sunrise', duha: 'sun', zawal: 'info', evening: 'sunLow',
+  'jumuah-hour': 'hand', jumuah: 'mosque', 'jumuah-after': 'mosque',
+};
+
+// What is recommended now (the sunnah of the prayer whose time it is, Duha, the witr…) and
+// how long since the last adhan.
 function periodTile(info) {
-  const now = Date.now();
-  const t = info.times;
-  const y = (k) => t[k].at - 86400000;
-  const LAST = ['stars', 'الثلث الأخير من الليل', 'وقت نزول واستجابة — قيام الليل والدعاء'];
-  const LATE = ['moon', 'بعد منتصف الليل', 'أوتر قبل أن تنام'];
-  const ISHA = ['moon', 'بعد صلاة العشاء', 'أذكار النوم وسورة الملك'];
-  let p;
-  // Before Fajr it is still last night: its middle and last third were 24 hours before tonight's.
-  if (now < t.fajr.at) {
-    p = now >= y('lastThird') ? LAST : now >= y('midnight') ? LATE : ISHA;
-  } else if (now < t.sunrise.at) p = ['sunrise', 'بعد صلاة الفجر', 'وقت أذكار الصباح'];
-  else if (now < t.duha.at) p = ['sunrise', 'وقت الشروق', `الضحى ${clockText(t.duha.hours, state.settings.clock24)}`];
-  else if (info.forbidden?.key === 'zawal') p = ['info', 'قبيل الظهر', 'وقت نهي عن النافلة'];
-  else if (now < t.dhuhr.at) p = ['sun', 'وقت الضحى', 'صلِّ ركعتي الضحى'];
-  else if (now < t.asr.at) p = ['sun', `بعد صلاة ${info.isFriday ? 'الجمعة' : 'الظهر'}`, info.isFriday ? 'أكثر من الصلاة على النبي ﷺ' : 'وقت القيلولة والعمل'];
-  else if (now < t.maghrib.at) p = ['sunLow', 'بعد صلاة العصر', info.isFriday ? 'تحرَّ ساعة الإجابة آخر ساعة' : 'وقت أذكار المساء'];
-  else if (now < t.isha.at) p = ['sunset', 'بعد صلاة المغرب', 'أذكار المساء إن لم تقرأها'];
-  else if (now < t.midnight.at) p = ISHA;
-  else if (now < t.lastThird.at) p = LATE;
-  else p = LAST;
-  return `<span class="pt-ic">${icon(p[0], 26)}</span><b>${p[1]}</b><small>${p[2]}</small>`;
+  const s = state.settings;
+  const n = sunnahNow(info.times, Date.now(), s.iqama, info.isFriday);
+  const since = sinceText(n.since, num);
+  return `${since ? `<em class="pt-since">${since}</em>` : ''}
+    <div class="pt-row"><span class="pt-ic">${icon(NOW_ICONS[n.key] || 'stars', 24)}</span><small class="pt-now">الآن</small></div>
+    <b>${esc(n.title)}</b><small>${esc(n.sub)}</small>`;
 }
 
 // The next Islamic occasion and how long until it.

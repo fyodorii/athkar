@@ -56,6 +56,7 @@ const ROUTES = [
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],
   [/^#\/settings\/notify$/, 'settings', (v) => settings.renderNotify(v)],
   [/^#\/settings\/widget$/, 'settings', (v) => settings.renderWidget(v)],
+  [/^#\/settings\/icon$/, 'settings', (v) => settings.renderIcon(v)],
 ];
 
 const view = $('#view');
