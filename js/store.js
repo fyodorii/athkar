@@ -37,15 +37,32 @@ export const DEFAULTS = {
       salawat: false,
       salawatHours: 3,
       worship: false,
+      afterAdhan: 0,
+      duha: false,
+      duhaDelay: 30,
+      midnight: false,
+      prayerEnd: 0,
+      kahf: true,
+      kahfTime: '09:00',
+      mulk: false,
+      mulkTime: '21:45',
+      baqarah: 0,
+      baqarahTime: '17:00',
+      khatma: false,
+      khatmaTime: '05:30',
     },
   },
   progress: { day: '', counts: {} },
   custom: [],
   notebook: [],
   saved: [],
-  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, phrases: [] },
+  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, phrases: [], fontSize: 40 },
+  khatma: { page: 0, days: 30, start: '', done: 0, log: {} },
+  radio: { station: 'saudi', custom: '' },
+  seeded: 0,
   worship: {},
   worshipCustom: [],
+  diary: {},
   sync: { hash: '', at: 0 },
 };
 
@@ -71,6 +88,31 @@ function load() {
 }
 
 export const state = load();
+
+// Adhkar every new user starts with in "my adhkar"; existing users get them once.
+const SEED_VERSION = 1;
+const SEED = [
+  { text: 'لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير.', target: 100, ref: 'رواه البخاري ومسلم' },
+  { text: 'لا حول ولا قوة إلا بالله.', target: 100, ref: '«كنز من كنوز الجنة» — متفق عليه' },
+  {
+    text: 'اللهم صل على محمد وعلى آل محمد، كما صليت على إبراهيم وعلى آل إبراهيم، إنك حميد مجيد. اللهم بارك على محمد وعلى آل محمد، كما باركت على إبراهيم وعلى آل إبراهيم، إنك حميد مجيد.',
+    target: 10,
+    ref: 'رواه البخاري',
+  },
+];
+if (state.seeded < SEED_VERSION) {
+  const have = new Set(state.custom.map((c) => c.text));
+  const now = Date.now();
+  SEED.forEach((x, i) => {
+    if (!have.has(x.text)) state.custom.push({ id: `seed${i + 1}`, reminder: '', today: 0, total: 0, created: now, ...x });
+  });
+  state.seeded = SEED_VERSION;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    // Storage blocked: the seed shows again next time, which is harmless.
+  }
+}
 const listeners = new Set();
 
 export function save() {
@@ -94,24 +136,25 @@ export function persistStorage() {
   navigator.storage?.persist?.().catch(() => {});
 }
 
-// ---- Daily progress through the adhkar ----
+// ---- Daily counters ----
 
-export function todayCounts(dayKey) {
-  if (state.progress.day !== dayKey) {
-    state.progress = { day: dayKey, counts: {} };
-    for (const c of state.custom) c.today = 0;
-  }
-  return state.progress.counts;
+// Starts the daily counters afresh on a new day.
+export function newDay(dayKey) {
+  if (state.progress.day === dayKey) return;
+  state.progress = { day: dayKey, counts: {} };
+  for (const c of state.custom) c.today = 0;
 }
 
-// ---- Notebook bookmarks of library adhkar ----
+// ---- Notebook bookmarks ----
+// Each bookmark keeps its own text, so it survives changes to where it came from:
+// { id, text, title, ref, quran (Uthmani script), at }.
 
 export const isSaved = (id) => state.saved.some((s) => s.id === id);
 
-export function toggleSaved(id) {
-  const i = state.saved.findIndex((s) => s.id === id);
+export function toggleSaved(item) {
+  const i = state.saved.findIndex((s) => s.id === item.id);
   if (i >= 0) state.saved.splice(i, 1);
-  else state.saved.unshift({ id, at: Date.now() });
+  else state.saved.unshift({ id: item.id, text: item.text, title: item.title || '', ref: item.ref || '', quran: !!item.quran, at: Date.now() });
   save();
   return i < 0;
 }

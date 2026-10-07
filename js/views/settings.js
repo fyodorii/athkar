@@ -1,14 +1,16 @@
 // Settings: location, calculation, notifications, display, widget and backup.
 
 import { CITIES, nearestCity } from '../cities.js';
-import { clockText, hijriText, minutesText, num } from '../dates.js';
+import { clockText, countdown, gregText, hijri, HIJRI_MONTHS, hijriText, minutesText, num, weekday } from '../dates.js';
 import { icon } from '../icons.js';
 import { METHODS, PRAYER_NAMES } from '../prayer.js';
 import { disablePush, enablePush, isIOS, isStandalone, pushActive, pushSupported, sendTest, syncSchedule } from '../push.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { $, $$, copyText, esc, openSheet, pageHeader, toast, toggle } from '../ui.js';
-import { widgetScript } from '../widget.js';
+import { widgetScript, WIDGET_STYLES } from '../widget.js';
+import { dailyFor } from '../daily-data.js';
+import { DAILY } from '../adhkar-data.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -314,6 +316,27 @@ export function renderNotify(view) {
           .join('')}
         <div class="row"><span class="row-label">الشروق<small>نهاية وقت الفجر</small></span>${toggle('sunrise', n.sunrise)}</div>
         <div class="row"><span class="row-label">تنبيه قبل الأذان</span>${select('before', BEFORE, n.before, (v) => (v ? `قبل ${minutesText(v)}` : 'بلا تنبيه'))}</div>
+        <div class="row"><span class="row-label">تنبيه بعد الأذان<small>«هل صليت؟» وأذكار ما بعد الصلاة</small></span>${select('afterAdhan', BEFORE, n.afterAdhan, (v) => (v ? `بعد ${minutesText(v)}` : 'بلا تنبيه'))}</div>
+        <div class="row"><span class="row-label">خروج وقت الصلاة<small>قبل أن ينتهي وقت كل صلاة</small></span>${select('prayerEnd', [0, 10, 15, 20, 30, 45, 60], n.prayerEnd, (v) => (v ? `قبل ${minutesText(v)}` : 'بلا تنبيه'))}</div>
+        <p class="hint">ينتهي وقت الفجر بالشروق، والظهر بدخول العصر، والعصر بالغروب (ويُكره تأخيرها إلى اصفرار الشمس)، والمغرب بدخول العشاء، والعشاء بمنتصف الليل.</p>
+      </div>
+      <div class="group">
+        <h4>أوقات أخرى</h4>
+        <div class="row"><span class="row-label">صلاة الضحى</span>${toggle('duha', n.duha)}</div>
+        ${n.duha ? `<div class="row sub"><span class="row-label">بعد الشروق بـ</span>${select('duhaDelay', [15, 30, 60, 90, 120, 180], n.duhaDelay, (v) => (v >= 60 ? (v === 60 ? 'ساعة' : v === 120 ? 'ساعتين' : v === 180 ? '٣ ساعات' : 'ساعة ونصف') : minutesText(v)))}</div>` : ''}
+        <div class="row"><span class="row-label">منتصف الليل<small>آخر وقت العشاء</small></span>${toggle('midnight', n.midnight)}</div>
+        <div class="row"><span class="row-label">الثلث الأخير من الليل<small>لقيام الليل والدعاء</small></span>${toggle('lastThird', n.lastThird)}</div>
+      </div>
+      <div class="group">
+        <h4>القرآن</h4>
+        <div class="row"><span class="row-label">سورة الكهف<small>كل يوم جمعة</small></span>${toggle('kahf', n.kahf)}</div>
+        ${n.kahf ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="kahfTime" value="${esc(n.kahfTime)}"></div>` : ''}
+        <div class="row"><span class="row-label">سورة الملك<small>كل ليلة</small></span>${toggle('mulk', n.mulk)}</div>
+        ${n.mulk ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="mulkTime" value="${esc(n.mulkTime)}"></div>` : ''}
+        <div class="row"><span class="row-label">سورة البقرة</span>${select('baqarah', [0, 1, 2, 3, 7], n.baqarah, (v) => ({ 0: 'بلا تنبيه', 1: 'كل يوم', 2: 'كل يومين', 3: 'كل ٣ أيام', 7: 'كل أسبوع' })[v])}</div>
+        ${n.baqarah ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="baqarahTime" value="${esc(n.baqarahTime)}"></div>` : ''}
+        <div class="row"><span class="row-label">ورد الختمة<small>${state.khatma.start ? 'وردك اليومي من القرآن' : 'ابدأ ختمة من قسم القرآن'}</small></span>${toggle('khatma', n.khatma)}</div>
+        ${n.khatma ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="khatmaTime" value="${esc(n.khatmaTime)}"></div>` : ''}
       </div>
       <div class="group">
         <h4>الأذكار</h4>
@@ -325,15 +348,14 @@ export function renderNotify(view) {
         ${n.sleep ? `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="sleepTime" value="${esc(n.sleepTime)}"></div>` : ''}
         <div class="row"><span class="row-label">الصلاة على النبي ﷺ<small>من ٩ صباحاً إلى ٩ مساءً</small></span>${toggle('salawat', n.salawat)}</div>
         ${n.salawat ? `<div class="row sub"><span class="row-label">كل</span>${select('salawatHours', [1, 2, 3, 4, 6], n.salawatHours, (v) => (v === 1 ? 'ساعة' : v === 2 ? 'ساعتين' : `${num(v)} ساعات`))}</div>` : ''}
-        <p class="hint">ولكل ذكر في «أذكاري» تذكيره الخاص بالوقت الذي تختاره.</p>
+        <p class="hint">التنبيه يفتح «أذكاري». ولكل ذكر فيها تذكيره الخاص بالوقت الذي تختاره.</p>
       </div>
       <div class="group">
         <h4>تذكيرات أخرى</h4>
-        <div class="row"><span class="row-label">يوم الجمعة<small>سورة الكهف والصلاة على النبي ﷺ</small></span>${toggle('friday', n.friday)}</div>
+        <div class="row"><span class="row-label">يوم الجمعة<small>الصلاة على النبي ﷺ وساعة الإجابة</small></span>${toggle('friday', n.friday)}</div>
         <div class="row"><span class="row-label">صيام الاثنين والخميس<small>مساء اليوم السابق</small></span>${toggle('fasting', n.fasting)}</div>
         <div class="row"><span class="row-label">الأيام البيض<small>١٣ و١٤ و١٥ من كل شهر هجري</small></span>${toggle('whiteDays', n.whiteDays)}</div>
         <div class="row"><span class="row-label">متابعة العبادات<small>كل ليلة الساعة ٩:٣٠ مساءً</small></span>${toggle('worship', n.worship)}</div>
-        <div class="row"><span class="row-label">الثلث الأخير من الليل<small>لقيام الليل والدعاء</small></span>${toggle('lastThird', n.lastThird)}</div>
       </div>
       <p class="hint center">التنبيهات تُرسل من خادم التطبيق في وقتها، فافتح التطبيق مرة كل بضعة أسابيع ليبقى جدولها محدّثاً.</p>`;
   };
@@ -377,11 +399,11 @@ export function renderNotify(view) {
     }
     if (t.name.startsWith('p-')) n.prayers[t.name.slice(2)] = t.checked;
     else if (t.type === 'checkbox') n[t.name] = t.checked;
-    else if (t.name === 'sleepTime') n.sleepTime = t.value || '22:30';
+    else if (t.type === 'time') n[t.name] = t.value || n[t.name];
     else n[t.name] = Number(t.value);
     save();
     syncSchedule();
-    if (['morning', 'evening', 'sleep', 'salawat'].includes(t.name)) draw();
+    if (['morning', 'evening', 'sleep', 'salawat', 'duha', 'kahf', 'mulk', 'baqarah', 'khatma'].includes(t.name)) draw();
   };
   view.onclick = async (e) => {
     if (!e.target.closest('[data-test]')) return;
@@ -406,46 +428,47 @@ export function renderWidget(view) {
   const s = state.settings;
   const info = today();
   const next = info.next;
+  const d = dailyFor(info.day);
+  const h = hijri(info.day, s.hijriAdjust);
   const rows = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha']
     .map((k) => `<li class="${k === next.key ? 'on' : ''}"><span>${PRAYER_NAMES[k]}</span><b>${clockText(info.times[k].hours, s.clock24)}</b></li>`)
     .join('');
+  const previews = {
+    مواقيت: `<div class="wg wg-m"><ul>${rows}</ul><div class="wg-side"><small class="gold">${hijriText(info.day, s.hijriAdjust)}</small><span class="wg-label">الصلاة القادمة</span><b class="wg-name">${esc(next.name)}</b><b class="wg-time">${clockText(next.hours, s.clock24)}</b></div></div>`,
+    عداد: `<div class="wg wg-s blue"><span class="wg-label">الصلاة القادمة</span><b class="wg-name">${esc(next.name)}</b><b class="wg-time gold">${countdown(next.at - Date.now())}</b><small class="wg-place">${info.current ? `يخرج وقت ${esc(info.current.name)} ${clockText(info.current.end.hours, s.clock24)}` : ''}</small></div>`,
+    التاريخ: `<div class="wg wg-s gold-bg"><b>${weekday(info.day)}</b><b class="wg-big">${num(h.day)}</b><span class="gold">${HIJRI_MONTHS[h.month - 1]} ${num(h.year)}</span><small class="wg-place">${gregText(info.day)}</small></div>`,
+    آية: `<div class="wg wg-s"><small class="gold">آية اليوم</small><p class="wg-text">﴿${esc(d.ayah.plain)}﴾</p><small class="wg-place">${esc(d.ayah.ref)}</small></div>`,
+    ذكر: `<div class="wg wg-s violet"><small class="gold">ذكر</small><p class="wg-text">${esc(DAILY[0].text)}</p></div>`,
+    أذكاري: `<div class="wg wg-s rose"><small class="gold">من أذكاري</small><p class="wg-text">${esc(state.custom[0]?.text.slice(0, 80) || 'أذكارك الخاصة')}</p></div>`,
+    الليل: `<div class="wg wg-s night"><small class="gold">${hijriText(info.day, s.hijriAdjust)}</small><ul>${['sunrise', 'duha', 'midnight', 'lastThird'].map((k) => `<li><span>${info.times[k].name}</span><b>${clockText(info.times[k].hours, s.clock24)}</b></li>`).join('')}</ul></div>`,
+  };
   view.innerHTML = `
-    ${pageHeader('ويدجت الشاشة الرئيسية', { back: '#/settings' })}
-    <div class="widget-previews">
-      <div class="wg wg-s">
-        <small class="gold">${hijriText(info.day, s.hijriAdjust)}</small>
-        <span class="wg-label">الصلاة القادمة</span>
-        <b class="wg-name">${esc(next.name)}</b>
-        <b class="wg-time">${clockText(next.hours, s.clock24)}</b>
-        <small class="wg-place">${esc(s.location.name)}</small>
-      </div>
-      <div class="wg wg-m">
-        <ul>${rows}</ul>
-        <div class="wg-side">
-          <small class="gold">${hijriText(info.day, s.hijriAdjust)}</small>
-          <span class="wg-label">الصلاة القادمة</span>
-          <b class="wg-name">${esc(next.name)}</b>
-          <b class="wg-time">${clockText(next.hours, s.clock24)}</b>
-        </div>
-      </div>
-      <div class="wg wg-lock"><b>${esc(next.name)} ${clockText(next.hours, s.clock24)}</b><span>${hijriText(info.day, s.hijriAdjust)}</span></div>
+    ${pageHeader('الويدجت', { back: '#/settings', sub: `${num(WIDGET_STYLES.length)} أشكال للشاشة الرئيسية وشاشة القفل` })}
+    <div class="wg-gallery">
+      ${WIDGET_STYLES.map(
+        (w) => `<figure class="wg-item">${previews[w.word]}<figcaption><b>${w.title}</b><span>${w.desc}</span><button class="chip-opt" data-word="${w.word}">الكلمة: ${w.word} ${icon('copy', 14)}</button></figcaption></figure>`
+      ).join('')}
+      <figure class="wg-item"><div class="wg wg-lock"><b>${esc(next.name)} ${clockText(next.hours, s.clock24)}</b><span>${hijriText(info.day, s.hijriAdjust)}</span></div>
+        <figcaption><b>شاشة القفل</b><span>المستطيل والدائري والسطر، لكل الأشكال السابقة</span></figcaption></figure>
     </div>
 
     <div class="group">
       <h4>كيف أضيف الويدجت؟</h4>
-      <p class="hint">آبل لا تسمح لتطبيقات الويب بإضافة ويدجت، لذلك نستعمل تطبيق <b>Scriptable</b> المجاني، فيعرض مواقيتك والتاريخ الهجري على الشاشة الرئيسية وشاشة القفل، ويعمل دون إنترنت.</p>
+      <p class="hint">آبل لا تسمح لتطبيقات الويب بإضافة ويدجت، لذلك نستعمل تطبيق <b>Scriptable</b> المجاني. كود واحد يكفي لكل الأشكال، ويعمل دون إنترنت.</p>
       <ol class="steps">
         <li>ثبّت تطبيق <b>Scriptable</b> من App Store.</li>
         <li>اضغط «نسخ كود الويدجت» بالأسفل.</li>
-        <li>افتح Scriptable، واضغط <b>+</b> أعلى الشاشة، والصق الكود، وسمِّه «مواقيت».</li>
-        <li>اضغط مطولاً على الشاشة الرئيسية ← <b>+</b> ← Scriptable، واختر الحجم، ثم أضفه.</li>
-        <li>اضغط على الويدجت مطولاً ← تعديل الأداة ← Script ← اختر «مواقيت».</li>
+        <li>افتح Scriptable، واضغط <b>+</b>، والصق الكود، وسمِّه «أذكار».</li>
+        <li>اضغط مطولاً على الشاشة الرئيسية ← <b>+</b> ← Scriptable، واختر الحجم وأضفه.</li>
+        <li>اضغط على الويدجت مطولاً ← تعديل الأداة ← <b>Script</b>: «أذكار»، وفي <b>Parameter</b> اكتب كلمة الشكل الذي تريده (مثل: التاريخ). أضف أكثر من ويدجت بكلمات مختلفة.</li>
       </ol>
       <button class="btn primary wide" data-copy>${icon('copy', 20)} نسخ كود الويدجت</button>
-      <p class="hint">يدعم كل الأحجام، وشاشة القفل (المستطيل والدائري والسطر). إذا غيّرت مدينتك أو طريقة الحساب فانسخ الكود من جديد والصقه مكان القديم.</p>
+      <p class="hint">إذا غيّرت مدينتك أو طريقة الحساب أو أذكارك فانسخ الكود من جديد والصقه مكان القديم.</p>
     </div>`;
   view.onclick = (e) => {
     if (e.target.closest('[data-copy]')) copyText(widgetScript(s));
+    const w = e.target.closest('[data-word]');
+    if (w) copyText(w.dataset.word);
   };
   return { destroy: () => (view.onclick = null) };
 }

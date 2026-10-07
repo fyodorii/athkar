@@ -1,18 +1,21 @@
 // My notebook: the user's own supplications, and every dhikr bookmarked from the library.
 
-import { CATEGORY_BY_ID, findItem } from '../adhkar-data.js';
+import { findItem } from '../adhkar-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { save, state, toggleSaved, uid } from '../store.js';
 import { $, $$, confirmSheet, copyText, esc, openSheet, pageHeader, segmented, shareText, toast } from '../ui.js';
-import { editCustom } from './adhkar.js';
+import { editCustom, MINE_TABS } from './adhkar.js';
 
 export const TAGS = ['عام', 'المغفرة', 'الوالدين', 'الذرية', 'الرزق', 'الشفاء', 'الهداية', 'الآخرة', 'ذكر'];
 
-const TABS = [
-  ['#/notebook', 'أدعيتي'],
-  ['#/notebook/saved', 'المحفوظات'],
-];
+const TABS = MINE_TABS;
+
+// Bookmarks keep their own text; early ones stored only an adhkar id.
+const savedItems = () =>
+  state.saved
+    .map((s) => (s.text ? s : (() => { const x = findItem(s.id); return x && { ...s, text: x.text, title: x.title || '', ref: x.ref || '', quran: !!x.quran }; })()))
+    .filter(Boolean);
 
 let query = '';
 let tagFilter = '';
@@ -24,8 +27,8 @@ export function render(view, tab) {
   const saved = tab === 'saved';
 
   const draw = () => {
-    const header = pageHeader('دفتري', {
-      sub: 'أدعيتك الخاصة وما حفظته من الأذكار',
+    const header = pageHeader('أذكاري', {
+      sub: saved ? 'كل ما حفظته من الآيات والأذكار' : 'دفتر أدعيتك الخاصة',
       actions: saved ? '' : `<button class="icon-btn primary" data-add aria-label="دعاء جديد">${icon('plus', 22)}</button>`,
     });
     view.innerHTML = `
@@ -39,10 +42,10 @@ export function render(view, tab) {
   const drawList = () => {
     const box = $('[data-list]', view);
     if (saved) {
-      const items = state.saved.map((s) => findItem(s.id)).filter(Boolean).filter((x) => matches(x.text + (x.title || '')));
+      const items = savedItems().filter((x) => matches(x.text + (x.title || '')));
       box.innerHTML = items.length
         ? `<section class="notes">${items.map(savedCard).join('')}</section>`
-        : empty('bookmark', state.saved.length ? 'لا نتائج' : 'لا محفوظات بعد', 'اضغط على علامة الحفظ تحت أي ذكر في قسم الأذكار ليظهر هنا.');
+        : empty('bookmark', state.saved.length ? 'لا نتائج' : 'لا محفوظات بعد', 'اضغط على علامة الحفظ في آيات الرقية أو بطاقات اليوم ليظهر هنا.');
       return;
     }
     const usedTags = [...new Set(state.notebook.map((n) => n.tag).filter(Boolean))];
@@ -83,17 +86,15 @@ export function render(view, tab) {
     if (card) return openNote(state.notebook.find((n) => n.id === card.dataset.note), drawList);
     const sv = e.target.closest('[data-saved]');
     if (sv) {
-      const item = findItem(sv.dataset.saved);
+      const item = savedItems().find((x) => x.id === sv.dataset.saved);
       const a = e.target.closest('[data-act]')?.dataset.act;
-      const full = (item.before ? item.before + '\n' : '') + item.text;
-      if (a === 'copy') return copyText(full);
-      if (a === 'share') return shareText(full);
+      if (a === 'copy') return copyText(item.text);
+      if (a === 'share') return shareText(item.text);
       if (a === 'remove') {
-        toggleSaved(item.id);
+        toggleSaved(item);
         toast('أُزيل من المحفوظات');
         return drawList();
       }
-      if (a === 'open') location.hash = `#/adhkar/${item.id.replace(/-\d+$/, '')}`;
     }
   };
 
@@ -121,15 +122,12 @@ function noteCard(n) {
 }
 
 function savedCard(x) {
-  const cat = CATEGORY_BY_ID[x.id.replace(/-\d+$/, '')];
-  return `<article class="note saved ${x.quran ? 'quran' : ''}" data-saved="${x.id}">
-    <div class="saved-cat tone-${cat.tone}">${icon(cat.icon, 14)} ${esc(cat.title)}</div>
+  return `<article class="note saved ${x.quran ? 'quran' : ''}" data-saved="${esc(x.id)}">
     ${x.title ? `<h3>${esc(x.title)}</h3>` : ''}
-    <p class="note-text">${esc(x.text)}</p>
+    <p class="note-text ${x.quran ? 'hafs' : ''}">${esc(x.text)}</p>
     <div class="note-meta">
-      ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
+      ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : '<span></span>'}
       <div class="dhikr-actions">
-        <button class="icon-btn ghost sm" data-act="open" aria-label="فتح في الأذكار">${icon('chevron', 20)}</button>
         <button class="icon-btn ghost sm" data-act="copy" aria-label="نسخ">${icon('copy', 20)}</button>
         <button class="icon-btn ghost sm" data-act="share" aria-label="مشاركة">${icon('share', 20)}</button>
         <button class="icon-btn ghost sm" data-act="remove" aria-label="إزالة">${icon('bookmarkOn', 20)}</button>

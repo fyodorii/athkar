@@ -1,7 +1,9 @@
 // The list of reminders for the coming days, worked out on the device. The server
 // (push/cron.php) only sends each one at its time, so it needs no prayer-time code.
 
-import { addDays, dateAt, dayTimes, PRAYER_NAMES } from './prayer.js';
+import { addDays, dateAt, dayTimes, PRAYER_NAMES, prayerEnd } from './prayer.js';
+import { PAGES } from './quran-data.js';
+import { dailyPages } from './khatma.js';
 import { clockText, hijri, minutesText, num } from './dates.js';
 
 export const SCHEDULE_DAYS = 30;
@@ -21,6 +23,7 @@ const SALAWAT = [
 ];
 
 const isRamadan = (day, adj) => hijri(day, adj).month === 9;
+const dayNumber = ({ y, m, d }) => Math.floor(Date.UTC(y, m - 1, d) / 86400000);
 
 // Moment of "HH:MM" on a calendar day at the location.
 function atClock(day, hhmm, times) {
@@ -58,15 +61,32 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
           `before-${k}`
         );
       }
+      if (n.afterAdhan > 0) {
+        add(t[k].at + n.afterAdhan * 60000, `هل صليت ${name}؟`, 'أقم صلاتك، ولا تنسَ أذكار ما بعد الصلاة', '#/worship', `after-${k}`);
+      }
+      if (n.prayerEnd > 0) {
+        const end = prayerEnd(t, k);
+        add(
+          end.at - n.prayerEnd * 60000,
+          `اقترب خروج وقت صلاة ${name}`,
+          `يخرج وقتها بعد ${minutesText(n.prayerEnd)}، الساعة ${clockText(end.hours, s.clock24)} — إن لم تصلِّها فبادر`,
+          '#/home',
+          `end-${k}`
+        );
+      }
     }
+    if (n.duha) {
+      add(t.sunrise.at + Math.max(15, n.duhaDelay) * 60000, 'صلاة الضحى', '«صلاة الأوابين حين ترمض الفصال» — ركعتان تجزئان عن صدقة كل مفاصلك', '#/worship', 'duha');
+    }
+    if (n.midnight) add(t.midnight.at, 'منتصف الليل', 'آخر وقت صلاة العشاء، وأوتر قبل أن تنام إن خشيت ألا تقوم', '#/home', 'midnight');
     if (n.sunrise) add(t.sunrise.at, 'الشروق', 'انتهى وقت صلاة الفجر', '#/home', 'sunrise');
     if (n.morning) {
-      add(t.fajr.at + n.morningDelay * 60000, 'أذكار الصباح ☀️', '«أصبحنا وأصبح الملك لله…» حصّن يومك بأذكار الصباح', '#/adhkar/morning', 'morning');
+      add(t.fajr.at + n.morningDelay * 60000, 'أذكار الصباح ☀️', '«أصبحنا وأصبح الملك لله…» حصّن يومك بأذكار الصباح', '#/mine', 'morning');
     }
     if (n.evening) {
-      add(t.asr.at + n.eveningDelay * 60000, 'أذكار المساء 🌙', '«أمسينا وأمسى الملك لله…» حان وقت أذكار المساء', '#/adhkar/evening', 'evening');
+      add(t.asr.at + n.eveningDelay * 60000, 'أذكار المساء 🌙', '«أمسينا وأمسى الملك لله…» حان وقت أذكار المساء', '#/mine', 'evening');
     }
-    if (n.sleep) add(atClock(day, n.sleepTime, t), 'أذكار النوم', '«باسمك اللهم أموت وأحيا» — لا تنسَ أذكار النوم', '#/adhkar/sleep', 'sleep');
+    if (n.sleep) add(atClock(day, n.sleepTime, t), 'أذكار النوم', '«باسمك اللهم أموت وأحيا» — لا تنسَ أذكار النوم', '#/mine', 'sleep');
     if (n.lastThird) {
       add(t.lastThird.at, 'الثلث الأخير من الليل', '«ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر…»', '#/home', 'last-third');
     }
@@ -74,7 +94,19 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
       add(atClock(day, '21:30', t), 'عباداتي اليوم', 'سجّل صلواتك وعباداتك، وحاسب نفسك قبل أن تنام', '#/worship', 'worship');
     }
     if (n.friday && weekday === 5) {
-      add(atClock(day, '09:00', t), 'يوم الجمعة', 'سورة الكهف، والإكثار من الصلاة على النبي ﷺ، وساعة الإجابة آخر ساعة بعد العصر', '#/home', 'friday');
+      add(atClock(day, '10:00', t), 'يوم الجمعة', 'أكثر من الصلاة على النبي ﷺ، وتحرَّ ساعة الإجابة آخر ساعة بعد العصر', '#/home', 'friday');
+    }
+    if (n.kahf && weekday === 5) {
+      add(atClock(day, n.kahfTime, t), 'سورة الكهف 📖', '«من قرأ سورة الكهف يوم الجمعة أضاء له من النور ما بين الجمعتين»', '#/quran', 'kahf');
+    }
+    if (n.mulk) {
+      add(atClock(day, n.mulkTime, t), 'سورة الملك', '«سورة من القرآن ثلاثون آية شفعت لرجل حتى غُفر له: تبارك الذي بيده الملك»', '#/quran', 'mulk');
+    }
+    if (n.baqarah > 0 && dayNumber(day) % n.baqarah === 0) {
+      add(atClock(day, n.baqarahTime, t), 'سورة البقرة', '«لا تجعلوا بيوتكم مقابر، إن الشيطان ينفر من البيت الذي تُقرأ فيه سورة البقرة»', '#/quran', 'baqarah');
+    }
+    if (n.khatma && state.khatma.page < PAGES) {
+      add(atClock(day, n.khatmaTime, t), 'وردك من القرآن', `وردك اليوم ${num(dailyPages(state.khatma, day))} صفحة لتختم في موعدك`, '#/quran', 'khatma');
     }
     if (n.fasting && (weekday === 0 || weekday === 3)) {
       add(atClock(day, '21:00', t), `غداً ${weekday === 0 ? 'الاثنين' : 'الخميس'}`, 'تذكير بصيام التطوع، وتُعرض الأعمال فيه على الله', '#/home', 'fasting');
@@ -100,7 +132,8 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
 export function scheduleHash(state) {
   const s = state.settings;
   const custom = state.custom.filter((c) => c.reminder).map((c) => [c.id, c.reminder, c.text]);
-  const text = JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust, s.clock24, s.digits, s.notify, custom]);
+  const k = state.khatma;
+  const text = JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust, s.clock24, s.digits, s.notify, custom, k.days, k.start, k.page]);
   let h = 0;
   for (let i = 0; i < text.length; i++) h = (Math.imul(31, h) + text.charCodeAt(i)) | 0;
   return String(h);

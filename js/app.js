@@ -13,25 +13,29 @@ import * as qibla from './views/qibla.js';
 import * as notebook from './views/notebook.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
+import * as quran from './views/quran.js';
+import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
 const TABS = [
-  ['home', 'الرئيسية', 'home'],
-  ['adhkar', 'الأذكار', 'sun'],
-  ['tasbeeh', 'السبحة', 'beads'],
-  ['worship', 'عباداتي', 'check'],
-  ['notebook', 'دفتري', 'book'],
+  ['home', 'الرئيسية', 'home', '#/home'],
+  ['mine', 'أذكاري', 'heart', '#/mine'],
+  ['quran', 'القرآن', 'quran', '#/quran'],
+  ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
+  ['worship', 'عباداتي', 'check', '#/worship'],
 ];
 
 // [pattern, tab, view(viewEl, ...params)]
 const ROUTES = [
   [/^#\/home$/, 'home', (v) => home.render(v)],
-  [/^#\/adhkar$/, 'adhkar', (v) => adhkar.renderList(v)],
-  [/^#\/adhkar\/([\w-]+)$/, 'adhkar', (v, id) => adhkar.renderCategory(v, id)],
-  [/^#\/mine(?:\/([\w-]+))?$/, 'adhkar', (v, id) => adhkar.renderMine(v, id)],
+  [/^#\/mine(?:\/([\w-]+))?$/, 'mine', (v, id) => adhkar.renderMine(v, id)],
+  [/^#\/adhkar(?:\/[\w-]+)?$/, 'mine', (v) => adhkar.renderMine(v)], // old links from notifications
+  [/^#\/quran$/, 'quran', (v) => quran.renderKhatma(v)],
+  [/^#\/ruqyah$/, 'quran', (v) => quran.renderRuqyah(v)],
+  [/^#\/radio$/, 'quran', (v) => quran.renderRadio(v)],
   [/^#\/tasbeeh$/, 'tasbeeh', (v) => adhkar.renderTasbeeh(v)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/qibla$/, 'qibla', (v) => qibla.render(v)],
-  [/^#\/notebook(?:\/(saved))?$/, 'notebook', (v, tab) => notebook.render(v, tab)],
+  [/^#\/notebook(?:\/(saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)],
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],
@@ -59,6 +63,7 @@ function route() {
   current = fn(view, ...m.slice(1)) || null;
   for (const a of document.querySelectorAll('#tabs a')) a.classList.toggle('on', a.dataset.tab === tab);
   document.body.dataset.tab = tab;
+  renderMini();
   view.classList.remove('enter');
   void view.offsetWidth;
   view.classList.add('enter');
@@ -66,7 +71,7 @@ function route() {
 
 function renderTabs() {
   $('#tabs').innerHTML = TABS.map(
-    ([id, label, ic]) => `<a href="#/${id}" data-tab="${id}">${icon(ic, 24)}<span>${label}</span></a>`
+    ([id, label, ic, href]) => `<a href="${href}" data-tab="${id}">${icon(ic, 24)}<span>${label}</span></a>`
   ).join('');
 }
 
@@ -126,6 +131,30 @@ function chime() {
     // No audio: the toast is enough.
   }
 }
+
+// ---- Radio mini player (above the tabs while a station is on) ----
+
+function renderMini() {
+  const el = $('#mini');
+  const { status, station } = radioStatus();
+  const onRadioPage = location.hash === '#/radio';
+  if (!station || onRadioPage || document.body.dataset.tab === 'tasbeeh') {
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  const live = status === 'playing' || status === 'loading';
+  el.innerHTML = `
+    <a href="#/radio" class="mini-info">${icon('radio', 20)}<span><b>${esc(station.name)}</b><small>${quran.statusText(status)}</small></span></a>
+    <button class="icon-btn ghost sm" data-mini="toggle" aria-label="${live ? 'إيقاف مؤقت' : 'تشغيل'}">${icon(live ? 'pause' : 'play', 20)}</button>
+    <button class="icon-btn ghost sm" data-mini="stop" aria-label="إيقاف">${icon('close', 20)}</button>`;
+}
+$('#mini').addEventListener('click', (e) => {
+  const a = e.target.closest('[data-mini]')?.dataset.mini;
+  if (a === 'toggle') toggleRadio();
+  if (a === 'stop') stopRadio();
+});
+onRadio(renderMini);
 
 // ---- Install hint (iPhone Safari, not yet on the home screen) ----
 

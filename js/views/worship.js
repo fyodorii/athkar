@@ -1,7 +1,6 @@
 // Worship tracker: a daily checklist of prayers, voluntary prayers, Quran, adhkar and
 // good deeds, with the last week at a glance and a streak for the five prayers.
 
-import { CATEGORY_BY_ID } from '../adhkar-data.js';
 import { hijriText, num, WEEKDAYS } from '../dates.js';
 import { icon } from '../icons.js';
 import { addDays, dayKey } from '../prayer.js';
@@ -19,20 +18,31 @@ const GROUPS = [
     title: 'النوافل',
     icon: 'moonStar',
     items: [
+      { id: 'fajrSunnah', name: 'ركعتا الفجر', type: 'check' },
       { id: 'rawatib', name: 'السنن الرواتب', type: 'count', goal: 12, step: 2, unit: 'ركعة' },
       { id: 'duha', name: 'صلاة الضحى', type: 'check' },
-      { id: 'witr', name: 'الوتر', type: 'check' },
+      { id: 'witr', name: 'صلاة الوتر', type: 'check' },
       { id: 'qiyam', name: 'قيام الليل', type: 'check' },
     ],
   },
   {
-    title: 'القرآن والذكر',
+    title: 'القرآن',
     icon: 'book',
     items: [
       { id: 'quran', name: 'ورد القرآن', type: 'count', goal: 'quranGoal', step: 1, unit: 'صفحة' },
-      { id: 'morning', name: 'أذكار الصباح', type: 'check', auto: 'morning' },
-      { id: 'evening', name: 'أذكار المساء', type: 'check', auto: 'evening' },
-      { id: 'sleep', name: 'أذكار النوم', type: 'check', auto: 'sleep' },
+      { id: 'hifz', name: 'ورد الحفظ', type: 'check' },
+      { id: 'review', name: 'ورد المراجعة', type: 'check' },
+      { id: 'baqarah', name: 'سورة البقرة', type: 'check' },
+      { id: 'mulk', name: 'سورة الملك', type: 'check' },
+    ],
+  },
+  {
+    title: 'الأذكار',
+    icon: 'beads',
+    items: [
+      { id: 'morning', name: 'أذكار الصباح', type: 'check' },
+      { id: 'evening', name: 'أذكار المساء', type: 'check' },
+      { id: 'sleep', name: 'أذكار النوم', type: 'check' },
       { id: 'istighfar', name: 'الاستغفار مائة مرة', type: 'check' },
     ],
   },
@@ -40,10 +50,20 @@ const GROUPS = [
     title: 'أعمال صالحة',
     icon: 'heart',
     items: [
-      { id: 'fast', name: 'الصيام', type: 'check' },
       { id: 'sadaqa', name: 'الصدقة', type: 'check' },
+      { id: 'fast', name: 'الصيام', type: 'check' },
       { id: 'parents', name: 'بر الوالدين وصلة الرحم', type: 'check' },
       { id: 'learn', name: 'طلب العلم', type: 'check' },
+    ],
+  },
+  {
+    title: 'عاداتي اليومية',
+    icon: 'sun',
+    items: [
+      { id: 'gym', name: 'التمارين / النادي', type: 'check' },
+      { id: 'walk', name: 'المشي ٣٠ دقيقة', type: 'check' },
+      { id: 'reading', name: 'القراءة ٣٠ دقيقة', type: 'check' },
+      { id: 'puzzles', name: 'الألغاز والتمارين الذهنية', type: 'check' },
     ],
   },
 ];
@@ -52,16 +72,8 @@ const goalOf = (item) => (item.goal === 'quranGoal' ? state.settings.quranGoal |
 
 const record = (key) => (state.worship[key] ??= {});
 
-// An adhkar item counts as done when its category was finished today in the counter.
-function autoDone(item, key) {
-  if (!item.auto || key !== today().key || state.progress.day !== key) return false;
-  const c = state.progress.counts;
-  return CATEGORY_BY_ID[item.auto].items.every((x) => (c[x.id] || 0) >= x.count);
-}
-
 const value = (item, key) => {
-  const v = state.worship[key]?.[item.id] || 0;
-  return item.type === 'check' && !v && autoDone(item, key) ? 1 : v;
+  return state.worship[key]?.[item.id] || 0;
 };
 
 const isDone = (item, key) => {
@@ -157,6 +169,10 @@ export function render(view) {
         state.worshipCustom.map((c) => ({ id: c.id, name: c.name, type: 'check', custom: true })),
         `<button class="btn ghost wide" data-add-habit>${icon('plus', 18)} أضف عبادة تتابعها</button>`
       )}
+      <section class="card diary">
+        <div class="card-head"><h2>${icon('edit', 18)} يومياتي</h2><small class="muted" data-diary-saved></small></div>
+        <textarea data-diary rows="5" placeholder="اكتب خواطرك اليوم، ما تعلمته، وما تحمد الله عليه…">${esc(state.diary[selected] || '')}</textarea>
+      </section>
       <p class="hint center">اضغط على الصلاة مرة لتسجيلها، ومرة ثانية إن صليتها في جماعة. سجلّك محفوظ على جهازك فقط.</p>`;
   };
 
@@ -182,7 +198,7 @@ export function render(view) {
         <div class="stepper ${done ? 'done' : ''}" data-count="${x.id}" data-step="${x.step}"><button data-d="-1">−</button><b>${num(v)}</b><button data-d="1">+</button></div></div>`;
     }
     return `<button class="track-row" data-check="${x.id}">
-      <span class="row-label">${esc(x.name)}${x.auto && done && !state.worship[selected]?.[x.id] ? '<small>من عدّاد الأذكار</small>' : ''}</span>
+      <span class="row-label">${esc(x.name)}</span>
       ${x.custom ? `<span class="icon-btn ghost sm" data-del="${x.id}" role="button" aria-label="حذف">${icon('trash', 17)}</span>` : ''}
       <span class="tick-box ${done ? 'p1' : ''}">${done ? icon('check', 18) : ''}</span></button>`;
   };
@@ -214,7 +230,6 @@ export function render(view) {
     if (c) {
       const item = allItems().find((x) => x.id === c.dataset.check);
       const r = record(selected);
-      if (!r[item.id] && autoDone(item, selected)) return toast('سُجّلت تلقائياً لأنك أتممتها في قسم الأذكار');
       r[item.id] = r[item.id] ? 0 : 1;
       save();
       haptic();
@@ -236,7 +251,24 @@ export function render(view) {
     }
     if (e.target.closest('[data-add-habit]')) addHabit(draw);
   };
-  return { destroy: () => (view.onclick = null) };
+  let typing;
+  view.oninput = (e) => {
+    if (!e.target.matches('[data-diary]')) return;
+    const text = e.target.value;
+    clearTimeout(typing);
+    typing = setTimeout(() => {
+      if (text.trim()) state.diary[selected] = text;
+      else delete state.diary[selected];
+      save();
+      const el = $('[data-diary-saved]', view);
+      if (el) el.textContent = 'حُفظ';
+    }, 400);
+  };
+  return {
+    destroy() {
+      view.onclick = view.oninput = null;
+    },
+  };
 }
 
 function quranGoal(redraw) {

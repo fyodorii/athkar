@@ -1,177 +1,43 @@
-// Adhkar library (categories and their counters), "my adhkar" and the tasbeeh counter.
+// My adhkar (the user's own list, with counters and reminders, which can also be
+// filled from the authentic adhkar), and the full-screen tasbeeh.
 
-import { CATEGORIES, CATEGORY_BY_ID } from '../adhkar-data.js';
+import { CATEGORIES } from '../adhkar-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { syncSchedule } from '../push.js';
-import { isSaved, save, state, todayCounts, toggleSaved, uid } from '../store.js';
+import { newDay, save, state, uid } from '../store.js';
 import { today } from '../today.js';
-import { $, $$, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
+import { $, $$, confirmSheet, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
 
-const TABS = [
-  ['#/adhkar', 'الأذكار'],
+export const MINE_TABS = [
   ['#/mine', 'أذكاري'],
+  ['#/notebook', 'أدعيتي'],
+  ['#/notebook/saved', 'المحفوظات'],
 ];
-
-const counts = () => todayCounts(today().key);
-const doneIn = (cat) => cat.items.filter((x) => (counts()[x.id] || 0) >= x.count).length;
-
-// ---- Categories ----
-
-export function renderList(view) {
-  view.innerHTML = `
-    ${pageHeader('الأذكار', { sub: 'من الكتاب والسنة الصحيحة' })}
-    ${segmented(TABS, '#/adhkar')}
-    <section class="cat-grid">
-      ${CATEGORIES.map((c) => {
-        const done = doneIn(c);
-        const all = c.items.length;
-        return `<a class="cat tone-${c.tone}" href="#/adhkar/${c.id}">
-          <div class="cat-icon">${icon(c.icon, 26)}</div>
-          <div class="cat-text"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></div>
-          <div class="cat-progress">${done ? `${ring(done / all, 34, 4)}<i>${done === all ? icon('check', 14) : num(done)}</i>` : `<small>${num(all)}</small>`}</div>
-        </a>`;
-      }).join('')}
-    </section>`;
-}
-
-// ---- One category: tap a card to count it down ----
-
-export function renderCategory(view, id) {
-  const cat = CATEGORY_BY_ID[id];
-  if (!cat) {
-    location.hash = '#/adhkar';
-    return;
-  }
-  const scale = state.settings.textScale;
-
-  const draw = () => {
-    const c = counts();
-    const done = doneIn(cat);
-    view.innerHTML = `
-      ${pageHeader(cat.title, {
-        back: '#/adhkar',
-        sub: `<span data-done>${num(done)}</span> من ${num(cat.items.length)}`,
-        actions: `<button class="icon-btn ghost" data-reset aria-label="البدء من جديد">${icon('reset', 22)}</button>`,
-      })}
-      <div class="cat-bar"><i data-bar style="width:${(done / cat.items.length) * 100}%"></i></div>
-      <section class="dhikr-list" style="--scale:${scale}">
-        ${cat.items.map((x) => dhikrCard(x, c[x.id] || 0)).join('')}
-      </section>
-      <div class="finish ${done === cat.items.length ? 'show' : ''}" data-finish>
-        ${icon('check', 28)}<b>أتممت ${esc(cat.title)}</b><span>تقبّل الله منك</span>
-      </div>`;
-  };
-  draw();
-
-  const onClick = async (e) => {
-    const card = e.target.closest('.dhikr');
-    if (!card) return;
-    const item = cat.items.find((x) => x.id === card.dataset.id);
-    const action = e.target.closest('[data-act]')?.dataset.act;
-    const full = (item.before ? item.before + '\n' : '') + item.text;
-    if (action === 'save') {
-      const on = toggleSaved(item.id);
-      e.target.closest('[data-act]').innerHTML = icon(on ? 'bookmarkOn' : 'bookmark', 20);
-      toast(on ? `${icon('bookmarkOn', 18)} حُفظ في دفتري` : 'أُزيل من دفتري');
-      return;
-    }
-    if (action === 'copy') return copyText(full);
-    if (action === 'share') return shareText(full);
-    if (e.target.closest('summary, details')) return;
-    count(card, item);
-  };
-
-  const count = (card, item) => {
-    const c = counts();
-    const n = c[item.id] || 0;
-    if (n >= item.count) return;
-    c[item.id] = n + 1;
-    save();
-    haptic();
-    const left = item.count - c[item.id];
-    card.querySelector('[data-left]').textContent = left ? num(left) : '';
-    card.querySelector('.counter').classList.add('bump');
-    setTimeout(() => card.querySelector('.counter')?.classList.remove('bump'), 160);
-    card.querySelector('.counter-ring').innerHTML = ring(c[item.id] / item.count, 58, 4);
-    if (!left) {
-      card.classList.add('done');
-      card.querySelector('[data-left]').innerHTML = icon('check', 24);
-      haptic(30);
-      const done = doneIn(cat);
-      $('[data-done]', view).textContent = num(done);
-      $('[data-bar]', view).style.width = `${(done / cat.items.length) * 100}%`;
-      const nextCard = $$('.dhikr:not(.done)', view)[0];
-      if (nextCard) setTimeout(() => nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
-      else $('[data-finish]', view).classList.add('show');
-    }
-  };
-
-  const onReset = async (e) => {
-    if (!e.target.closest('[data-reset]')) return;
-    if (!(await confirmSheet('إعادة عدّاد هذه الأذكار من البداية؟', { ok: 'إعادة', danger: false }))) return;
-    const c = counts();
-    for (const x of cat.items) delete c[x.id];
-    save();
-    draw();
-    window.scrollTo({ top: 0 });
-  };
-
-  view.addEventListener('click', onClick);
-  view.addEventListener('click', onReset);
-  return {
-    destroy() {
-      view.removeEventListener('click', onClick);
-      view.removeEventListener('click', onReset);
-    },
-  };
-}
-
-function dhikrCard(x, n) {
-  const done = n >= x.count;
-  const left = x.count - n;
-  return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
-    ${x.title ? `<h3 class="dhikr-title">${esc(x.title)}</h3>` : ''}
-    <div class="dhikr-text">${x.before ? `<span class="before">${esc(x.before)}</span>` : ''}${esc(x.text)}</div>
-    ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
-    <footer>
-      <div class="dhikr-meta">
-        ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
-        <div class="dhikr-actions">
-          <button class="icon-btn ghost sm" data-act="save" aria-label="حفظ في دفتري">${icon(isSaved(x.id) ? 'bookmarkOn' : 'bookmark', 20)}</button>
-          <button class="icon-btn ghost sm" data-act="copy" aria-label="نسخ">${icon('copy', 20)}</button>
-          <button class="icon-btn ghost sm" data-act="share" aria-label="مشاركة">${icon('share', 20)}</button>
-        </div>
-      </div>
-      <button class="counter" aria-label="عدّ">
-        <span class="counter-ring">${ring(n / x.count, 58, 4)}</span>
-        <span class="counter-num" data-left>${done ? icon('check', 24) : num(left)}</span>
-      </button>
-    </footer>
-    ${x.count > 1 ? `<span class="times">${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}</span>` : ''}
-  </article>`;
-}
+const TABS = MINE_TABS;
 
 // ---- My adhkar ----
 
 export function renderMine(view, focusId) {
   const draw = () => {
-    counts(); // resets the daily counters on a new day
+    newDay(today().key);
     const list = state.custom;
     view.innerHTML = `
       ${pageHeader('أذكاري', {
         sub: 'أذكارك الخاصة بعدّادها وتذكيرها',
-        actions: `<button class="icon-btn primary" data-add aria-label="إضافة ذكر">${icon('plus', 22)}</button>`,
+        actions: `<button class="icon-btn ghost" data-pick aria-label="من الأذكار المأثورة">${icon('book', 22)}</button><button class="icon-btn primary" data-add aria-label="إضافة ذكر">${icon('plus', 22)}</button>`,
       })}
       ${segmented(TABS, '#/mine')}
       ${
         list.length
-          ? `<section class="mine-list">${list.map(mineCard).join('')}</section>`
+          ? `<section class="mine-list">${list.map(mineCard).join('')}</section>
+             <button class="btn ghost wide pick-more" data-pick>${icon('book', 20)} أضف من الأذكار المأثورة</button>`
           : `<div class="empty">
               <div class="empty-art">${icon('beads', 44)}</div>
               <b>أضف ذكرك الأول</b>
               <p>اكتب الذكر الذي تحب المداومة عليه، وحدّد عدده اليومي، واختر وقتاً ليذكّرك التطبيق به.</p>
               <button class="btn primary" data-add>${icon('plus', 20)} إضافة ذكر</button>
+              <button class="btn ghost" data-pick>${icon('book', 20)} اختر من الأذكار المأثورة</button>
             </div>`
       }`;
     if (focusId) {
@@ -187,11 +53,12 @@ export function renderMine(view, focusId) {
 
   const onClick = (e) => {
     if (e.target.closest('[data-add]')) return editCustom(null, draw);
+    if (e.target.closest('[data-pick]')) return pickAdhkar(draw);
     const card = e.target.closest('.mine');
     if (!card) return;
     const item = state.custom.find((c) => c.id === card.dataset.id);
     if (e.target.closest('[data-more]')) return customMenu(item, draw);
-    counts();
+    newDay(today().key);
     item.today = (item.today || 0) + 1;
     item.total = (item.total || 0) + 1;
     save();
@@ -210,7 +77,8 @@ function mineCard(c) {
   const done = c.target && c.today >= c.target;
   return `<article class="mine ${done ? 'done' : ''}" data-id="${c.id}">
     <div class="mine-body">
-      <p class="mine-text">${esc(c.text)}</p>
+      <p class="mine-text ${c.quran ? 'hafs' : ''}">${esc(c.text)}</p>
+      ${c.ref ? `<p class="mine-ref">${esc(c.ref)}</p>` : ''}
       <div class="mine-meta">
         ${c.reminder ? `<span class="pill">${icon('bell', 14)} ${num(c.reminder)}</span>` : ''}
         <span class="pill soft">المجموع ${num(c.total || 0)}</span>
@@ -313,7 +181,52 @@ export function editCustom(item, onDone, preset = {}) {
   );
 }
 
-// ---- Tasbeeh (السبحة) ----
+// Adds adhkar from the Book and Sunnah to "my adhkar", a whole set or one by one.
+function pickAdhkar(redraw) {
+  const have = new Set(state.custom.map((c) => c.text));
+  openSheet(
+    `<p class="hint">اختر ما تريد إضافته إلى أذكارك، بعدده ومصدره. يمكنك تعديله أو حذفه بعد ذلك.</p>
+     ${CATEGORIES.map(
+       (c) => `<details class="pick-cat">
+         <summary><span class="tone-${c.tone} pick-icon">${icon(c.icon, 18)}</span><b>${esc(c.title)}</b><small>${num(c.items.length)}</small></summary>
+         <button type="button" class="btn ghost wide" data-all="${c.id}">${icon('plus', 18)} أضف الكل</button>
+         ${c.items
+           .map(
+             (x) => `<label class="pick-item"><input type="checkbox" value="${x.id}" ${have.has(x.text) ? 'checked disabled' : ''}>
+               <span>${x.title ? `<b>${esc(x.title)}</b> ` : ''}${esc(x.text.length > 140 ? x.text.slice(0, 137) + '…' : x.text)}<small>${x.count > 1 ? `${num(x.count)} مرات • ` : ''}${esc(x.ref || '')}</small></span></label>`
+           )
+           .join('')}
+       </details>`
+     ).join('')}
+     <div class="sheet-actions sticky"><button class="btn primary" data-add-picked>إضافة المحدد إلى أذكاري</button></div>`,
+    (el, close) => {
+      const items = Object.fromEntries(CATEGORIES.flatMap((c) => c.items.map((x) => [x.id, x])));
+      const add = (ids) => {
+        let n = 0;
+        for (const id of ids) {
+          const x = items[id];
+          if (!x || have.has(x.text)) continue;
+          const text = (x.before ? x.before + '\n' : '') + x.text;
+          state.custom.push({ id: uid(), text, target: x.count, ref: x.ref || '', reminder: '', today: 0, total: 0, created: Date.now() });
+          have.add(x.text);
+          n++;
+        }
+        save();
+        close();
+        toast(n ? `${icon('check', 18)} أُضيف ${num(n)} إلى أذكاري` : 'لم تختر شيئاً جديداً');
+        redraw();
+      };
+      el.addEventListener('click', (e) => {
+        const all = e.target.closest('[data-all]');
+        if (all) return add(CATEGORIES.find((c) => c.id === all.dataset.all).items.map((x) => x.id));
+        if (e.target.closest('[data-add-picked]')) add($$('input:checked:not(:disabled)', el).map((i) => i.value));
+      });
+    },
+    { title: 'من الأذكار المأثورة' }
+  );
+}
+
+// ---- Tasbeeh (السبحة): a full-screen counter; tap anywhere to count ----
 
 const PHRASES = [
   'سبحان الله',
@@ -322,12 +235,14 @@ const PHRASES = [
   'لا إله إلا الله',
   'أستغفر الله',
   'سبحان الله وبحمده',
-  'سبحان الله العظيم',
+  'سبحان الله وبحمده، سبحان الله العظيم',
   'لا حول ولا قوة إلا بالله',
-  'اللهم صل على محمد',
+  'اللهم صل وسلم على نبينا محمد',
   'لا إله إلا أنت سبحانك إني كنت من الظالمين',
 ];
 const T_TARGETS = [33, 99, 100, 1000, 0];
+const FONT_MIN = 22;
+const FONT_MAX = 110;
 
 export function renderTasbeeh(view) {
   const t = state.tasbeeh;
@@ -337,41 +252,37 @@ export function renderTasbeeh(view) {
     t.today = 0;
     save();
   }
-  const phrases = () => [...PHRASES, ...(t.phrases || [])];
-  // Share of the current round done; a finished round shows full until the next tap.
+  t.fontSize ||= 40;
   const frac = () => (t.target ? (t.count % t.target || (t.count ? t.target : 0)) / t.target : 0);
-  const roundText = () => (t.target ? `الدورة ${num(Math.ceil(t.count / t.target) || 1)} • الهدف ${num(t.target)}` : 'بلا حد');
+  const roundText = () => (t.target ? `الدورة ${num(Math.ceil(t.count / t.target) || 1)} • الهدف ${num(t.target)}` : 'عدّ مفتوح بلا حد');
 
   const draw = () => {
     view.innerHTML = `
-      ${pageHeader('السبحة', {
-        sub: 'اضغط على الدائرة للتسبيح',
-        actions: `<button class="icon-btn ghost" data-reset aria-label="تصفير">${icon('reset', 22)}</button>`,
-      })}
-      <div class="chips scroll" data-phrases>
-        ${phrases().map((p) => `<button class="chip-opt ${p === t.phrase ? 'on' : ''}" data-p="${esc(p)}">${esc(p)}</button>`).join('')}
-        <button class="chip-opt add" data-new aria-label="ذكر جديد">${icon('plus', 16)}</button>
-      </div>
-      <section class="tasbeeh">
-        <p class="tasbeeh-phrase">${esc(t.phrase)}</p>
-        <button class="tasbeeh-btn" data-tap aria-label="سبّح">
-          <span class="beads-orbit" data-orbit style="--turn:${(t.count % 33) * (360 / 33)}deg">${beads()}</span>
-          <span data-ring>${ring(frac(), 236, 9)}</span>
-          <span class="tasbeeh-count"><b data-count>${num(t.count)}</b><small data-round>${roundText()}</small></span>
-        </button>
-        <div class="chips centered" data-targets>
-          ${T_TARGETS.map((n) => `<button class="chip-opt ${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : '∞'}</button>`).join('')}
+      <section class="tsb" data-area>
+        <header class="tsb-top" data-ui>
+          <a class="icon-btn glass" href="#/home" aria-label="خروج">${icon('back', 22)}</a>
+          <div class="tsb-tools">
+            <button class="icon-btn glass" data-font="-6" aria-label="تصغير الذكر">${icon('minus', 20)}</button>
+            <button class="icon-btn glass" data-font="6" aria-label="تكبير الذكر">${icon('plus', 20)}</button>
+            <button class="icon-btn glass" data-phrases aria-label="اختيار الذكر">${icon('beads', 20)}</button>
+            <button class="icon-btn glass" data-reset aria-label="تصفير">${icon('reset', 20)}</button>
+          </div>
+        </header>
+        <div class="tsb-phrase" data-phrase style="font-size:${t.fontSize}px">${esc(t.phrase)}</div>
+        <div class="tsb-counter">
+          <span data-ring>${ring(frac(), 250, 8)}</span>
+          <span class="tsb-num"><b data-count>${num(t.count)}</b><small data-round>${roundText()}</small></span>
         </div>
-        <div class="stats">
-          <div><small>تسبيح اليوم</small><b data-today>${num(t.today || 0)}</b></div>
-          <div><small>المجموع الكلي</small><b data-total>${num(t.total)}</b></div>
-        </div>
-        <p class="hint center">${icon('info', 15)} «كلمتان خفيفتان على اللسان، ثقيلتان في الميزان، حبيبتان إلى الرحمن: سبحان الله وبحمده، سبحان الله العظيم» — متفق عليه</p>
+        <p class="tsb-hint">اضغط في أي مكان للتسبيح • باعد بإصبعين لتكبير الذكر</p>
+        <footer class="tsb-bottom" data-ui>
+          <div class="tsb-targets">${T_TARGETS.map((n) => `<button class="${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : '∞'}</button>`).join('')}</div>
+          <div class="tsb-stats"><span>اليوم <b data-today>${num(t.today || 0)}</b></span><span>المجموع <b data-total>${num(t.total)}</b></span></div>
+        </footer>
       </section>`;
   };
   draw();
 
-  const tap = () => {
+  const tap = (x, y) => {
     t.count += 1;
     t.total += 1;
     t.today = (t.today || 0) + 1;
@@ -379,80 +290,126 @@ export function renderTasbeeh(view) {
     const reached = t.target && t.count % t.target === 0;
     haptic(reached ? 40 : 10);
     if (reached) toast(`${icon('check', 18)} أتممت ${num(t.target)} — ${esc(t.phrase)}`);
-    $('[data-ring]', view).innerHTML = ring(frac(), 236, 9);
+    $('[data-ring]', view).innerHTML = ring(frac(), 250, 8);
     $('[data-count]', view).textContent = num(t.count);
     $('[data-round]', view).textContent = roundText();
     $('[data-total]', view).textContent = num(t.total);
     $('[data-today]', view).textContent = num(t.today);
-    $('[data-orbit]', view).style.setProperty('--turn', `${(t.count % 33) * (360 / 33)}deg`);
+    const counter = $('.tsb-num', view);
+    counter.classList.remove('pop');
+    void counter.offsetWidth;
+    counter.classList.add('pop');
+    if (x !== undefined) {
+      const r = document.createElement('i');
+      r.className = 'tsb-ripple';
+      r.style.left = `${x}px`;
+      r.style.top = `${y}px`;
+      $('[data-area]', view).appendChild(r);
+      setTimeout(() => r.remove(), 600);
+    }
+  };
+
+  const setFont = (size) => {
+    t.fontSize = Math.round(Math.max(FONT_MIN, Math.min(FONT_MAX, size)));
+    $('[data-phrase]', view).style.fontSize = `${t.fontSize}px`;
   };
 
   const onClick = async (e) => {
-    if (e.target.closest('[data-tap]')) return tap();
-    if (e.target.closest('[data-new]')) return newPhrase(draw);
-    const p = e.target.closest('[data-p]');
-    if (p) {
-      t.phrase = p.dataset.p;
-      t.count = 0;
-      save();
-      return draw();
+    const f = e.target.closest('[data-font]');
+    if (f) {
+      setFont(t.fontSize + Number(f.dataset.font));
+      return save();
     }
+    if (e.target.closest('[data-phrases]')) return choosePhrase(draw);
     const n = e.target.closest('[data-t]');
     if (n) {
       t.target = Number(n.dataset.t);
       save();
       return draw();
     }
-    if (e.target.closest('[data-reset]') && (await confirmSheet('تصفير العدّاد الحالي؟', { ok: 'تصفير', danger: false }))) {
-      t.count = 0;
-      save();
-      draw();
+    if (e.target.closest('[data-reset]')) {
+      if (await confirmSheet('تصفير العدّاد الحالي؟', { ok: 'تصفير', danger: false })) {
+        t.count = 0;
+        save();
+        draw();
+      }
+      return;
     }
+    if (e.target.closest('[data-ui], a, button')) return;
+    tap(e.clientX, e.clientY);
   };
-  // Volume keys cannot be read on the web; Space/Enter count on a keyboard.
+
+  // Pinch on iPhone (Safari's gesture events) resizes the dhikr text.
+  let base = t.fontSize;
+  let pinching = false;
+  const onGestureStart = (e) => {
+    e.preventDefault();
+    pinching = true;
+    base = t.fontSize;
+  };
+  const onGestureChange = (e) => {
+    e.preventDefault();
+    setFont(base * e.scale);
+  };
+  const onGestureEnd = (e) => {
+    e.preventDefault();
+    save();
+    setTimeout(() => (pinching = false), 300);
+  };
+  const guardClick = (e) => {
+    if (pinching) e.stopPropagation();
+  };
   const onKey = (e) => {
     if ((e.key === ' ' || e.key === 'Enter') && !e.target.closest('input, textarea, button')) {
       e.preventDefault();
       tap();
     }
   };
+  view.addEventListener('click', guardClick, true);
   view.addEventListener('click', onClick);
+  view.addEventListener('gesturestart', onGestureStart);
+  view.addEventListener('gesturechange', onGestureChange);
+  view.addEventListener('gestureend', onGestureEnd);
   document.addEventListener('keydown', onKey);
   return {
     destroy() {
+      view.removeEventListener('click', guardClick, true);
       view.removeEventListener('click', onClick);
+      view.removeEventListener('gesturestart', onGestureStart);
+      view.removeEventListener('gesturechange', onGestureChange);
+      view.removeEventListener('gestureend', onGestureEnd);
       document.removeEventListener('keydown', onKey);
     },
   };
 }
 
-function beads() {
-  let s = '';
-  for (let i = 0; i < 33; i++) s += `<i style="transform: rotate(${i * (360 / 33)}deg) translateY(calc(var(--r) * -1))"></i>`;
-  return s;
-}
-
-function newPhrase(redraw) {
+// Choose what to count: the usual phrases, the user's own adhkar, or a new phrase.
+function choosePhrase(redraw) {
   const t = state.tasbeeh;
+  const short = (s) => (s.length > 90 ? s.slice(0, 87) + '…' : s);
+  const list = [...PHRASES, ...(t.phrases || []), ...state.custom.map((c) => c.text).filter((x) => x.length <= 160)];
+  const unique = [...new Set(list)];
   openSheet(
-    `<form class="form">
-       <label class="field"><span>الذكر</span><textarea name="text" rows="2" maxlength="120" required placeholder="مثال: سبحان الله وبحمده عدد خلقه"></textarea></label>
-       ${t.phrases?.length ? `<div class="field"><span>أذكارك في السبحة (اضغط للحذف)</span><div class="chips">${t.phrases.map((p, i) => `<button type="button" class="chip-opt" data-rm="${i}">${esc(p)} ×</button>`).join('')}</div></div>` : ''}
-       <div class="sheet-actions"><button class="btn primary" type="submit">إضافة إلى السبحة</button><button class="btn ghost" type="button" data-close>إلغاء</button></div>
+    `<div class="menu phrases">${unique
+      .map((p, i) => `<button data-i="${i}" class="${p === t.phrase ? 'on' : ''}">${p === t.phrase ? icon('check', 18) : icon('beads', 18)} <span>${esc(short(p))}</span></button>`)
+      .join('')}</div>
+     <form class="form new-phrase">
+       <label class="field"><span>ذكر جديد للسبحة</span><textarea name="text" rows="2" maxlength="160" placeholder="اكتب الذكر هنا"></textarea></label>
+       <button class="btn primary" type="submit">${icon('plus', 18)} إضافة واختيار</button>
      </form>`,
     (el, close) => {
-      const form = el.querySelector('form');
       el.addEventListener('click', (e) => {
-        const rm = e.target.closest('[data-rm]');
-        if (!rm) return;
-        t.phrases.splice(Number(rm.dataset.rm), 1);
+        const b = e.target.closest('[data-i]');
+        if (!b) return;
+        t.phrase = unique[Number(b.dataset.i)];
+        t.count = 0;
         save();
-        rm.remove();
+        close();
         redraw();
       });
-      form.addEventListener('submit', (e) => {
+      el.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault();
-        const text = form.text.value.trim();
+        const text = e.target.text.value.trim();
         if (!text) return;
         t.phrases = [...(t.phrases || []).filter((p) => p !== text), text];
         t.phrase = text;
@@ -462,6 +419,6 @@ function newPhrase(redraw) {
         redraw();
       });
     },
-    { title: 'ذكر جديد للسبحة' }
+    { title: 'اختر الذكر' }
   );
 }

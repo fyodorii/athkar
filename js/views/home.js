@@ -1,24 +1,29 @@
 // Home: live clock, Hijri and Gregorian dates, next prayer countdown and today's times.
 
-import { CATEGORY_BY_ID, DAILY } from '../adhkar-data.js';
+import { DAILY } from '../adhkar-data.js';
 import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, gregText, hijriText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
 import { METHODS, PRAYERS } from '../prayer.js';
 import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
-import { adhkarNow, hoursAt, today } from '../today.js';
+import { hoursAt, today } from '../today.js';
+import { todayPortion } from '../khatma.js';
+import { PAGES } from '../quran-data.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
 import { cyclePrayer, dayScore, prayerIcon, prayerStreak } from './worship.js';
 
-const SUGGEST = {
-  morning: { text: 'حان وقت أذكار الصباح', sub: 'من الفجر إلى طلوع الشمس' },
-  evening: { text: 'حان وقت أذكار المساء', sub: 'من العصر إلى غروب الشمس' },
-  sleep: { text: 'أذكار النوم', sub: 'اختم يومك بذكر الله' },
-  prayer: { text: 'أذكار بعد الصلاة', sub: 'دبر كل صلاة مكتوبة' },
-};
+const QUICK = [
+  ['#/mine', 'أذكاري', 'heart', 'rose'],
+  ['#/quran', 'الختمة', 'quran', 'emerald'],
+  ['#/ruqyah', 'الرقية', 'book', 'teal'],
+  ['#/radio', 'الإذاعة', 'radio', 'indigo'],
+  ['#/tasbeeh', 'السبحة', 'beads', 'amber'],
+  ['#/qibla', 'القبلة', 'compass', 'teal'],
+];
 
-const QUICK = ['morning', 'evening', 'prayer', 'sleep'];
+// Rows under the five prayers: Duha, the middle of the night and its last third.
+const EXTRA = ['duha', 'midnight', 'lastThird'];
 
 function bigClock() {
   const { h, m, s } = hoursAt();
@@ -30,8 +35,6 @@ export function render(view) {
   const s = state.settings;
   const info = today();
   const c = bigClock();
-  const suggestion = adhkarNow(info);
-  const cat = CATEGORY_BY_ID[suggestion];
   const daily = DAILY[(info.day.d + info.day.m * 3) % DAILY.length];
   const d = dailyFor(info.day);
   const texts = {
@@ -72,10 +75,11 @@ export function render(view) {
         </div>
       </div>
       <div class="bar"><i data-progress style="width:${progress(info)}%"></i></div>
+      <div class="ends" data-ends>${endsText(info)}</div>
     </div>
   </section>
 
-  ${info.isFriday ? `<a class="banner gold" href="#/adhkar/tasbih">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>سورة الكهف، والإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></a>` : ''}
+  ${info.isFriday ? `<a class="banner gold" href="#/quran">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>سورة الكهف، والإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></a>` : ''}
 
   <section class="card prayers">
     <div class="card-head">
@@ -85,29 +89,24 @@ export function render(view) {
     <ul class="prayer-list">
       ${PRAYERS.map((k) => prayerRow(info, k)).join('')}
     </ul>
-    <div class="night-times">
-      <span>${icon('stars', 15)} منتصف الليل <b>${clockText(info.times.midnight.hours, s.clock24)}</b></span>
-      <span>الثلث الأخير <b>${clockText(info.times.lastThird.hours, s.clock24)}</b></span>
-    </div>
+    <ul class="extra-times">
+      ${EXTRA.map((k) => {
+        const c2 = clock(info.times[k].hours, s.clock24);
+        return `<li><span>${icon(PRAYER_ICONS[k], 18)}</span><b>${info.times[k].name}</b><em>${c2.time} <small>${c2.period}</small></em></li>`;
+      }).join('')}
+    </ul>
   </section>
-
-  <a class="suggest card" href="#/adhkar/${suggestion}">
-    <div class="suggest-icon tone-${cat.tone}">${icon(cat.icon, 26)}</div>
-    <div class="suggest-text"><b>${SUGGEST[suggestion].text}</b><span>${SUGGEST[suggestion].sub}</span></div>
-    ${icon('chevron', 20, 'muted')}
-  </a>
 
   <section class="quick">
-    ${QUICK.map((id) => {
-      const q = CATEGORY_BY_ID[id];
-      return `<a class="quick-tile tone-${q.tone}" href="#/adhkar/${id}">${icon(q.icon, 24)}<span>${esc(q.title)}</span></a>`;
-    }).join('')}
+    ${QUICK.map(([href, label, ic, tone]) => `<a class="quick-tile tone-${tone}" href="${href}">${icon(ic, 24)}<span>${label}</span></a>`).join('')}
   </section>
+
+  ${khatmaCard(info)}
 
   ${worshipCard(info)}
 
   <section class="today-cards" data-cards>
-    ${todayCard('ayah', 'آية اليوم', 'book', `﴿${esc(d.ayah.text)}﴾`, d.ayah.ref)}
+    ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs">${esc(d.ayah.text)}</span>`, d.ayah.ref)}
     ${todayCard('hadith', 'حديث اليوم', 'quote', esc(d.hadith.text), d.hadith.ref)}
     ${todayCard('advice', 'نصيحة اليوم', 'heart', esc(d.advice.text), '')}
     ${todayCard('dhikr', 'ذكر اليوم', 'beads', esc(daily.text), daily.note)}
@@ -115,9 +114,8 @@ export function render(view) {
   <div class="dots" data-dots>${[0, 1, 2, 3].map((i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>
 
   <div class="foot-links">
-    <a href="#/qibla">${icon('compass', 18)} اتجاه القبلة</a>
-    <a href="#/tasbeeh">${icon('beads', 18)} السبحة</a>
     <a href="#/settings/widget">${icon('widget', 18)} ويدجت الشاشة</a>
+    <a href="#/settings/notify">${icon('bell', 18)} التنبيهات</a>
   </div>`;
 
   view.addEventListener('click', onClick);
@@ -137,6 +135,7 @@ export function render(view) {
       if (p) p.textContent = c2.period;
       $('[data-countdown]', view).textContent = countdown(info2.next.at - Date.now());
       $('[data-progress]', view).style.width = `${progress(info2)}%`;
+      $('[data-ends]', view).innerHTML = endsText(info2);
     },
     destroy() {
       view.removeEventListener('click', onClick);
@@ -238,4 +237,32 @@ function worshipCard(info) {
       </div>
     </div>
   </section>`;
+}
+
+// "The time for Dhuhr ends in 01:23:45", or what time it is when no prayer is due.
+function endsText(info) {
+  const now = Date.now();
+  const c = info.current;
+  if (c) {
+    const left = c.end.at - now;
+    return `<span class="${left < 20 * 60000 ? 'warn' : ''}">${icon('clock', 15)} يخرج وقت ${esc(c.name)} بعد <b>${countdown(left)}</b> (${clockText(c.end.hours, state.settings.clock24)})</span>`;
+  }
+  const t = info.times;
+  if (now >= t.sunrise.at && now < t.dhuhr.at) return `<span>${icon('sun', 15)} وقت الضحى — ${now < t.duha.at ? `يبدأ ${clockText(t.duha.hours, state.settings.clock24)}` : 'صلِّ ركعتي الضحى'}</span>`;
+  return `<span>${icon('stars', 15)} ${now >= t.lastThird.at - 86400000 || now >= t.lastThird.at ? 'الثلث الأخير من الليل — وقت نزول واستجابة' : 'بعد منتصف الليل'}</span>`;
+}
+
+function khatmaCard(info) {
+  const k = state.khatma;
+  if (!k.start) {
+    return `<a class="card khatma-mini" href="#/quran">
+      <span class="km-icon">${icon('quran', 24)}</span>
+      <span class="km-text"><b>ابدأ ختمتك</b><small>حدد مدة الختمة، ويحسب لك وردك اليومي</small></span>${icon('chevron', 18, 'muted')}</a>`;
+  }
+  const p = todayPortion(k, info.day);
+  return `<a class="card khatma-mini" href="#/quran">
+    <span class="km-ring">${ring(k.page / PAGES, 52, 5)}<b>${num(Math.floor((k.page / PAGES) * 100))}٪</b></span>
+    <span class="km-text"><b>${k.page >= PAGES ? 'أتممت الختمة' : p.done ? 'أتممت وردك اليوم ✓' : `وردك اليوم: ${num(p.size)} صفحة`}</b>
+      <small>${k.page >= PAGES ? 'تقبّل الله منك' : `من ص ${num(p.from)} (${esc(p.fromInfo.surahName)}) إلى ص ${num(p.to)} (${esc(p.toInfo.surahName)})`}</small></span>
+    ${icon('chevron', 18, 'muted')}</a>`;
 }

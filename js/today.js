@@ -1,6 +1,6 @@
 // "Now" at the chosen location: today's date, prayer times and the next prayer.
 
-import { addDays, dateAt, dayKey, dayTimes, tzOffset } from './prayer.js';
+import { addDays, dateAt, dayKey, dayTimes, prayerEnd, tzOffset } from './prayer.js';
 import { hijri } from './dates.js';
 import { state } from './store.js';
 
@@ -31,7 +31,21 @@ export function today(now = new Date()) {
   const weekday = new Date(Date.UTC(day.y, day.m - 1, day.d)).getUTCDay();
   const isFriday = weekday === 5;
   if (isFriday && next.key === 'dhuhr') next = { ...next, name: 'الجمعة' };
-  return { ...cache.value, next, prev, weekday, isFriday };
+
+  // The prayer whose time is running now, and when it runs out (none between sunrise
+  // and Dhuhr, or between the middle of the night and Fajr).
+  let current = null;
+  const yIsha = { ...times.isha, at: times.isha.at - 86400000 };
+  const yMid = { ...times.midnight, at: times.midnight.at - 86400000 };
+  if (t < times.fajr.at && t < yMid.at) current = { ...yIsha, end: yMid };
+  else {
+    const p = list.filter((x) => x.at <= t).pop();
+    if (p) {
+      const end = prayerEnd(times, p.key);
+      if (t < end.at) current = { ...p, name: isFriday && p.key === 'dhuhr' ? 'الجمعة' : p.name, end };
+    }
+  }
+  return { ...cache.value, next, prev, current, weekday, isFriday };
 }
 
 // Current wall-clock time at the location as decimal hours (for the big clock).
@@ -39,13 +53,4 @@ export function hoursAt(now = new Date()) {
   const tz = tzOffset(state.settings.location.tz, now);
   const d = new Date(now.getTime() + tz * 3600000);
   return { h: d.getUTCHours(), m: d.getUTCMinutes(), s: d.getUTCSeconds() };
-}
-
-// Which adhkar suit this moment, for the home screen suggestion.
-export function adhkarNow(info, now = Date.now()) {
-  const { times } = info;
-  if (now >= times.fajr.at && now < times.dhuhr.at) return 'morning';
-  if (now >= times.asr.at && now < times.isha.at) return 'evening';
-  if (now >= times.isha.at || now < times.fajr.at) return 'sleep';
-  return 'prayer';
 }

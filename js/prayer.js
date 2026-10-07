@@ -23,6 +23,7 @@ export const PRAYERS = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 export const PRAYER_NAMES = {
   fajr: 'الفجر',
   sunrise: 'الشروق',
+  duha: 'الضحى',
   dhuhr: 'الظهر',
   asr: 'العصر',
   maghrib: 'المغرب',
@@ -161,7 +162,16 @@ export function dayTimes(day, settings, isRamadan = false) {
     const minutes = Math.round(raw[k] * 60 + (offsets[k] || 0));
     out[k] = { key: k, name: PRAYER_NAMES[k], hours: minutes / 60, at: base + (minutes - tz * 60) * 60000 };
   }
+  // Duha begins once the sun has risen about a spear's length, ~15 minutes after sunrise.
+  out.duha = { key: 'duha', name: PRAYER_NAMES.duha, hours: out.sunrise.hours + 0.25, at: out.sunrise.at + 15 * 60000 };
   return out;
+}
+
+// When each obligatory prayer's time runs out: Fajr at sunrise, Dhuhr at Asr, Asr at
+// Maghrib, Maghrib at Isha, and Isha at the middle of the night (Muslim, from Ibn ʿAmr).
+export const PRAYER_END = { fajr: 'sunrise', dhuhr: 'asr', asr: 'maghrib', maghrib: 'isha', isha: 'midnight' };
+export function prayerEnd(times, key) {
+  return times[PRAYER_END[key]];
 }
 
 // Great-circle direction (degrees from true north) and distance (km) to the Kaaba.
