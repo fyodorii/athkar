@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>أذكار ومواقيت</title>
+    <meta name="description" content="أذكار الصباح والمساء، مواقيت الصلاة، القبلة، أذكارك ودفتر أدعيتك، والتاريخ الهجري — مع تنبيهات وويدجت للآيفون." />
+    <meta name="theme-color" content="#0b3b34" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="أذكار" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="preload" href="fonts/plex-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/plex-arabic-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="css/app.css" />
+    <script>
+      // Set the theme before the first paint so dark mode never flashes white.
+      try {
+        var st = JSON.parse(localStorage.getItem('adhkar-app:v1') || '{}').settings || {};
+        var t = st.theme || 'auto';
+        if (t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+        // The chosen fonts, before the first paint (same stacks as FONTS in js/ui.js).
+        var f = { amiri: "'Amiri', serif", plex: "'Plex', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif", tajawal: "'Tajawal', 'Plex', -apple-system, 'SF Arabic', system-ui, sans-serif" };
+        var r = document.documentElement.style;
+        if (f[st.fontText]) r.setProperty('--font-text', f[st.fontText]);
+        if (f[st.fontUi]) r.setProperty('--font-ui', f[st.fontUi]);
+        if (st.textBold === false) r.setProperty('--text-weight', '400');
+        if (st.uiBold) r.setProperty('--ui-weight', '700');
+        // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
+        // when the app is added to the home screen.
+        var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;
+        if (['night', 'violet', 'sky', 'parchment', 'black', 'burgundy', 'gold'].indexOf(ic) >= 0) document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png';
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <main id="view" class="view"></main>
+    <div id="mini" class="mini" hidden></div>
+    <nav id="tabs" aria-label="الأقسام"></nav>
+    <div id="sheet-root"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <noscript><p style="padding: 2rem; text-align: center">يحتاج التطبيق إلى تفعيل JavaScript.</p></noscript>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
