@@ -9,6 +9,7 @@ import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { $, copyText, esc, FONT_NAMES, FONTS, pageHeader, toast, toggle } from '../ui.js';
 import { themeByWord, widgetScript, WIDGET_STYLES, WIDGET_THEMES } from '../widget.js';
+import { autostartEnabled, isDesktop, setAutostart } from '../desktop.js';
 import { sunnahNow } from '../sunnah.js';
 import { APP_VERSION } from '../config.js';
 import { AYAT, dailyFor } from '../daily-data.js';
@@ -34,7 +35,7 @@ export function render(view) {
       <h4>التنبيهات والويدجت</h4>
       ${row('#/settings/notify', 'bell', 'الإشعارات والتنبيهات', n.enabled ? 'مفعّلة' : 'متوقفة')}
       ${row('#/settings/widget', 'widget', 'ويدجت الشاشة الرئيسية')}
-      ${row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
+      ${isDesktop ? '' : row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
     </div>
     <div class="group">
       <h4>العرض</h4>
@@ -349,9 +350,10 @@ export function renderNotify(view) {
       }
       <div class="group">
         <div class="row big"><span class="row-icon">${icon('bell', 22)}</span>
-          <span class="row-label">تفعيل الإشعارات<small data-status>${n.enabled ? (active ? 'تصلك التنبيهات حتى والتطبيق مغلق' : 'جارٍ التحقق…') : 'متوقفة'}</small></span>
+          <span class="row-label">تفعيل الإشعارات<small data-status>${n.enabled ? (active ? (isDesktop ? 'تصلك والتطبيق مفتوح أو بجانب الساعة' : 'تصلك التنبيهات حتى والتطبيق مغلق') : 'جارٍ التحقق…') : 'متوقفة'}</small></span>
           ${toggle('enabled', n.enabled, blocked && !needsInstall ? 'disabled' : '')}</div>
         ${n.enabled ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} إرسال إشعار تجريبي</button>` : ''}
+        ${isDesktop ? `<div class="row">${lab('widget', 'التشغيل مع ويندوز', 'يبدأ بجانب الساعة لتصلك التنبيهات دون أن تفتحه')}${toggle('autostart', false)}</div>` : ''}
       </div>
       <div class="group">
         <h4>مواقيت الصلاة</h4>
@@ -415,7 +417,8 @@ export function renderNotify(view) {
         <div class="row">${lab('mosque', 'يوم الجمعة', 'الصلاة على النبي ﷺ وساعة الإجابة')}${toggle('friday', n.friday)}</div>
         <div class="row">${lab('check', 'متابعة العبادات', 'كل ليلة الساعة ٩:٣٠ مساءً')}${toggle('worship', n.worship)}</div>
       </div>
-      <p class="hint center">التنبيهات تُرسل من خادم التطبيق في وقتها، فافتح التطبيق مرة كل بضعة أسابيع ليبقى جدولها محدّثاً.</p>`;
+      <p class="hint center">${isDesktop ? 'إغلاق النافذة يُبقي التطبيق بجانب الساعة لتصلك التنبيهات؛ وللخروج اضغط أيقونته هناك بالزر الأيمن ← «خروج».' : 'التنبيهات تُرسل من خادم التطبيق في وقتها، فافتح التطبيق مرة كل بضعة أسابيع ليبقى جدولها محدّثاً.'}</p>`;
+    if (isDesktop) autostartEnabled().then((on) => { const el = view.querySelector('input[name=autostart]'); if (el) el.checked = on; });
   };
   draw();
   pushActive().then((on) => {
@@ -431,6 +434,10 @@ export function renderNotify(view) {
 
   view.onchange = async (e) => {
     const t = e.target;
+    if (t.name === 'autostart') {
+      await setAutostart(t.checked).catch(() => toast('تعذّر تغيير التشغيل مع ويندوز'));
+      return;
+    }
     if (t.name === 'enabled') {
       if (t.checked) {
         t.disabled = true;
@@ -443,7 +450,7 @@ export function renderNotify(view) {
           n.enabled = false;
           const msg = {
             ADD_TO_HOME: 'أضف التطبيق إلى الشاشة الرئيسية أولاً، ثم افتحه منها وفعّل الإشعارات',
-            DENIED: 'رُفض الإذن. فعّله من إعدادات الآيفون ← الإشعارات ← أذكار',
+            DENIED: isDesktop ? 'رُفض الإذن. فعّله من إعدادات ويندوز ← النظام ← الإشعارات' : 'رُفض الإذن. فعّله من إعدادات الآيفون ← الإشعارات ← أذكار',
             SERVER: 'تعذر الاتصال بخادم التنبيهات. تأكد من الإنترنت ثم حاول مرة أخرى',
           }[err.message];
           toast(msg || 'هذا المتصفح لا يدعم الإشعارات');
@@ -474,7 +481,7 @@ export function renderNotify(view) {
     try {
       await syncSchedule(true);
       await sendTest();
-      toast('أُرسل إشعار تجريبي، سيصلك خلال لحظات');
+      toast(isDesktop ? 'أُرسل إشعار تجريبي' : 'أُرسل إشعار تجريبي، سيصلك خلال لحظات');
     } catch (err) {
       toast('تعذر إرسال الإشعار التجريبي');
     }

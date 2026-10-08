@@ -6,6 +6,7 @@ import { FONTS } from './ui.js';
 import { icon } from './icons.js';
 import { checkForUpdate, isIOS, isStandalone, onNotificationOpen, registerServiceWorker, syncSchedule } from './push.js';
 import { buildSchedule } from './schedule.js';
+import { isDesktop, startDesktop } from './desktop.js';
 import { onChange, persistStorage, state } from './store.js';
 import { $, esc, toast } from './ui.js';
 import * as home from './views/home.js';
@@ -114,7 +115,8 @@ media.addEventListener?.('change', applyTheme);
 let reminderTimer;
 function scheduleInApp() {
   clearTimeout(reminderTimer);
-  if (!state.settings.notify.enabled) return;
+  // The Windows app shows each reminder as a Windows notification instead (desktop.js).
+  if (isDesktop || !state.settings.notify.enabled) return;
   const next = buildSchedule(state, { days: 2 })[0];
   if (!next) return;
   const wait = next.at - Date.now();
@@ -226,6 +228,7 @@ document.addEventListener('visibilitychange', () => {
   if (anyTimerRunning()) keepAwake(true);
 });
 
+startDesktop();
 registerServiceWorker();
 onNotificationOpen((url) => {
   const hash = new URL(url, location.href).hash;

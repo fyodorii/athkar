@@ -1,11 +1,13 @@
 // Web Push for the home-screen app: push/cron.php on the server sends each reminder
-// at its time, and sw.js shows it, even when the app is closed.
+// at its time, and sw.js shows it, even when the app is closed. In the Windows app
+// (desktop.js) the app shows its reminders itself, so none of the server part runs.
 
 import { PUSH_URL } from './config.js';
+import { askNotify, isDesktop, notify, notifyAllowed } from './desktop.js';
 import { buildSchedule, scheduleHash } from './schedule.js';
 import { save, state } from './store.js';
 
-export const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+export const pushSupported = () => isDesktop || ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window);
 
 export const isIOS = () =>
   /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -15,7 +17,8 @@ export const isStandalone = () =>
 
 let registration;
 export function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) return Promise.resolve(null);
+  // The Windows app carries its files inside the exe: no offline cache to keep.
+  if (isDesktop || !('serviceWorker' in navigator)) return Promise.resolve(null);
   if (!registration) {
     // A new release takes over the page while it is open: reload once so the new
     // files show now rather than on the next launch. Not on the very first install.
@@ -58,6 +61,7 @@ async function currentSubscription() {
 }
 
 export async function pushActive() {
+  if (isDesktop) return notifyAllowed();
   if (!pushSupported() || Notification.permission !== 'granted') return false;
   return !!(await currentSubscription());
 }
@@ -71,6 +75,10 @@ async function upload(sub) {
 
 // Must run straight from a tap: iOS only shows the permission prompt for a user gesture.
 export async function enablePush() {
+  if (isDesktop) {
+    if (!(await askNotify())) throw new Error('DENIED');
+    return true;
+  }
   if (!pushSupported()) throw new Error(isIOS() && !isStandalone() ? 'ADD_TO_HOME' : 'UNSUPPORTED');
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') throw new Error('DENIED');
@@ -96,7 +104,7 @@ export async function enablePush() {
 // Re-sends the reminders when settings changed, or every half day so the server
 // always holds the coming weeks. Quiet on failure; the next open tries again.
 export async function syncSchedule(force = false) {
-  if (!state.settings.notify.enabled) return;
+  if (isDesktop || !state.settings.notify.enabled) return;
   try {
     const sub = await currentSubscription();
     if (!sub) return;
@@ -108,6 +116,7 @@ export async function syncSchedule(force = false) {
 }
 
 export async function disablePush() {
+  if (isDesktop) return;
   const sub = await currentSubscription();
   if (!sub) return;
   await api('subscribe.php', { endpoint: sub.endpoint, remove: true }).catch(() => {});
@@ -115,6 +124,7 @@ export async function disablePush() {
 }
 
 export async function sendTest() {
+  if (isDesktop) return notify('أذكار ومواقيت', 'هكذا تصلك التنبيهات على ويندوز، بإذن الله');
   const sub = await currentSubscription();
   if (!sub) throw new Error('NOT_SUBSCRIBED');
   await api('subscribe.php', { endpoint: sub.endpoint, test: true });

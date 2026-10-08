@@ -1,0 +1,52 @@
+# Builds the Windows app (desktop/, Tauri) into an installer .exe on a Windows machine and
+# publishes it as a GitHub Release: Actions → "Windows app (exe)" → Run workflow, or push
+# a tag like v14.0.0. The version comes from desktop/src-tauri/tauri.conf.json.
+name: Windows app (exe)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'desktop/src-tauri -> target'
+
+      - name: Install the Tauri CLI
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build the installer and publish the release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          tagName: v__VERSION__
+          releaseName: 'أذكار ومواقيت لويندوز __VERSION__'
+          releaseBody: |
+            ثبّت التطبيق بملف `Athkar_…_x64-setup.exe` أدناه.
+            أول مرة قد يظهر تحذير «Windows protected your PC» لأن الملف غير موقّع بشهادة: اضغط «More info» ثم «Run anyway».
+          releaseDraft: false
+          prerelease: false
+
+      - name: Keep the installer as a build artifact too
+        uses: actions/upload-artifact@v4
+        with:
+          name: athkar-windows
+          path: desktop/src-tauri/target/release/bundle/nsis/*.exe

@@ -71,7 +71,8 @@ export function widgetScript(settings) {
     hijriAdjust: settings.hijriAdjust,
     clock24: settings.clock24,
     arabicDigits: settings.digits === 'arab',
-    url: location.href.split('#')[0],
+    // The app the widget opens when tapped (from the Windows app: the published one).
+    url: window.__TAURI__ ? 'https://fyodorii.github.io/athkar/' : location.href.split('#')[0],
   };
   const dhikr = DAILY.map((d) => d.text);
   const ayat = AYAT.map(([, plain, ref]) => [plain, ref]);

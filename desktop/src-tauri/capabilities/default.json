@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What the app's page may ask of Windows: notifications, opening links in the browser, starting with Windows",
+  "windows": ["main"],
+  "permissions": ["core:default", "notification:default", "opener:default", "autostart:default"]
+}

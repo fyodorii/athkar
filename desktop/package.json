@@ -1,0 +1,12 @@
+{
+  "name": "athkar-desktop",
+  "private": true,
+  "description": "أذكار ومواقيت لويندوز: التطبيق نفسه داخل نافذة Tauri، مع أيقونة بجانب الساعة وتنبيهات النظام",
+  "scripts": {
+    "tauri": "tauri",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1"
+  }
+}

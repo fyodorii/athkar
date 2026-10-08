@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline,
 // and shows the reminders that push/cron.php sends.
 
-const VERSION = 'v13'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v14'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const MUSHAF_CACHE = 'mushaf-fonts-v1'; // not named adhkar-…, so updates keep it
 const FILES = [
@@ -17,6 +17,7 @@ const FILES = [
   'js/khatma.js',
   'js/hifz.js',
   'js/occasions.js',
+  'js/desktop.js',
   'js/mushaf/kahf.js',
   'js/mushaf/mulk.js',
   'js/mushaf/baqarah.js',

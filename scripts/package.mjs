@@ -10,7 +10,7 @@ import { files, writeZip } from './zip.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const ZIP = join(ROOT, 'adhkar-web-app.zip');
-const SKIP = /^(\.git|\.github|scripts|node_modules)(\/|$)|^(package\.json|package-lock\.json|\.gitignore|adhkar-web-app\.zip)$/;
+const SKIP = /^(\.git|\.github|scripts|desktop|node_modules)(\/|$)|^(package\.json|package-lock\.json|\.gitignore|adhkar-web-app\.zip)$/;
 
 const entries = files(ROOT)
   .map((file) => ({ file, rel: relative(ROOT, file).split(sep).join('/') }))

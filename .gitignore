@@ -6,3 +6,9 @@ push/data/subs/
 # The upload package (npm run zip)
 adhkar-web-app.zip
 node_modules/
+
+# Windows app build (desktop/)
+desktop/node_modules/
+desktop/dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
