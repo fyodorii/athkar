@@ -1,7 +1,7 @@
 // "Now" at the chosen location: today's date, the day's times and the next moment among the
 // ones the app shows (sunrise, Duha, the middle of the night and its last third).
 
-import { addDays, dateAt, dayKey, dayTimes, forbiddenTimes, tzOffset } from './prayer.js';
+import { addDays, dateAt, dayKey, dayTimes, tzOffset } from './prayer.js';
 import { hijri } from './dates.js';
 import { state } from './store.js';
 
@@ -41,12 +41,11 @@ export function today(now = new Date()) {
   const next = timeline.find((x) => x.at > t) || tomorrow.duha;
   const prev = [...timeline].reverse().find((x) => x.at <= t) || { ...yesterday.lastThird };
 
-  const forbidden = forbiddenTimes(times).find((f) => t >= f.from.at && t < f.to.at) || null;
-  return { ...cache.value, next, prev, forbidden, weekday, isFriday: weekday === 5, period: periodNow(times, night, t, forbidden) };
+  return { ...cache.value, next, prev, weekday, isFriday: weekday === 5, period: periodNow(times, night, t) };
 }
 
-// What kind of time it is: a forbidden time, Duha, the afternoon or a part of the night.
-function periodNow(times, night, t, forbidden) {
+// What kind of time it is: sunrise, Duha, the afternoon or a part of the night.
+function periodNow(times, night, t) {
   const qiyam = { key: 'qiyam', title: 'الثلث الأخير من الليل', sub: 'وقت النزول والاستجابة — قيام ودعاء واستغفار' };
   const after = { key: 'midnight', title: 'بعد منتصف الليل', sub: 'وقت الوتر والقيام، فاجعل آخر صلاتك وتراً' };
   if (t < times.fajr.at) {
@@ -55,12 +54,11 @@ function periodNow(times, night, t, forbidden) {
     return { key: 'night', title: 'أول الليل', sub: 'وقت مفتوح للنوافل والأذكار قبل النوم' };
   }
   if (t >= times.sunrise.at && t < times.duha.at) return { key: 'sunrise', title: 'وقت الشروق', sub: 'انتظر حتى ترتفع الشمس قيد رمح، ثم صلِّ الضحى' };
-  if (forbidden) return { key: 'nahy', title: 'وقت نهي', sub: `${forbidden.name} — لا تُصلَّ فيه نافلة مطلقة` };
   if (t >= times.duha.at && t < times.dhuhr.at) return { key: 'duha', title: 'وقت الضحى', sub: 'ركعتان فأكثر، تجزئان عن صدقة كل مفاصلك' };
   if (t >= times.lastThird.at) return qiyam;
   if (t >= times.midnight.at) return after;
   if (t >= times.maghrib.at) return { key: 'night', title: 'أول الليل', sub: 'وقت مفتوح للنوافل والأذكار قبل النوم' };
-  return { key: 'day', title: 'وقت النافلة', sub: 'يجوز التطوع المطلق ما لم يدخل وقت نهي' };
+  return { key: 'day', title: 'النهار', sub: 'وقت للعمل والذكر وما تيسّر من النوافل' };
 }
 
 // Current wall-clock time at the location as decimal hours (for the big clock).

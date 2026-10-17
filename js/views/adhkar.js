@@ -4,7 +4,6 @@
 import { CATEGORIES, CATEGORY_BY_ID } from '../adhkar-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
-import { syncSchedule } from '../push.js';
 import { isSaved, newDay, save, state, toggleSaved, uid } from '../store.js';
 import { today } from '../today.js';
 import { $, $$, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
@@ -247,7 +246,6 @@ function customMenu(item, redraw) {
         if (a === 'delete' && (await confirmSheet('حذف هذا الذكر من أذكاري؟'))) {
           state.custom = state.custom.filter((c) => c.id !== item.id);
           save();
-          syncSchedule();
           redraw();
         }
       });
@@ -291,7 +289,6 @@ export function editCustom(item, onDone, preset = {}) {
         if (item) Object.assign(item, { text, target });
         else state.custom.unshift({ id: uid(), text, target, today: 0, total: 0, created: Date.now() });
         save();
-        syncSchedule();
         close();
         toast(`${icon('check', 18)} ${item ? 'حُفظ التعديل' : 'أُضيف الذكر إلى أذكاري'}`);
         onDone?.();
@@ -433,11 +430,6 @@ export function renderTasbeeh(view, mineId) {
         },
         reset: () => (t.count = 0),
       };
-  const frac = () => {
-    const [c, n] = [src.count(), src.target()];
-    if (!n) return 0;
-    return mine ? Math.min(1, c / n) : (c % n || (c ? n : 0)) / n;
-  };
   const roundText = () => {
     const [c, n] = [src.count(), src.target()];
     if (!n) return 'عدّ مفتوح بلا حد';
@@ -464,7 +456,6 @@ export function renderTasbeeh(view, mineId) {
         ${mine ? `<p class="tsb-from">من أذكاري${mine.ref ? ` • ${esc(mine.ref)}` : ''}</p>` : ''}
         <div class="tsb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(src.phrase())}</span></div>
         <div class="tsb-counter">
-          <span data-ring>${ring(frac(), 250, 8)}</span>
           <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
         </div>
         <p class="tsb-hint">اضغط في أي مكان للتسبيح • باعد بإصبعين لتكبير الذكر</p>
@@ -499,7 +490,6 @@ export function renderTasbeeh(view, mineId) {
     const reached = n && (mine ? c === n : c % n === 0);
     haptic(reached ? 40 : 10);
     if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
-    $('[data-ring]', view).innerHTML = ring(frac(), 250, 8);
     $('[data-count]', view).textContent = num(c);
     $('[data-round]', view).textContent = roundText();
     $('[data-total]', view).textContent = num(src.total());

@@ -24,18 +24,6 @@ export const DEFAULTS = {
     haptics: true,
     quranGoal: 5,
     appIcon: 'emerald', // icons/alt/<name>.png for the home screen
-    mushafMode: 'pages', // al-Mulk: the mushaf's pages | continuous text
-    mushafInk: 'blue', // blue | black
-    // The only reminders: istighfar and the salawat, every few minutes between two hours.
-    notify: {
-      enabled: false,
-      istighfar: false,
-      istighfarEvery: 5, // minutes: 3 | 5 | 10
-      salawat: false,
-      salawatEvery: 5,
-      from: '06:00',
-      to: '22:00',
-    },
   },
   progress: { day: '', counts: {} },
   custom: [],
@@ -48,7 +36,6 @@ export const DEFAULTS = {
   worshipCustom: [],
   diary: {},
   migrated: {}, // one-time data changes done
-  surahs: {}, // mulk → { ayah: where reading stopped, done: day finished }
   tools: { ahzab: { start: '', done: {} }, nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };
@@ -68,22 +55,12 @@ function merge(base, value) {
   return value === undefined || value === null ? base : value;
 }
 
-// Data of features the app no longer has (khatma, memorization, iqama, the per-prayer
-// reminders) is dropped when loading, so old saves and backups stay light.
+// Data of features the app no longer has (khatma, memorization, prayer times, notifications,
+// the qibla, al-Mulk) is dropped when loading, so old saves and backups stay light.
 function prune(data) {
-  delete data.khatma;
-  delete data.hifz;
-  delete data.surahs?.kahf;
-  delete data.surahs?.baqarah;
+  for (const k of ['khatma', 'hifz', 'surahs']) delete data[k];
   const s = data.settings;
-  if (s) {
-    delete s.iqama;
-    delete s.prayerLayout;
-    // Only istighfar and the salawat remain as reminders; the old ones are dropped.
-    const n = s.notify;
-    if (n) for (const k of Object.keys(n)) if (!(k in DEFAULTS.settings.notify)) delete n[k];
-    if (n && ![3, 5, 10].includes(n.salawatEvery)) n.salawatEvery = 5;
-  }
+  if (s) for (const k of ['iqama', 'prayerLayout', 'notify', 'mushafMode', 'mushafInk', 'quranScale']) delete s[k];
   return data;
 }
 

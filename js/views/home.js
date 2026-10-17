@@ -1,22 +1,20 @@
 // Home: live clock, Hijri and Gregorian dates, the next moment (sunrise, Duha, midnight, the
-// last third) with a countdown, and the day's times with the forbidden times.
+// last third) with a countdown, and the day's times.
 
 import { CATEGORY_BY_ID, DAILY } from '../adhkar-data.js';
 import { wirdDone } from './adhkar.js';
 import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, GREG_MONTHS, gregText, hijri, hijriText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
-import { addDays, dayTimes, forbiddenTimes, METHODS } from '../prayer.js';
+import { addDays, dayTimes, METHODS } from '../prayer.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
 import { dayScore } from './worship.js';
 import { daysText, nextOccasion, rangeText } from './calendar.js';
-import { quickSurahs } from './surah.js';
 
 const QUICK = [
   ['#/notebook', 'أدعيتي', 'hand', 'teal'],
-  ['#/qibla', 'القبلة', 'kaaba', 'emerald'],
   ['#/calendar', 'التقويم', 'grid', 'teal'],
   ['#/occasions', 'المناسبات', 'calendar', 'rose'],
   ['#/qailulah', 'القيلولة', 'moon', 'teal'],
@@ -54,7 +52,6 @@ export function render(view) {
     advice: d.advice.text,
     dhikr: `${daily.text} — ${daily.note}`,
   };
-  const notifyOn = s.notify.enabled;
 
   view.innerHTML = `
   <section class="hero">
@@ -62,8 +59,6 @@ export function render(view) {
     <div class="hero-top">
       <a class="chip glass" href="#/settings/location">${icon('pin', 16)}<span>${esc(s.location.name)}</span></a>
       <div class="hero-actions">
-        <a class="icon-btn glass" href="#/qibla" aria-label="القبلة">${icon('compass', 20)}</a>
-        <a class="icon-btn glass" href="#/settings/notify" aria-label="التنبيهات">${icon(notifyOn ? 'bell' : 'bellOff', 20)}</a>
         <a class="icon-btn glass" href="#/settings" aria-label="الإعدادات">${icon('gear', 20)}</a>
       </div>
     </div>
@@ -100,11 +95,10 @@ export function render(view) {
         <div class="card period tp-${info.period.key}" data-period-tile>${periodTile(info)}</div>
       </section>
 
-      ${info.isFriday ? `<a class="banner gold" href="#/settings/notify">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>الإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></a>` : ''}
+      ${info.isFriday ? `<div class="banner gold">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>الإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></div>` : ''}
 
       ${timesCard(info)}
 
-      ${nahyCard(info)}
     </div>
     <div class="home-col">
       ${wirdSuggestion(info)}
@@ -113,7 +107,6 @@ export function render(view) {
         ${QUICK.map(([href, label, ic, tone]) => `<a class="quick-tile tone-${tone}" href="${href}">${icon(ic, 24)}<span>${label}</span></a>`).join('')}
       </section>
 
-      ${quickSurahs()}
       ${occasionCard()}
 
       ${worshipCard(info)}
@@ -129,7 +122,6 @@ export function render(view) {
   <div class="dots" data-dots>${[0, 1, 2, 3].map((i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>
 
   <div class="foot-links">
-    <a href="#/settings/notify">${icon('bell', 18)} التنبيهات</a>
     <a href="#/settings">${icon('gear', 18)} الإعدادات</a>
   </div>`;
 
@@ -145,8 +137,8 @@ export function render(view) {
     tick() {
       const c2 = bigClock();
       const info2 = today();
-      // Redraw when the day, the next moment, the kind of time or a forbidden time changes.
-      if (info2.key !== info.key || info2.next.at !== info.next.at || info2.period.key !== info.period.key || info2.forbidden?.key !== info.forbidden?.key) {
+      // Redraw when the day, the next moment, or the kind of time changes.
+      if (info2.key !== info.key || info2.next.at !== info.next.at || info2.period.key !== info.period.key) {
         return 'rerender';
       }
       $('[data-clock]', view).textContent = c2.time;
@@ -185,20 +177,18 @@ function progress(info) {
   return Math.max(0, Math.min(100, ((Date.now() - info.prev.at) / span) * 100));
 }
 
-// The sentence under the countdown: a forbidden time if one is running, else what the time is for.
+// The sentence under the countdown: what the coming moment is.
 function endsText(info) {
-  const f = info.forbidden;
-  if (f) return `<span class="nahy">${icon('info', 15)} وقت نهي عن النافلة (${esc(f.name)}) حتى <b>${clockText(f.to.hours, state.settings.clock24)}</b></span>`;
   return `<span>${icon(PRAYER_ICONS[info.next.key] || 'clock', 15)} ${esc(MOMENT_NOTE[info.next.key] || '')}</span>`;
 }
 
-// The kind of time it is now: Duha, a forbidden time, the last third…
+// The kind of time it is now: Duha, the afternoon, the last third…
 function periodTile(info) {
   const n = info.period;
   return `<div class="pt-row"><span class="pt-ic">${icon(PERIOD_ICONS[n.key] || 'stars', 24)}</span><small class="pt-now">الآن</small></div>
     <b>${esc(n.title)}</b><small>${esc(n.sub)}</small>`;
 }
-const PERIOD_ICONS = { sunrise: 'sunrise', nahy: 'info', duha: 'sun', day: 'sun', night: 'moon', midnight: 'moon', qiyam: 'stars' };
+const PERIOD_ICONS = { sunrise: 'sunrise', duha: 'sun', day: 'sun', night: 'moon', midnight: 'moon', qiyam: 'stars' };
 
 // The times card, for today or another day picked with the arrows: sunrise, Duha, the
 // middle of the night and its last third.
@@ -213,13 +203,12 @@ function timesCard(info) {
   const d = shown.day;
   const h24 = s.clock24;
   const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
-  const noon = shown.times.dhuhr.hours - 10 / 60;
   const rows = MOMENTS.map((key) => {
     const t = shown.times[key];
     const c = clock(t.hours, h24);
     const isNext = !shown.other && info.next.key === key && info.next.at === t.at;
     const passed = !shown.other && t.at <= Date.now() && !isNext && (key === 'sunrise' || key === 'duha');
-    const sub = key === 'duha' ? `إلى قبيل الزوال ${clockText(noon, h24)}` : MOMENT_NOTE[key];
+    const sub = MOMENT_NOTE[key];
     return `<li class="prayer moment ${isNext ? 'next' : ''} ${passed ? 'passed' : ''}">
       <span class="p-icon">${icon(PRAYER_ICONS[key] || 'sun', 20)}</span>
       <span class="p-name"><span>${t.name}${isNext ? '<em>القادم</em>' : ''}</span><small class="p-end">${sub}</small></span>
@@ -237,31 +226,6 @@ function timesCard(info) {
       <button class="icon-btn ghost sm" data-pday="1" aria-label="اليوم التالي">${icon('chevron', 20)}</button>
     </div>
     <ul class="prayer-list">${rows}</ul>
-  </section>`;
-}
-
-// The three times voluntary prayer is forbidden, with the one running now marked.
-function nahyCard(info) {
-  const s = state.settings;
-  const h24 = s.clock24;
-  const now = Date.now();
-  return `<section class="card nahy-card">
-    <div class="card-head">
-      <h2>${icon('info', 18)} أوقات النهي <small class="muted">عن صلاة النافلة</small></h2>
-    </div>
-    <ul class="nahy-list">
-      ${forbiddenTimes(info.times)
-        .map((f) => {
-          const on = now >= f.from.at && now < f.to.at;
-          const past = now >= f.to.at;
-          return `<li class="${on ? 'on' : ''} ${past ? 'past' : ''}">
-            <div><b>${esc(f.name)}${on ? '<em>الآن</em>' : ''}</b><small>${esc(f.desc)}</small></div>
-            <span class="nahy-time">${clockText(f.from.hours, h24)}<i>←</i>${clockText(f.to.hours, h24)}</span>
-          </li>`;
-        })
-        .join('')}
-    </ul>
-    <p class="hint">ويُستثنى منها قضاء الفريضة الفائتة، وذوات الأسباب كتحية المسجد وسنة الوضوء على الراجح من أقوال أهل العلم.</p>
   </section>`;
 }
 

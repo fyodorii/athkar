@@ -164,28 +164,3 @@ export function dayTimes(day, settings, isRamadan = false) {
   out.duha = { key: 'duha', name: PRAYER_NAMES.duha, hours: out.sunrise.hours + 0.25, at: out.sunrise.at + 15 * 60000 };
   return out;
 }
-
-// The times voluntary prayer is forbidden: after Fajr until the sun is a spear's length
-// up, when the sun stands at its height until it passes the meridian (taken as the 10
-// minutes before Dhuhr), and after Asr until sunset.
-export const ZAWAL_MINUTES = 10;
-export function forbiddenTimes(times) {
-  const zawal = { hours: times.dhuhr.hours - ZAWAL_MINUTES / 60, at: times.dhuhr.at - ZAWAL_MINUTES * 60000 };
-  return [
-    { key: 'fajr', name: 'بعد الفجر', desc: 'من صلاة الفجر حتى تطلع الشمس وترتفع قيد رمح', from: times.fajr, to: times.duha },
-    { key: 'zawal', name: 'قيام الشمس', desc: 'حين تتوسط الشمس كبد السماء حتى تزول، قُبيل الظهر', from: zawal, to: times.dhuhr },
-    { key: 'asr', name: 'بعد العصر', desc: 'من صلاة العصر حتى تغرب الشمس', from: times.asr, to: times.maghrib },
-  ];
-}
-
-// Great-circle direction (degrees from true north) and distance (km) to the Kaaba.
-const KAABA = { lat: 21.422487, lng: 39.826206 };
-export function qibla(lat, lng) {
-  const R = Math.PI / 180;
-  const p1 = lat * R;
-  const p2 = KAABA.lat * R;
-  const dl = (KAABA.lng - lng) * R;
-  const bearing = Math.atan2(Math.sin(dl), Math.cos(p1) * Math.tan(p2) - Math.sin(p1) * Math.cos(dl)) / R;
-  const a = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
-  return { bearing: (bearing + 360) % 360, km: 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) };
-}

@@ -1,14 +1,13 @@
-// Settings: location, calculation, notifications, display and backup.
+// Settings: location, calculation, display and backup.
 
 import { CITIES, nearestCity } from '../cities.js';
 import { clockText, hijriText, minutesText, num } from '../dates.js';
 import { icon } from '../icons.js';
 import { METHODS, PRAYER_NAMES } from '../prayer.js';
-import { disablePush, enablePush, isIOS, isStandalone, pushActive, pushSupported, sendTest, syncSchedule } from '../push.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { $, copyText, esc, FONT_NAMES, FONTS, pageHeader, toast, toggle } from '../ui.js';
-import { autostartEnabled, isDesktop, setAutostart } from '../desktop.js';
+import { isDesktop } from '../desktop.js';
 import { APP_VERSION } from '../config.js';
 
 const row = (href, ic, label, value = '') =>
@@ -18,18 +17,12 @@ const row = (href, ic, label, value = '') =>
 
 export function render(view) {
   const s = state.settings;
-  const n = s.notify;
   view.innerHTML = `
     ${pageHeader('الإعدادات', { back: '#/home' })}
     <div class="group">
       <h4>الموقع والأوقات</h4>
       ${row('#/settings/location', 'pin', 'الموقع', esc(s.location.name))}
       ${row('#/settings/method', 'sun', 'طريقة الحساب', esc(METHODS[s.method]?.name.split(' — ')[0]))}
-      ${row('#/qibla', 'compass', 'اتجاه القبلة')}
-    </div>
-    <div class="group">
-      <h4>التنبيهات</h4>
-      ${row('#/settings/notify', 'bell', 'الإشعارات والتنبيهات', n.enabled ? 'مفعّلة' : 'متوقفة')}
       ${isDesktop ? '' : row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
     </div>
     <div class="group">
@@ -86,7 +79,6 @@ export function render(view) {
         try {
           importData(text);
           toast(`${icon('check', 18)} استُعيدت بياناتك`);
-          syncSchedule(true);
           render(view);
         } catch (err) {
           toast(err.message || 'تعذرت قراءة الملف');
@@ -96,8 +88,7 @@ export function render(view) {
     }
     save();
     if (t.name === 'clock24' || t.name === 'digits') {
-      syncSchedule();
-      render(view);
+            render(view);
     }
   };
   const onInput = (e) => {
@@ -121,8 +112,7 @@ export function render(view) {
     if (hd) {
       s.hijriAdjust = Math.max(-2, Math.min(2, s.hijriAdjust + Number(hd.dataset.d)));
       save();
-      syncSchedule();
-      return render(view);
+            return render(view);
     }
     if (e.target.closest('[data-export]')) exportBackup();
   };
@@ -184,8 +174,7 @@ export function renderLocation(view) {
     s.location = loc;
     if (method) s.method = method;
     save();
-    syncSchedule();
-  };
+      };
 
   view.oninput = (e) => {
     if (!e.target.matches('[data-q]')) return;
@@ -299,122 +288,12 @@ export function renderMethod(view) {
     }
     if (m || a || o) {
       save();
-      syncSchedule();
-      const y = window.scrollY;
+            const y = window.scrollY;
       draw();
       window.scrollTo(0, y);
     }
   };
   return { destroy: () => (view.onclick = null) };
-}
-
-// ---- Notifications ----
-
-const EVERY = [3, 5, 10];
-
-export function renderNotify(view) {
-  const s = state.settings;
-  const n = s.notify;
-  let active = false;
-
-  const draw = () => {
-    const blocked = !pushSupported();
-    const needsInstall = isIOS() && !isStandalone();
-    const select = (name, values, value, label) =>
-      `<select name="${name}">${values.map((v) => `<option value="${v}" ${v === value ? 'selected' : ''}>${label(v)}</option>`).join('')}</select>`;
-    const lab = (ic, text, small = '') => `<span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${text}${small ? `<small>${small}</small>` : ''}</span>`;
-    view.innerHTML = `
-      ${pageHeader('الإشعارات', { back: '#/settings', sub: 'اختر ما يصلك ومتى' })}
-      ${
-        needsInstall
-          ? `<div class="banner info">${icon('info', 22)}<div><b>أضف التطبيق إلى الشاشة الرئيسية أولاً</b>
-              <span>على الآيفون لا تصل الإشعارات إلا للتطبيق المثبّت: اضغط زر المشاركة ${icon('share', 15)} في Safari ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من أيقونته.</span></div></div>`
-          : ''
-      }
-      <div class="group">
-        <div class="row big"><span class="row-icon">${icon('bell', 22)}</span>
-          <span class="row-label">تفعيل الإشعارات<small data-status>${n.enabled ? (active ? (isDesktop ? 'تصلك والتطبيق مفتوح أو بجانب الساعة' : 'تصلك التنبيهات حتى والتطبيق مغلق') : 'جارٍ التحقق…') : 'متوقفة'}</small></span>
-          ${toggle('enabled', n.enabled, blocked && !needsInstall ? 'disabled' : '')}</div>
-        ${n.enabled ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} إرسال إشعار تجريبي</button>` : ''}
-        ${isDesktop ? `<div class="row">${lab('widget', 'التشغيل مع ويندوز', 'يبدأ بجانب الساعة لتصلك التنبيهات دون أن تفتحه')}${toggle('autostart', false)}</div>` : ''}
-      </div>
-      <div class="group">
-        <h4>الذكر المتكرر</h4>
-        <div class="row">${lab('heart', 'الاستغفار', 'تنبيه يتكرر طوال اليوم')}${toggle('istighfar', n.istighfar)}</div>
-        ${n.istighfar ? `<div class="row sub"><span class="row-label">كل</span>${select('istighfarEvery', EVERY, n.istighfarEvery, (v) => `${num(v)} دقائق`)}</div>` : ''}
-        <div class="row">${lab('stars', 'الصلاة على النبي ﷺ', 'تنبيه يتكرر طوال اليوم')}${toggle('salawat', n.salawat)}</div>
-        ${n.salawat ? `<div class="row sub"><span class="row-label">كل</span>${select('salawatEvery', EVERY, n.salawatEvery, (v) => `${num(v)} دقائق`)}</div>` : ''}
-        ${n.istighfar || n.salawat ? `<div class="row sub"><span class="row-label">من الساعة</span><input type="time" name="from" value="${esc(n.from)}"></div>
-        <div class="row sub"><span class="row-label">إلى الساعة</span><input type="time" name="to" value="${esc(n.to)}"></div>` : ''}
-        <p class="hint">يتكرر التنبيه في الفترة التي تختارها كل يوم. </p>
-      </div>
-      <p class="hint center">${isDesktop ? 'إغلاق النافذة يُبقي التطبيق بجانب الساعة لتصلك التنبيهات؛ وللخروج اضغط أيقونته هناك بالزر الأيمن ← «خروج».' : 'التنبيهات تُرسل من خادم التطبيق في وقتها، فوبسبب كثرة التنبيهات يغطي الجدول بضعة أيام فقط، فافتح التطبيق كل يوم أو يومين ليتجدّد.'}</p>`;
-    if (isDesktop) autostartEnabled().then((on) => { const el = view.querySelector('input[name=autostart]'); if (el) el.checked = on; });
-  };
-  draw();
-  pushActive().then((on) => {
-    active = on;
-    const el = $('[data-status]', view);
-    if (el && n.enabled) el.textContent = on ? 'تصلك التنبيهات حتى والتطبيق مغلق' : 'اضغط المفتاح مرة أخرى لإكمال التفعيل';
-    if (n.enabled && !on) {
-      n.enabled = false;
-      save();
-      draw();
-    }
-  });
-
-  view.onchange = async (e) => {
-    const t = e.target;
-    if (t.name === 'autostart') {
-      await setAutostart(t.checked).catch(() => toast('تعذّر تغيير التشغيل مع ويندوز'));
-      return;
-    }
-    if (t.name === 'enabled') {
-      if (t.checked) {
-        t.disabled = true;
-        try {
-          await enablePush();
-          n.enabled = true;
-          active = true;
-          toast(`${icon('check', 18)} فُعّلت الإشعارات`);
-        } catch (err) {
-          n.enabled = false;
-          const msg = {
-            ADD_TO_HOME: 'أضف التطبيق إلى الشاشة الرئيسية أولاً، ثم افتحه منها وفعّل الإشعارات',
-            DENIED: isDesktop ? 'رُفض الإذن. فعّله من إعدادات ويندوز ← النظام ← الإشعارات' : 'رُفض الإذن. فعّله من إعدادات الآيفون ← الإشعارات ← أذكار',
-            SERVER: 'تعذر الاتصال بخادم التنبيهات. تأكد من الإنترنت ثم حاول مرة أخرى',
-          }[err.message];
-          toast(msg || 'هذا المتصفح لا يدعم الإشعارات');
-        }
-      } else {
-        n.enabled = false;
-        disablePush();
-      }
-      save();
-      return draw();
-    }
-    if (t.type === 'checkbox') n[t.name] = t.checked;
-    else if (t.type === 'time') n[t.name] = t.value || n[t.name];
-    else n[t.name] = Number(t.value);
-    save();
-    syncSchedule();
-    if (['istighfar', 'salawat'].includes(t.name)) draw();
-  };
-  view.onclick = async (e) => {
-    if (!e.target.closest('[data-test]')) return;
-    try {
-      await syncSchedule(true);
-      await sendTest();
-      toast(isDesktop ? 'أُرسل إشعار تجريبي' : 'أُرسل إشعار تجريبي، سيصلك خلال لحظات');
-    } catch (err) {
-      toast('تعذر إرسال الإشعار التجريبي');
-    }
-  };
-  return {
-    destroy() {
-      view.onchange = view.onclick = null;
-    },
-  };
 }
 
 export const APP_ICONS = [
