@@ -7,7 +7,6 @@ import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, GREG_MONTHS, gregText, hijri, hijriText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
 import { addDays, dayTimes, forbiddenTimes, METHODS } from '../prayer.js';
-import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
@@ -28,13 +27,8 @@ const QUICK = [
 
 let dayOffset = 0; // the day shown in the times card: 0 today, -1 yesterday, 1 tomorrow…
 
-// The four moments shown, in the order of the day, with the setting that turns each one's reminder on.
-const MOMENTS = [
-  { key: 'sunrise', notify: 'sunrise' },
-  { key: 'duha', notify: 'duha' },
-  { key: 'midnight', notify: 'midnight' },
-  { key: 'lastThird', notify: 'lastThird' },
-];
+// The four moments shown, in the order of the day.
+const MOMENTS = ['sunrise', 'duha', 'midnight', 'lastThird'];
 const MOMENT_NOTE = {
   sunrise: 'تطلع الشمس، وينتهي وقت الفجر',
   duha: 'بعد الشروق بـ١٥ دقيقة',
@@ -182,21 +176,6 @@ export function render(view) {
       const [kind, what] = act.dataset.cardAct.split(':');
       return what === 'copy' ? copyText(texts[kind]) : shareText(texts[kind]);
     }
-    const bell = e.target.closest('[data-bell]');
-    if (!bell) return;
-    e.preventDefault();
-    const k = bell.dataset.bell;
-    s.notify[k] = !s.notify[k];
-    save();
-    bell.classList.toggle('on', s.notify[k]);
-    bell.innerHTML = icon(s.notify[k] ? 'bell' : 'bellOff', 18);
-    const what = k === 'nahy' ? 'أوقات النهي' : info.times[k].name;
-    if (!s.notify.enabled) {
-      toast('فعّل التنبيهات من الإعدادات لتصلك في أوقاتها');
-    } else {
-      toast(s.notify[k] ? `سيصلك تنبيه ${esc(what)}` : `أُوقف تنبيه ${esc(what)}`);
-      syncSchedule();
-    }
   }
 }
 
@@ -235,7 +214,7 @@ function timesCard(info) {
   const h24 = s.clock24;
   const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
   const noon = shown.times.dhuhr.hours - 10 / 60;
-  const rows = MOMENTS.map(({ key, notify }) => {
+  const rows = MOMENTS.map((key) => {
     const t = shown.times[key];
     const c = clock(t.hours, h24);
     const isNext = !shown.other && info.next.key === key && info.next.at === t.at;
@@ -245,7 +224,6 @@ function timesCard(info) {
       <span class="p-icon">${icon(PRAYER_ICONS[key] || 'sun', 20)}</span>
       <span class="p-name"><span>${t.name}${isNext ? '<em>القادم</em>' : ''}</span><small class="p-end">${sub}</small></span>
       <span class="p-time"><span>${c.time}<small>${c.period}</small></span></span>
-      <button class="bell ${s.notify[notify] ? 'on' : ''}" data-bell="${notify}" aria-label="تنبيه ${t.name}">${icon(s.notify[notify] ? 'bell' : 'bellOff', 18)}</button>
     </li>`;
   }).join('');
   return `<section class="card prayers" data-times>
@@ -270,7 +248,6 @@ function nahyCard(info) {
   return `<section class="card nahy-card">
     <div class="card-head">
       <h2>${icon('info', 18)} أوقات النهي <small class="muted">عن صلاة النافلة</small></h2>
-      <button class="bell ${s.notify.nahy ? 'on' : ''}" data-bell="nahy" aria-label="تنبيه أوقات النهي">${icon(s.notify.nahy ? 'bell' : 'bellOff', 18)}</button>
     </div>
     <ul class="nahy-list">
       ${forbiddenTimes(info.times)

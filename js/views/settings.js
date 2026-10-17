@@ -310,8 +310,7 @@ export function renderMethod(view) {
 
 // ---- Notifications ----
 
-const SUNRISE_OPTS = ['off', 0, 10, 15, 20, 30];
-const DELAYS = [0, 15, 30, 45, 60, 90];
+const EVERY = [3, 5, 10];
 
 export function renderNotify(view) {
   const s = state.settings;
@@ -324,7 +323,6 @@ export function renderNotify(view) {
     const select = (name, values, value, label) =>
       `<select name="${name}">${values.map((v) => `<option value="${v}" ${v === value ? 'selected' : ''}>${label(v)}</option>`).join('')}</select>`;
     const lab = (ic, text, small = '') => `<span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${text}${small ? `<small>${small}</small>` : ''}</span>`;
-    const timeRow = (name) => `<div class="row sub"><span class="row-label">الساعة</span><input type="time" name="${name}" value="${esc(n[name])}"></div>`;
     view.innerHTML = `
       ${pageHeader('الإشعارات', { back: '#/settings', sub: 'اختر ما يصلك ومتى' })}
       ${
@@ -341,47 +339,16 @@ export function renderNotify(view) {
         ${isDesktop ? `<div class="row">${lab('widget', 'التشغيل مع ويندوز', 'يبدأ بجانب الساعة لتصلك التنبيهات دون أن تفتحه')}${toggle('autostart', false)}</div>` : ''}
       </div>
       <div class="group">
-        <h4>الأوقات</h4>
-        <div class="row">${lab('sunrise', 'الشروق', 'ليلحق من لم يصلِّ الفجر')}${select('sunriseOpt', SUNRISE_OPTS, n.sunrise ? n.sunriseBefore || 0 : 'off', (x) => (x === 'off' ? 'متوقف' : x ? `قبل الشروق بـ${minutesText(x)}` : 'عند الشروق'))}</div>
-        <div class="row">${lab('sun', 'صلاة الضحى')}${toggle('duha', n.duha)}</div>
-        ${n.duha ? `<div class="row sub"><span class="row-label">بعد الشروق بـ</span>${select('duhaDelay', [15, 30, 60, 90, 120, 180], n.duhaDelay, (v) => (v >= 60 ? (v === 60 ? 'ساعة' : v === 120 ? 'ساعتين' : v === 180 ? '٣ ساعات' : 'ساعة ونصف') : minutesText(v)))}</div>` : ''}
-        <div class="row">${lab('moon', 'منتصف الليل', 'آخر وقت العشاء')}${toggle('midnight', n.midnight)}</div>
-        <div class="row">${lab('stars', 'الثلث الأخير من الليل', 'لقيام الليل والدعاء')}${toggle('lastThird', n.lastThird)}</div>
-        <div class="row">${lab('info', 'أوقات النهي', 'عند دخول كل وقت من الثلاثة')}${toggle('nahy', n.nahy)}</div>
-        <div class="row">${lab('moonStar', 'القيلولة', 'عند بدء الساعة السادسة قبل الزوال')}${toggle('qailulah', n.qailulah)}</div>
+        <h4>الذكر المتكرر</h4>
+        <div class="row">${lab('heart', 'الاستغفار', 'تنبيه يتكرر طوال اليوم')}${toggle('istighfar', n.istighfar)}</div>
+        ${n.istighfar ? `<div class="row sub"><span class="row-label">كل</span>${select('istighfarEvery', EVERY, n.istighfarEvery, (v) => `${num(v)} دقائق`)}</div>` : ''}
+        <div class="row">${lab('stars', 'الصلاة على النبي ﷺ', 'تنبيه يتكرر طوال اليوم')}${toggle('salawat', n.salawat)}</div>
+        ${n.salawat ? `<div class="row sub"><span class="row-label">كل</span>${select('salawatEvery', EVERY, n.salawatEvery, (v) => `${num(v)} دقائق`)}</div>` : ''}
+        ${n.istighfar || n.salawat ? `<div class="row sub"><span class="row-label">من الساعة</span><input type="time" name="from" value="${esc(n.from)}"></div>
+        <div class="row sub"><span class="row-label">إلى الساعة</span><input type="time" name="to" value="${esc(n.to)}"></div>` : ''}
+        <p class="hint">يتكرر التنبيه في الفترة التي تختارها كل يوم. </p>
       </div>
-      <div class="group">
-        <h4>القرآن</h4>
-        <div class="row">${lab('crown', 'سورة الملك', 'كل ليلة')}${toggle('mulk', n.mulk)}</div>
-        ${n.mulk ? timeRow('mulkTime') : ''}
-      </div>
-      <div class="group">
-        <h4>الأذكار</h4>
-        <div class="row">${lab('sunrise', 'أذكار الصباح')}${toggle('morning', n.morning)}</div>
-        ${n.morning ? `<div class="row sub"><span class="row-label">بعد الفجر بـ</span>${select('morningDelay', DELAYS, n.morningDelay, (v) => (v ? minutesText(v) : 'عند الأذان'))}</div>` : ''}
-        <div class="row">${lab('moonStar', 'أذكار المساء')}${toggle('evening', n.evening)}</div>
-        ${n.evening ? `<div class="row sub"><span class="row-label">بعد العصر بـ</span>${select('eveningDelay', DELAYS, n.eveningDelay, (v) => (v ? minutesText(v) : 'عند الأذان'))}</div>` : ''}
-        <div class="row">${lab('moon', 'أذكار النوم')}${toggle('sleep', n.sleep)}</div>
-        ${n.sleep ? timeRow('sleepTime') : ''}
-        <div class="row">${lab('heart', 'الصلاة على النبي ﷺ', 'من ٩ صباحاً إلى ٩ مساءً')}${toggle('salawat', n.salawat)}</div>
-        ${n.salawat ? `<div class="row sub"><span class="row-label">كل</span>${select('salawatHours', [1, 2, 3, 4, 6], n.salawatHours, (v) => (v === 1 ? 'ساعة' : v === 2 ? 'ساعتين' : `${num(v)} ساعات`))}</div>` : ''}
-        <p class="hint">ولكل ذكر في «أذكاري» تذكيره الخاص بالوقت الذي تختاره.</p>
-      </div>
-      <div class="group">
-        <h4>الصيام والمناسبات</h4>
-        <div class="row">${lab('leaf', 'صيام الاثنين والخميس', 'مساء الأحد والأربعاء')}${toggle('fasting', n.fasting)}</div>
-        ${n.fasting ? timeRow('fastingTime') : ''}
-        <div class="row">${lab('moon', 'صيام الأيام البيض', '١٣ و١٤ و١٥ — مساء اليوم الثاني عشر')}${toggle('whiteDays', n.whiteDays)}</div>
-        ${n.whiteDays ? timeRow('whiteDaysTime') : ''}
-        <div class="row">${lab('calendar', 'المناسبات', 'رمضان، والعشر، وعرفة، والعيدان، وعاشوراء… مساء اليوم السابق — <a class="link" href="#/occasions">عرضها</a>')}${toggle('occasions', n.occasions)}</div>
-        ${n.occasions ? timeRow('occasionsTime') : ''}
-      </div>
-      <div class="group">
-        <h4>تذكيرات أخرى</h4>
-        <div class="row">${lab('mosque', 'يوم الجمعة', 'الصلاة على النبي ﷺ وساعة الإجابة')}${toggle('friday', n.friday)}</div>
-        <div class="row">${lab('check', 'متابعة العبادات', 'كل ليلة الساعة ٩:٣٠ مساءً')}${toggle('worship', n.worship)}</div>
-      </div>
-      <p class="hint center">${isDesktop ? 'إغلاق النافذة يُبقي التطبيق بجانب الساعة لتصلك التنبيهات؛ وللخروج اضغط أيقونته هناك بالزر الأيمن ← «خروج».' : 'التنبيهات تُرسل من خادم التطبيق في وقتها، فافتح التطبيق مرة كل بضعة أسابيع ليبقى جدولها محدّثاً.'}</p>`;
+      <p class="hint center">${isDesktop ? 'إغلاق النافذة يُبقي التطبيق بجانب الساعة لتصلك التنبيهات؛ وللخروج اضغط أيقونته هناك بالزر الأيمن ← «خروج».' : 'التنبيهات تُرسل من خادم التطبيق في وقتها، فوبسبب كثرة التنبيهات يغطي الجدول بضعة أيام فقط، فافتح التطبيق كل يوم أو يومين ليتجدّد.'}</p>`;
     if (isDesktop) autostartEnabled().then((on) => { const el = view.querySelector('input[name=autostart]'); if (el) el.checked = on; });
   };
   draw();
@@ -426,15 +393,12 @@ export function renderNotify(view) {
       save();
       return draw();
     }
-    if (t.name === 'sunriseOpt') {
-      n.sunrise = t.value !== 'off';
-      if (n.sunrise) n.sunriseBefore = Number(t.value);
-    } else if (t.type === 'checkbox') n[t.name] = t.checked;
+    if (t.type === 'checkbox') n[t.name] = t.checked;
     else if (t.type === 'time') n[t.name] = t.value || n[t.name];
     else n[t.name] = Number(t.value);
     save();
     syncSchedule();
-    if (['morning', 'evening', 'sleep', 'salawat', 'duha', 'mulk', 'fasting', 'whiteDays', 'occasions'].includes(t.name)) draw();
+    if (['istighfar', 'salawat'].includes(t.name)) draw();
   };
   view.onclick = async (e) => {
     if (!e.target.closest('[data-test]')) return;

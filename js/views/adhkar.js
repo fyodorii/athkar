@@ -1,4 +1,4 @@
-// My adhkar (the user's own list, with counters and reminders, which can also be
+// My adhkar (the user's own list, with counters, which can also be
 // filled from the authentic adhkar), and the full-screen tasbeeh.
 
 import { CATEGORIES, CATEGORY_BY_ID } from '../adhkar-data.js';
@@ -205,7 +205,6 @@ function mineCard(c) {
       <p class="mine-text ${c.quran ? 'hafs' : ''}">${esc(c.text)}</p>
       ${c.ref ? `<p class="mine-ref">${esc(c.ref)}</p>` : ''}
       <div class="mine-meta">
-        ${c.reminder ? `<span class="pill">${icon('bell', 14)} ${num(c.reminder)}</span>` : ''}
         <span class="pill soft">المجموع ${num(c.total || 0)}</span>
       </div>
     </div>
@@ -260,7 +259,7 @@ function customMenu(item, redraw) {
 const TARGETS = [0, 3, 7, 10, 33, 100, 1000];
 
 export function editCustom(item, onDone, preset = {}) {
-  const c = item || { text: preset.text || '', target: 33, reminder: '' };
+  const c = item || { text: preset.text || '', target: 33 };
   openSheet(
     `<form class="form" data-form>
        <label class="field"><span>نص الذكر</span>
@@ -271,9 +270,6 @@ export function editCustom(item, onDone, preset = {}) {
          </div>
          <input type="number" name="target" inputmode="numeric" min="0" max="100000" value="${c.target || ''}" placeholder="أو اكتب عدداً">
        </div>
-       <label class="field row"><span>${icon('bell', 18)} تذكير يومي</span>
-         <input type="time" name="reminder" value="${esc(c.reminder || '')}"></label>
-       <p class="hint">يصلك التذكير في هذا الوقت كل يوم إذا فعّلت التنبيهات من الإعدادات. اتركه فارغاً لإيقافه.</p>
        <div class="sheet-actions">
          <button class="btn primary" type="submit">${item ? 'حفظ' : 'إضافة'}</button>
          <button class="btn ghost" type="button" data-close>إلغاء</button>
@@ -292,9 +288,8 @@ export function editCustom(item, onDone, preset = {}) {
         const text = form.text.value.trim();
         if (!text) return;
         const target = Math.max(0, Math.min(100000, parseInt(form.target.value, 10) || 0));
-        const reminder = form.reminder.value || '';
-        if (item) Object.assign(item, { text, target, reminder });
-        else state.custom.unshift({ id: uid(), text, target, reminder, today: 0, total: 0, created: Date.now() });
+        if (item) Object.assign(item, { text, target });
+        else state.custom.unshift({ id: uid(), text, target, today: 0, total: 0, created: Date.now() });
         save();
         syncSchedule();
         close();
@@ -333,7 +328,7 @@ function pickAdhkar(redraw) {
           const x = items[id];
           if (!x || have.has(x.text)) continue;
           const text = (x.before ? x.before + '\n' : '') + x.text;
-          state.custom.push({ id: uid(), text, target: x.count, ref: x.ref || '', reminder: '', today: 0, total: 0, created: Date.now() });
+          state.custom.push({ id: uid(), text, target: x.count, ref: x.ref || '', today: 0, total: 0, created: Date.now() });
           have.add(x.text);
           n++;
         }

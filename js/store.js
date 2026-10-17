@@ -26,34 +26,15 @@ export const DEFAULTS = {
     appIcon: 'emerald', // icons/alt/<name>.png for the home screen
     mushafMode: 'pages', // al-Mulk: the mushaf's pages | continuous text
     mushafInk: 'blue', // blue | black
+    // The only reminders: istighfar and the salawat, every few minutes between two hours.
     notify: {
       enabled: false,
-      sunrise: false,
-      sunriseBefore: 0, // minutes before sunrise (0 = at sunrise), to catch Fajr in time
-      morning: true,
-      morningDelay: 30,
-      evening: true,
-      eveningDelay: 30,
-      sleep: false,
-      sleepTime: '22:30',
-      lastThird: false,
-      friday: true,
-      fasting: false,
-      fastingTime: '21:00',
-      whiteDays: false,
-      whiteDaysTime: '21:00',
-      occasions: false, // the evening before Ramadan, Arafah, Ashura and the other occasions
-      occasionsTime: '21:00',
+      istighfar: false,
+      istighfarEvery: 5, // minutes: 3 | 5 | 10
       salawat: false,
-      salawatHours: 3,
-      worship: false,
-      duha: false,
-      duhaDelay: 30,
-      midnight: false,
-      nahy: false,
-      qailulah: false,
-      mulk: false,
-      mulkTime: '21:45',
+      salawatEvery: 5,
+      from: '06:00',
+      to: '22:00',
     },
   },
   progress: { day: '', counts: {} },
@@ -98,7 +79,10 @@ function prune(data) {
   if (s) {
     delete s.iqama;
     delete s.prayerLayout;
-    for (const k of ['prayers', 'beforeBy', 'iqama', 'before', 'fajrInfo', 'fajrInfoTime', 'afterAdhan', 'prayerEnd', 'khatma', 'khatmaTime', 'kahf', 'kahfTime', 'baqarah', 'baqarahTime']) delete s.notify?.[k];
+    // Only istighfar and the salawat remain as reminders; the old ones are dropped.
+    const n = s.notify;
+    if (n) for (const k of Object.keys(n)) if (!(k in DEFAULTS.settings.notify)) delete n[k];
+    if (n && ![3, 5, 10].includes(n.salawatEvery)) n.salawatEvery = 5;
   }
   return data;
 }
@@ -140,7 +124,7 @@ if (state.seeded < SEED_VERSION) {
   const have = new Set(state.custom.map((c) => c.text));
   const now = Date.now();
   SEED.forEach((x, i) => {
-    if (!have.has(x.text)) state.custom.push({ id: `seed${i + 1}`, reminder: '', today: 0, total: 0, created: now, ...x });
+    if (!have.has(x.text)) state.custom.push({ id: `seed${i + 1}`, today: 0, total: 0, created: now, ...x });
   });
   state.seeded = SEED_VERSION;
   try {
