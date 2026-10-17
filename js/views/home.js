@@ -1,46 +1,47 @@
-// Home: live clock, Hijri and Gregorian dates, next prayer countdown and today's times.
+// Home: live clock, Hijri and Gregorian dates, the next moment (sunrise, Duha, midnight, the
+// last third) with a countdown, and the day's times with the forbidden times.
 
 import { CATEGORY_BY_ID, DAILY } from '../adhkar-data.js';
 import { wirdDone } from './adhkar.js';
 import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, GREG_MONTHS, gregText, hijri, hijriText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
-import { addDays, dayTimes, forbiddenTimes, iqamaTime, METHODS, PRAYER_END, PRAYERS } from '../prayer.js';
+import { addDays, dayTimes, forbiddenTimes, METHODS } from '../prayer.js';
 import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
-import { todayPortion } from '../khatma.js';
-import { advanceIfDone, dayTasks, hifzDay, HIFZ_DAYS, isChecked, partDone } from '../hifz.js';
-import { PAGES } from '../quran-data.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
 import { cyclePrayer, dayScore, prayerIcon, prayerStreak } from './worship.js';
 import { daysText, nextOccasion, rangeText } from './calendar.js';
 import { quickSurahs } from './surah.js';
-import { sinceText, sunnahNow } from '../sunnah.js';
 
 const QUICK = [
-  ['#/mine', 'أذكاري', 'heart', 'rose'],
   ['#/notebook', 'أدعيتي', 'hand', 'teal'],
-  ['#/quran', 'الختمة', 'quran', 'emerald'],
-  ['#/hifz', 'ورد الحفظ', 'bookmark', 'amber'],
-  ['#/ruqyah', 'الرقية', 'book', 'teal'],
   ['#/qibla', 'القبلة', 'kaaba', 'emerald'],
-  ['#/radio', 'الإذاعة', 'radio', 'indigo'],
-  ['#/tasbeeh', 'السبحة', 'beads', 'amber'],
+  ['#/calendar', 'التقويم', 'grid', 'teal'],
+  ['#/occasions', 'المناسبات', 'calendar', 'rose'],
   ['#/qailulah', 'القيلولة', 'moon', 'teal'],
   ['#/walk', 'المشي الياباني', 'stars', 'amber'],
   ['#/focus', '١٠ دقائق', 'clock', 'rose'],
   ['#/tools', 'الأدوات', 'widget', 'indigo'],
-  ['#/calendar', 'التقويم', 'grid', 'teal'],
-  ['#/occasions', 'المناسبات', 'calendar', 'rose'],
-  ['#/settings/notify', 'الإشعارات', 'bell', 'amber'],
 ];
 
-const FARD = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-let dayOffset = 0; // the day shown in the prayer times card: 0 today, -1 yesterday, 1 tomorrow…
+let dayOffset = 0; // the day shown in the times card: 0 today, -1 yesterday, 1 tomorrow…
 
-// Rows under the five prayers: Duha, the middle of the night and its last third.
-const EXTRA = ['duha', 'midnight', 'lastThird'];
+// The four moments shown, in the order of the day, with the setting that turns each one's reminder on.
+const MOMENTS = [
+  { key: 'sunrise', notify: 'sunrise' },
+  { key: 'duha', notify: 'duha' },
+  { key: 'midnight', notify: 'midnight' },
+  { key: 'lastThird', notify: 'lastThird' },
+];
+const MOMENT_NOTE = {
+  sunrise: 'تطلع الشمس، وينتهي وقت الفجر',
+  duha: 'بعد الشروق بـ١٥ دقيقة',
+  midnight: 'نصف الليل بين المغرب والفجر',
+  lastThird: 'وقت نزول ربنا واستجابة الدعاء',
+};
+const FARD_NAMES = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
 
 function bigClock() {
   const { h, m, s } = hoursAt();
@@ -73,18 +74,20 @@ export function render(view) {
         <a class="icon-btn glass" href="#/settings" aria-label="الإعدادات">${icon('gear', 20)}</a>
       </div>
     </div>
-    <div class="hero-clock" aria-live="off">
-      <span class="t" data-clock>${c.time}</span><span class="s" data-sec>${c.sec}</span>${c.period ? `<span class="p" data-period>${c.period}</span>` : ''}
-    </div>
-    <div class="hero-dates">
-      <span class="hero-moon" title="القمر الليلة">${moonPhase(hijri(info.day, s.hijriAdjust).day)}</span>
-      <div class="hijri">${icon('moon', 16)}<span><b>${weekday(info.day)}</b> ${hijriText(info.day, s.hijriAdjust)}</span></div>
-      <div class="greg">${icon('calendar', 15)}<span>${gregText(info.day)}</span></div>
+    <div class="hero-main">
+      <div class="hero-clock" aria-live="off">
+        <span class="t" data-clock>${c.time}</span><span class="s" data-sec>${c.sec}</span>${c.period ? `<span class="p" data-period>${c.period}</span>` : ''}
+      </div>
+      <div class="hero-dates">
+        <span class="hero-moon" title="القمر الليلة">${moonPhase(hijri(info.day, s.hijriAdjust).day)}</span>
+        <div class="hijri">${icon('moon', 16)}<span><b>${weekday(info.day)}</b> ${hijriText(info.day, s.hijriAdjust)}</span></div>
+        <div class="greg">${icon('calendar', 15)}<span>${gregText(info.day)}</span></div>
+      </div>
     </div>
     <div class="next glass">
       <div class="next-row">
         <div class="next-name">
-          <small>الصلاة القادمة</small>
+          <small>القادم</small>
           <strong data-next-name>${esc(info.next.name)}</strong>
         </div>
         <div class="next-time">
@@ -93,35 +96,36 @@ export function render(view) {
         </div>
       </div>
       <div class="bar"><i data-progress style="width:${progress(info)}%"></i></div>
-      <div class="next-after" data-after>${afterNext(info)}</div>
       <div class="ends" data-ends>${endsText(info)}</div>
     </div>
   </section>
 
-  <section class="now-tiles">
-    <div class="card analog" aria-label="الساعة">${analogClock()}</div>
-    <div class="card period" data-period-tile>${periodTile(info)}</div>
-  </section>
+  <div class="home-grid">
+    <div class="home-col">
+      <section class="now-tiles">
+        <div class="card analog" aria-label="الساعة">${analogClock()}</div>
+        <div class="card period tp-${info.period.key}" data-period-tile>${periodTile(info)}</div>
+      </section>
 
-  ${info.isFriday ? `<a class="banner gold" href="#/surah/kahf">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>سورة الكهف، والإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></a>` : ''}
+      ${info.isFriday ? `<a class="banner gold" href="#/surah/kahf">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>سورة الكهف، والإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></a>` : ''}
 
-  ${prayersCard(info)}
+      ${timesCard(info)}
 
-  ${nahyCard(info)}
+      ${nahyCard(info)}
+    </div>
+    <div class="home-col">
+      ${wirdSuggestion(info)}
 
-  ${wirdSuggestion(info)}
+      <section class="quick">
+        ${QUICK.map(([href, label, ic, tone]) => `<a class="quick-tile tone-${tone}" href="${href}">${icon(ic, 24)}<span>${label}</span></a>`).join('')}
+      </section>
 
-  <section class="quick">
-    ${QUICK.map(([href, label, ic, tone]) => `<a class="quick-tile tone-${tone}" href="${href}">${icon(ic, 24)}<span>${label}</span></a>`).join('')}
-  </section>
+      ${quickSurahs()}
+      ${occasionCard()}
 
-  ${quickSurahs()}
-  ${occasionCard()}
-
-  ${khatmaCard(info)}
-  ${hifzCard()}
-
-  ${worshipCard(info)}
+      ${worshipCard(info)}
+    </div>
+  </div>
 
   <section class="today-cards" data-cards>
     ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs">${esc(d.ayah.text)}</span>`, d.ayah.ref)}
@@ -132,8 +136,8 @@ export function render(view) {
   <div class="dots" data-dots>${[0, 1, 2, 3].map((i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>
 
   <div class="foot-links">
-    <a href="#/settings/widget">${icon('widget', 18)} ويدجت الشاشة</a>
     <a href="#/settings/notify">${icon('bell', 18)} التنبيهات</a>
+    <a href="#/settings">${icon('gear', 18)} الإعدادات</a>
   </div>`;
 
   setHands(view);
@@ -148,9 +152,8 @@ export function render(view) {
     tick() {
       const c2 = bigClock();
       const info2 = today();
-      // Redraw when the day, the next prayer, the running prayer or a forbidden time changes.
-      const same = (a, b) => (a && a.at) === (b && b.at);
-      if (info2.key !== info.key || info2.next.at !== info.next.at || !same(info2.current, info.current) || info2.forbidden?.key !== info.forbidden?.key) {
+      // Redraw when the day, the next moment, the kind of time or a forbidden time changes.
+      if (info2.key !== info.key || info2.next.at !== info.next.at || info2.period.key !== info.period.key || info2.forbidden?.key !== info.forbidden?.key) {
         return 'rerender';
       }
       $('[data-clock]', view).textContent = c2.time;
@@ -159,7 +162,6 @@ export function render(view) {
       if (p) p.textContent = c2.period;
       $('[data-countdown]', view).textContent = countdown(info2.next.at - Date.now());
       $('[data-progress]', view).style.width = `${progress(info2)}%`;
-      $('[data-ends]', view).innerHTML = endsText(info2);
       setHands(view);
       const p2 = periodTile(info2);
       if (p2 !== lastTile) $('[data-period-tile]', view).innerHTML = lastTile = p2;
@@ -170,16 +172,10 @@ export function render(view) {
   };
 
   function onClick(e) {
-    if (e.target.closest('[data-playout]')) {
-      s.prayerLayout = s.prayerLayout === 'grid' ? 'list' : 'grid';
-      save();
-      $('[data-prayers]', view).outerHTML = prayersCard(today());
-      return;
-    }
     const nav = e.target.closest('[data-pday]');
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);
-      $('[data-prayers]', view).outerHTML = prayersCard(today());
+      $('[data-times]', view).outerHTML = timesCard(today());
       return;
     }
     const act = e.target.closest('[data-card-act]');
@@ -202,79 +198,106 @@ export function render(view) {
     if (!bell) return;
     e.preventDefault();
     const k = bell.dataset.bell;
-    s.notify.prayers[k] = !s.notify.prayers[k];
+    s.notify[k] = !s.notify[k];
     save();
-    bell.classList.toggle('on', s.notify.prayers[k]);
-    bell.innerHTML = icon(s.notify.prayers[k] ? 'bell' : 'bellOff', 18);
+    bell.classList.toggle('on', s.notify[k]);
+    bell.innerHTML = icon(s.notify[k] ? 'bell' : 'bellOff', 18);
+    const what = k === 'nahy' ? 'أوقات النهي' : info.times[k].name;
     if (!s.notify.enabled) {
-      toast('فعّل التنبيهات من الإعدادات لتصلك عند كل صلاة');
+      toast('فعّل التنبيهات من الإعدادات لتصلك في أوقاتها');
     } else {
-      toast(s.notify.prayers[k] ? `سيصلك تنبيه صلاة ${esc(info.times[k].name)}` : `أُوقف تنبيه صلاة ${esc(info.times[k].name)}`);
+      toast(s.notify[k] ? `سيصلك تنبيه ${esc(what)}` : `أُوقف تنبيه ${esc(what)}`);
       syncSchedule();
     }
   }
 }
 
+// How far the day has moved from the last moment to the next one.
 function progress(info) {
   const span = info.next.at - info.prev.at;
   return Math.max(0, Math.min(100, ((Date.now() - info.prev.at) / span) * 100));
 }
 
-function prayerRow(info, k) {
-  const s = state.settings;
-  const t = info.times[k];
-  const isNext = info.next.key === k && info.next.at === t.at;
-  const isCurrent = info.current?.key === k && info.current.at === t.at;
-  const passed = t.at <= Date.now() && !isNext && !isCurrent;
-  const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : t.name;
-  const c = clock(t.hours, s.clock24);
-  const iq = k !== 'sunrise' && s.iqama?.[k] ? iqamaTime(info.times, k, s.iqama) : null;
-  const bell =
-    k === 'sunrise'
-      ? '<span class="bell-space"></span>'
-      : `<button class="bell ${s.notify.prayers[k] ? 'on' : ''}" data-bell="${k}" aria-label="تنبيه ${name}">${icon(s.notify.prayers[k] ? 'bell' : 'bellOff', 18)}</button>`;
-  return `<li class="prayer ${isNext ? 'next' : ''} ${isCurrent ? 'current' : ''} ${passed ? 'passed' : ''} ${k === 'sunrise' ? 'minor' : ''}">
-    <span class="p-icon">${icon(PRAYER_ICONS[k], 20)}</span>
-    <span class="p-name"><span>${name}${isNext ? '<em>القادمة</em>' : isCurrent ? '<em class="now">وقتها الآن</em>' : ''}</span><small class="p-end">${endLabel(info, k)}</small></span>
-    <span class="p-time"><span>${c.time}<small>${c.period}</small></span>${iq ? `<small class="p-iqama">الإقامة ${clockText(iq.hours, s.clock24)}</small>` : ''}</span>
-    ${bell}
-  </li>`;
+// The sentence under the countdown: a forbidden time if one is running, else what the time is for.
+function endsText(info) {
+  const f = info.forbidden;
+  if (f) return `<span class="nahy">${icon('info', 15)} وقت نهي عن النافلة (${esc(f.name)}) حتى <b>${clockText(f.to.hours, state.settings.clock24)}</b></span>`;
+  return `<span>${icon(PRAYER_ICONS[info.next.key] || 'clock', 15)} ${esc(MOMENT_NOTE[info.next.key] || '')}</span>`;
 }
 
-// One prayer as a card (the grid layout): name, time, and its iqama (for sunrise, the ishraq).
-function prayerCell(info, k) {
-  const s = state.settings;
-  const t = info.times[k];
-  const isNext = info.next.key === k && info.next.at === t.at;
-  const isCurrent = info.current?.key === k && info.current.at === t.at;
-  const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : t.name;
-  const c = clock(t.hours, s.clock24);
-  const sub =
-    k === 'sunrise'
-      ? `الإشراق ${clockText(info.times.duha.hours, s.clock24)}`
-      : s.iqama?.[k]
-        ? `الإقامة ${clockText(iqamaTime(info.times, k, s.iqama).hours, s.clock24)}`
-        : '';
-  return `<div class="pcell ${isNext ? 'next' : ''} ${isCurrent ? 'current' : ''}">
-    <span class="pcell-ic">${icon(PRAYER_ICONS[k], 20)}</span>
-    <b class="pcell-name">${name}${isNext ? '<em>القادمة</em>' : isCurrent ? '<em class="now">الآن</em>' : ''}</b>
-    <b class="pcell-time">${c.time}<small>${c.period}</small></b>
-    <small class="pcell-sub">${sub}</small>
-  </div>`;
+// The kind of time it is now: Duha, a forbidden time, the last third…
+function periodTile(info) {
+  const n = info.period;
+  return `<div class="pt-row"><span class="pt-ic">${icon(PERIOD_ICONS[n.key] || 'stars', 24)}</span><small class="pt-now">الآن</small></div>
+    <b>${esc(n.title)}</b><small>${esc(n.sub)}</small>`;
 }
+const PERIOD_ICONS = { sunrise: 'sunrise', nahy: 'info', duha: 'sun', day: 'sun', night: 'moon', midnight: 'moon', qiyam: 'stars' };
 
-function todayCard(kind, label, ic, html, ref) {
-  return `<article class="today-card tc-${kind}">
-    <div class="tc-head">${icon(ic, 17)}<span>${label}</span></div>
-    <p class="tc-text">${html}</p>
-    <div class="tc-foot">
-      <small>${esc(ref)}</small>
-      <div>
-        <button class="icon-btn ghost sm" data-card-act="${kind}:copy" aria-label="نسخ">${icon('copy', 18)}</button>
-        <button class="icon-btn ghost sm" data-card-act="${kind}:share" aria-label="مشاركة">${icon('share', 18)}</button>
-      </div>
+// The times card, for today or another day picked with the arrows: sunrise, Duha, the
+// middle of the night and its last third.
+function timesCard(info) {
+  const s = state.settings;
+  let shown = info;
+  if (dayOffset) {
+    const day = addDays(info.day, dayOffset);
+    const times = dayTimes(day, s, hijri(day, s.hijriAdjust).month === 9);
+    shown = { day, times, next: {}, other: true };
+  }
+  const d = shown.day;
+  const h24 = s.clock24;
+  const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
+  const noon = shown.times.dhuhr.hours - 10 / 60;
+  const rows = MOMENTS.map(({ key, notify }) => {
+    const t = shown.times[key];
+    const c = clock(t.hours, h24);
+    const isNext = !shown.other && info.next.key === key && info.next.at === t.at;
+    const passed = !shown.other && t.at <= Date.now() && !isNext && (key === 'sunrise' || key === 'duha');
+    const sub = key === 'duha' ? `إلى قبيل الزوال ${clockText(noon, h24)}` : MOMENT_NOTE[key];
+    return `<li class="prayer moment ${isNext ? 'next' : ''} ${passed ? 'passed' : ''}">
+      <span class="p-icon">${icon(PRAYER_ICONS[key] || 'sun', 20)}</span>
+      <span class="p-name"><span>${t.name}${isNext ? '<em>القادم</em>' : ''}</span><small class="p-end">${sub}</small></span>
+      <span class="p-time"><span>${c.time}<small>${c.period}</small></span></span>
+      <button class="bell ${s.notify[notify] ? 'on' : ''}" data-bell="${notify}" aria-label="تنبيه ${t.name}">${icon(s.notify[notify] ? 'bell' : 'bellOff', 18)}</button>
+    </li>`;
+  }).join('');
+  return `<section class="card prayers" data-times>
+    <div class="card-head">
+      <h2>${icon('clock', 18)} الأوقات</h2>
+      <a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a>
     </div>
-  </article>`;
+    <div class="pday">
+      <button class="icon-btn ghost sm flip" data-pday="-1" aria-label="اليوم السابق">${icon('chevron', 20)}</button>
+      <button class="pday-label ${dayOffset ? 'other' : ''}" data-pday="0"><b>${label}</b><small>${weekday(d)}، ${num(d.d)} ${GREG_MONTHS[d.m - 1]} • ${hijriText(d, s.hijriAdjust)}</small></button>
+      <button class="icon-btn ghost sm" data-pday="1" aria-label="اليوم التالي">${icon('chevron', 20)}</button>
+    </div>
+    <ul class="prayer-list">${rows}</ul>
+  </section>`;
+}
+
+// The three times voluntary prayer is forbidden, with the one running now marked.
+function nahyCard(info) {
+  const s = state.settings;
+  const h24 = s.clock24;
+  const now = Date.now();
+  return `<section class="card nahy-card">
+    <div class="card-head">
+      <h2>${icon('info', 18)} أوقات النهي <small class="muted">عن صلاة النافلة</small></h2>
+      <button class="bell ${s.notify.nahy ? 'on' : ''}" data-bell="nahy" aria-label="تنبيه أوقات النهي">${icon(s.notify.nahy ? 'bell' : 'bellOff', 18)}</button>
+    </div>
+    <ul class="nahy-list">
+      ${forbiddenTimes(info.times)
+        .map((f) => {
+          const on = now >= f.from.at && now < f.to.at;
+          const past = now >= f.to.at;
+          return `<li class="${on ? 'on' : ''} ${past ? 'past' : ''}">
+            <div><b>${esc(f.name)}${on ? '<em>الآن</em>' : ''}</b><small>${esc(f.desc)}</small></div>
+            <span class="nahy-time">${clockText(f.from.hours, h24)}<i>←</i>${clockText(f.to.hours, h24)}</span>
+          </li>`;
+        })
+        .join('')}
+    </ul>
+    <p class="hint">ويُستثنى منها قضاء الفريضة الفائتة، وذوات الأسباب كتحية المسجد وسنة الوضوء على الراجح من أقوال أهل العلم.</p>
+  </section>`;
 }
 
 // Today's worship at a glance, with the five prayers to tick off right here.
@@ -290,10 +313,10 @@ function worshipCard(info) {
     <div class="worship-row">
       <a class="w-score" href="#/worship"><span data-wscore>${ring(sc.fraction, 54, 6)}</span><b data-wpct>${num(Math.round(sc.fraction * 100))}٪</b></a>
       <div class="qps">
-        ${['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']
+        ${Object.keys(FARD_NAMES)
           .map((k) => {
             const v = rec[k] || 0;
-            const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : info.times[k].name;
+            const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : FARD_NAMES[k];
             return `<button class="qp p${v}" data-quick="${k}" aria-label="${name}"><span class="qp-mark">${prayerIcon(v)}</span><small>${name}</small></button>`;
           })
           .join('')}
@@ -302,68 +325,18 @@ function worshipCard(info) {
   </section>`;
 }
 
-// "The time for Dhuhr ends in 01:23:45", or what time it is when no prayer is due.
-function endsText(info) {
-  const f = info.forbidden;
-  const nahy = f ? `<span class="nahy">${icon('info', 15)} وقت نهي عن النافلة (${esc(f.name)}) حتى <b>${clockText(f.to.hours, state.settings.clock24)}</b></span>` : '';
-  const q = info.iqama;
-  const iqama = q
-    ? `<span class="iqama">${icon('mosque', 15)} إقامة ${esc(q.name)} بعد <b>${countdown(q.at - Date.now())}</b> (${clockText(q.hours, state.settings.clock24)})</span>`
-    : '';
-  return iqama + currentText(info) + nahy;
-}
-
-function currentText(info) {
-  const now = Date.now();
-  const h24 = state.settings.clock24;
-  const c = info.current;
-  const t = info.times;
-  if (c) {
-    // Asr has a chosen time (until a shadow is twice an object) before its time of need.
-    const chosen = c.key === 'asr' && state.settings.asr === 1 && now < t.asr2.at;
-    const end = chosen ? t.asr2 : c.end;
-    const left = end.at - now;
-    const label = chosen ? 'وقت الاختيار للعصر' : c.key === 'asr' && state.settings.asr === 1 ? 'وقت الضرورة للعصر' : `وقت ${esc(c.name)}`;
-    return `<span class="${left < 20 * 60000 ? 'warn' : ''}">${icon('clock', 15)} يخرج ${label} بعد <b>${countdown(left)}</b> (${clockText(end.hours, h24)})</span>`;
-  }
-  if (now >= t.sunrise.at && now < t.dhuhr.at) {
-    if (info.forbidden?.key === 'zawal') return `<span>${icon('sun', 15)} انتهى وقت الضحى، والظهر ${clockText(t.dhuhr.hours, h24)}</span>`;
-    return `<span>${icon('sun', 15)} وقت الضحى — ${now < t.duha.at ? `يبدأ ${clockText(t.duha.hours, h24)}` : 'صلِّ ركعتي الضحى'}</span>`;
-  }
-  // Before Fajr the night is last night's, whose last third began 24 hours before tonight's.
-  const third = now < t.fajr.at ? t.lastThird.at - 86400000 : t.lastThird.at;
-  return `<span>${icon('stars', 15)} ${now >= third ? 'الثلث الأخير من الليل — وقت نزول واستجابة' : 'بعد منتصف الليل'}</span>`;
-}
-
-function khatmaCard(info) {
-  const k = state.khatma;
-  if (!k.start) {
-    return `<a class="card khatma-mini" href="#/quran">
-      <span class="km-icon">${icon('quran', 24)}</span>
-      <span class="km-text"><b>ابدأ ختمتك</b><small>حدد مدة الختمة، ويحسب لك وردك اليومي</small></span>${icon('chevron', 18, 'muted')}</a>`;
-  }
-  const p = todayPortion(k, info.day);
-  return `<a class="card khatma-mini" href="#/quran">
-    <span class="km-ring">${ring(k.page / PAGES, 52, 5)}<b>${num(Math.floor((k.page / PAGES) * 100))}٪</b></span>
-    <span class="km-text"><b>${k.page >= PAGES ? 'أتممت الختمة' : p.done ? 'أتممت وردك اليوم ✓' : `وردك اليوم: ${num(p.size)} صفحة`}</b>
-      <small>${k.page >= PAGES ? 'تقبّل الله منك' : p.hizb ? `الحزب ${num(p.hizb.n)}: ${esc(p.hizb.name)}` : `من ص ${num(p.from)} (${esc(p.fromInfo.surahName)}) إلى ص ${num(p.to)} (${esc(p.toInfo.surahName)})`}</small></span>
-    ${icon('chevron', 18, 'muted')}</a>`;
-}
-
-// Today's memorization wird, once the plan is started.
-function hifzCard() {
-  const h = state.hifz;
-  if (!h.on) return '';
-  if (advanceIfDone(today().key)) save();
-  const e = hifzDay(h.day);
-  const tasks = dayTasks(h.day);
-  const done = tasks.filter((x) => isChecked(h.day, x.id)).length;
-  const range = (a, b) => `${num(a)}–${num(b)}`;
-  return `<a class="card khatma-mini" href="#/hifz">
-    <span class="km-ring">${ring(done / tasks.length, 52, 5)}<b>${num(done)}/${num(tasks.length)}</b></span>
-    <span class="km-text"><b>${partDone(h.day) ? 'أتممت ورد الحفظ ✓' : `ورد الحفظ — اليوم ${num(h.day)} من ${num(HIFZ_DAYS)}`}</b>
-      <small>${e.from ? `حفظ الوجه ${range(e.from, e.to)}` : 'تثبيت'}${e.link ? ` • ربط ${range(e.link.from, e.link.to)}` : ''}${e.review ? ` • مراجعة ${range(e.review.from, e.review.to)}` : ''}</small></span>
-    ${icon('chevron', 18, 'muted')}</a>`;
+function todayCard(kind, label, ic, html, ref) {
+  return `<article class="today-card tc-${kind}">
+    <div class="tc-head">${icon(ic, 17)}<span>${label}</span></div>
+    <p class="tc-text">${html}</p>
+    <div class="tc-foot">
+      <small>${esc(ref)}</small>
+      <div>
+        <button class="icon-btn ghost sm" data-card-act="${kind}:copy" aria-label="نسخ">${icon('copy', 18)}</button>
+        <button class="icon-btn ghost sm" data-card-act="${kind}:share" aria-label="مشاركة">${icon('share', 18)}</button>
+      </div>
+    </div>
+  </article>`;
 }
 
 // The adhkar for this time of day: morning until Asr, evening until Isha, then sleep.
@@ -381,50 +354,6 @@ function wirdSuggestion(info) {
       <span>${finished ? 'تقبّل الله منك' : done ? `قرأت ${num(done)} من ${num(all)}` : esc(cat.subtitle)}</span></div>
     <span class="suggest-ring tone-${cat.tone}">${ring(done / all, 40, 4)}</span>
   </a>`;
-}
-
-// The prayer times card, for today or another day picked with the arrows.
-function prayersCard(info) {
-  const s = state.settings;
-  let shown = info;
-  if (dayOffset) {
-    const day = addDays(info.day, dayOffset);
-    const times = dayTimes(day, s, hijri(day, s.hijriAdjust).month === 9);
-    const wd = new Date(Date.UTC(day.y, day.m - 1, day.d)).getUTCDay();
-    shown = { day, times, next: {}, current: null, isFriday: wd === 5, other: true };
-  }
-  const d = shown.day;
-  const grid = s.prayerLayout === 'grid';
-  const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
-  return `<section class="card prayers" data-prayers>
-    <div class="card-head">
-      <h2>مواقيت الصلاة</h2>
-      <span class="ph-tools"><a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a>
-        <button class="icon-btn ghost sm" data-playout aria-label="${grid ? 'قائمة' : 'بطاقات'}">${icon(grid ? 'rows' : 'grid', 18)}</button></span>
-    </div>
-    <div class="pday">
-      <button class="icon-btn ghost sm flip" data-pday="-1" aria-label="اليوم السابق">${icon('chevron', 20)}</button>
-      <button class="pday-label ${dayOffset ? 'other' : ''}" data-pday="0"><b>${label}</b><small>${weekday(d)}، ${num(d.d)} ${GREG_MONTHS[d.m - 1]} • ${hijriText(d, s.hijriAdjust)}</small></button>
-      <button class="icon-btn ghost sm" data-pday="1" aria-label="اليوم التالي">${icon('chevron', 20)}</button>
-    </div>
-    ${grid ? `<div class="prayer-grid">${PRAYERS.map((k) => prayerCell(shown, k)).join('')}</div>` : `<ul class="prayer-list">${PRAYERS.map((k) => prayerRow(shown, k)).join('')}</ul>`}
-    <ul class="extra-times">
-      ${EXTRA.map((k) => {
-        const c2 = clock(shown.times[k].hours, s.clock24);
-        return `<li><span>${icon(PRAYER_ICONS[k], 18)}</span><b>${shown.times[k].name}</b><em>${c2.time} <small>${c2.period}</small></em></li>`;
-      }).join('')}
-    </ul>
-  </section>`;
-}
-
-// "Then Maghrib at 6:06": the prayer after the next one.
-function afterNext(info) {
-  const all = [...FARD.map((k) => info.times[k]), ...FARD.map((k) => info.tomorrow[k])];
-  const p = all.find((x) => x.at > info.next.at);
-  if (!p) return '';
-  // Dhuhr is «الجمعة» on Friday: today's on a Friday, tomorrow's on a Thursday.
-  const friday = p.at === info.tomorrow.dhuhr.at ? info.weekday === 4 : info.isFriday;
-  return `<span>ثم <b>${p.key === 'dhuhr' && friday ? 'الجمعة' : esc(p.name)}</b></span><span>${clockText(p.hours, state.settings.clock24)}</span>`;
 }
 
 // A small analog clock; its hands turn in tick().
@@ -466,22 +395,6 @@ function moonPhase(hday) {
   return `<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="24" r="${r}" class="moon-dark"/><path d="${d}" class="moon-lit"/></svg>`;
 }
 
-const NOW_ICONS = {
-  qiyam: 'stars', witr: 'moon', morning: 'sunrise', sunrise: 'sunrise', duha: 'sun', zawal: 'info', evening: 'sunLow',
-  'jumuah-hour': 'hand', jumuah: 'mosque', 'jumuah-after': 'mosque',
-};
-
-// What is recommended now (the sunnah of the prayer whose time it is, Duha, the witr…) and
-// how long since the last adhan.
-function periodTile(info) {
-  const s = state.settings;
-  const n = sunnahNow(info.times, Date.now(), s.iqama, info.isFriday);
-  const since = sinceText(n.since, num);
-  return `${since ? `<em class="pt-since">${since}</em>` : ''}
-    <div class="pt-row"><span class="pt-ic">${icon(NOW_ICONS[n.key] || 'stars', 24)}</span><small class="pt-now">الآن</small></div>
-    <b>${esc(n.title)}</b><small>${esc(n.sub)}</small>`;
-}
-
 // The next Islamic occasion and how long until it.
 function occasionCard() {
   const o = nextOccasion(400);
@@ -490,37 +403,4 @@ function occasionCard() {
     <span class="km-icon">${icon(o.icon, 24)}</span>
     <span class="km-text"><small>${o.left <= 0 ? 'المناسبة الحالية' : 'المناسبة القادمة'}</small><b>${esc(o.name)}</b><small>${rangeText(o.start, o.end)}</small></span>
     <span class="pill">${o.left < 0 ? 'الآن' : daysText(o.left)}</span></a>`;
-}
-
-// "Until 6:14 AM" under each prayer: when its time runs out. Asr shows its chosen time
-// (until a shadow is twice an object) and its time of need (until sunset).
-function endLabel(info, k) {
-  const h24 = state.settings.clock24;
-  const t = info.times;
-  if (k === 'sunrise') return 'نهاية وقت الفجر';
-  if (k === 'asr' && state.settings.asr === 1 && t.asr2.at > t.asr.at) {
-    return `الاختيار حتى ${clockText(t.asr2.hours, h24)} • الضرورة حتى ${clockText(t.maghrib.hours, h24)}`;
-  }
-  return `يخرج وقتها ${clockText(t[PRAYER_END[k]].hours, h24)}`;
-}
-
-function nahyCard(info) {
-  const h24 = state.settings.clock24;
-  const now = Date.now();
-  return `<section class="card nahy-card">
-    <div class="card-head"><h2>${icon('info', 18)} أوقات النهي</h2><small class="muted">عن صلاة النافلة</small></div>
-    <ul class="nahy-list">
-      ${forbiddenTimes(info.times)
-        .map((f) => {
-          const on = now >= f.from.at && now < f.to.at;
-          const past = now >= f.to.at;
-          return `<li class="${on ? 'on' : ''} ${past ? 'past' : ''}">
-            <div><b>${esc(f.name)}${on ? '<em>الآن</em>' : ''}</b><small>${esc(f.desc)}</small></div>
-            <span class="nahy-time">${clockText(f.from.hours, h24)}<i>←</i>${clockText(f.to.hours, h24)}</span>
-          </li>`;
-        })
-        .join('')}
-    </ul>
-    <p class="hint">ويُستثنى منها قضاء الفريضة الفائتة، وذوات الأسباب كتحية المسجد وسنة الوضوء على الراجح من أقوال أهل العلم.</p>
-  </section>`;
 }

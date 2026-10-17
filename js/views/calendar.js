@@ -1,4 +1,4 @@
-// The calendar (a Gregorian or Hijri month, with each day's prayer times and occasions)
+// The calendar (a Gregorian or Hijri month, with each day's times and occasions)
 // and the year's Islamic occasions with how long until each.
 
 import { clockText, GREG_MONTHS, gregText, hijri, HIJRI_MONTHS, hijriText, num, weekday, WEEKDAYS } from '../dates.js';
@@ -10,8 +10,8 @@ import { today } from '../today.js';
 import { esc, openSheet, pageHeader } from '../ui.js';
 
 const WD_SHORT = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
-const TIMES = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha', 'midnight', 'lastThird'];
-const TIME_ICONS = { fajr: 'moonStar', sunrise: 'sunrise', dhuhr: 'sun', asr: 'sunLow', maghrib: 'sunset', isha: 'moon', midnight: 'moon', lastThird: 'stars' };
+const TIMES = ['sunrise', 'duha', 'midnight', 'lastThird'];
+const TIME_ICONS = { sunrise: 'sunrise', duha: 'sun', midnight: 'moon', lastThird: 'stars' };
 const TIME_NAMES = { midnight: 'منتصف الليل', lastThird: 'الثلث الأخير' };
 
 const adj = () => state.settings.hijriAdjust;

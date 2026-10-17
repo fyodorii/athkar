@@ -1,21 +1,11 @@
 // The list of reminders for the coming days, worked out on the device. The server
 // (push/cron.php) only sends each one at its time, so it needs no prayer-time code.
 
-import { addDays, dateAt, dayTimes, forbiddenTimes, iqamaTime, PRAYER_NAMES, prayerEnd } from './prayer.js';
-import { PAGES } from './quran-data.js';
-import { dailyPages } from './khatma.js';
+import { addDays, dateAt, dayTimes, forbiddenTimes } from './prayer.js';
 import { clockText, hijri, minutesText, num } from './dates.js';
 import { OCCASIONS } from './occasions.js';
 
 export const SCHEDULE_DAYS = 30;
-
-const ADHAN_BODY = {
-  fajr: 'الصلاة خير من النوم',
-  dhuhr: 'حيّ على الصلاة، حيّ على الفلاح',
-  asr: '«من صلى البردين دخل الجنة»',
-  maghrib: 'حيّ على الصلاة، حيّ على الفلاح',
-  isha: '«من صلى العشاء في جماعة فكأنما قام نصف الليل»',
-};
 
 const SALAWAT = [
   'اللهم صلِّ وسلم وبارك على نبينا محمد ﷺ',
@@ -38,7 +28,6 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
   const s = state.settings;
   const n = s.notify;
   const items = [];
-  const place = s.location.name;
   const add = (at, title, body, url, tag) => {
     if (at > from) items.push({ at: Math.round(at), title, body, url: url || '#/home', tag: tag || '' });
   };
@@ -49,52 +38,13 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
     const t = dayTimes(day, s, isRamadan(day, s.hijriAdjust));
     const weekday = new Date(Date.UTC(day.y, day.m - 1, day.d)).getUTCDay();
 
-    for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']) {
-      if (!n.prayers[k]) continue;
-      const name = k === 'dhuhr' && weekday === 5 ? 'الجمعة' : PRAYER_NAMES[k];
-      add(t[k].at, `حان الآن وقت صلاة ${name}`, `${ADHAN_BODY[k]} — ${place}`, '#/home', `adhan-${k}`);
-      const before = n.beforeBy?.[k] ?? n.before;
-      if (before > 0) {
-        add(
-          t[k].at - before * 60000,
-          `اقترب وقت صلاة ${name}`,
-          `بعد ${minutesText(before)}، الساعة ${clockText(t[k].hours, s.clock24)}`,
-          '#/home',
-          `before-${k}`
-        );
-      }
-      if (n.iqama && s.iqama[k] > 0) {
-        const q = iqamaTime(t, k, s.iqama);
-        add(q.at, `إقامة صلاة ${name}`, `حان وقت الإقامة (${clockText(q.hours, s.clock24)}) — ${place}`, '#/home', `iqama-${k}`);
-      }
-      if (n.afterAdhan > 0) {
-        add(t[k].at + n.afterAdhan * 60000, `هل صليت ${name}؟`, 'أقم صلاتك، ولا تنسَ أذكار ما بعد الصلاة', '#/worship', `after-${k}`);
-      }
-      if (n.prayerEnd > 0) {
-        // For Asr, warn before its chosen time ends rather than at sunset.
-        const chosenAsr = k === 'asr' && s.asr === 1 && t.asr2.at > t.asr.at;
-        const end = chosenAsr ? t.asr2 : prayerEnd(t, k);
-        add(
-          end.at - n.prayerEnd * 60000,
-          chosenAsr ? 'اقترب خروج وقت الاختيار للعصر' : `اقترب خروج وقت صلاة ${name}`,
-          `يخرج وقتها بعد ${minutesText(n.prayerEnd)}، الساعة ${clockText(end.hours, s.clock24)} — إن لم تصلِّها فبادر`,
-          '#/home',
-          `end-${k}`
-        );
-      }
-    }
-    if (n.fajrInfo) {
-      // The coming Fajr: this morning's if the reminder is after midnight, else tomorrow's.
-      const at = atClock(day, n.fajrInfoTime || '23:00', t);
-      const f = at < t.fajr.at ? t : dayTimes(addDays(day, 1), s, isRamadan(addDays(day, 1), s.hijriAdjust));
-      add(at, 'موعد الفجر والشروق', `الفجر ${clockText(f.fajr.hours, s.clock24)} • الشروق ${clockText(f.sunrise.hours, s.clock24)}${s.iqama?.fajr ? ` • الإقامة ${clockText(f.fajr.hours + s.iqama.fajr / 60, s.clock24)}` : ''}`, '#/home', 'fajr-info');
-    }
     if (n.duha) {
       add(t.sunrise.at + Math.max(15, n.duhaDelay) * 60000, 'صلاة الضحى', '«صلاة الأوابين حين ترمض الفصال» — ركعتان تجزئان عن صدقة كل مفاصلك', '#/worship', 'duha');
     }
     if (n.nahy) {
-      const z = forbiddenTimes(t)[1];
-      add(z.from.at, 'دخل وقت النهي', `قيام الشمس حتى الظهر (${clockText(t.dhuhr.hours, s.clock24)}) — لا تُصلَّ فيه نافلة مطلقة`, '#/home', 'nahy');
+      for (const f of forbiddenTimes(t)) {
+        add(f.from.at, `دخل وقت النهي: ${f.name}`, `حتى ${clockText(f.to.hours, s.clock24)} — لا تُصلَّ فيه نافلة مطلقة`, '#/home', `nahy-${f.key}`);
+      }
     }
     if (n.qailulah) {
       // The start of the sixth seasonal hour of the day, the hour before the zawal.
@@ -132,9 +82,6 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
     }
     if (n.baqarah > 0 && dayNumber(day) % n.baqarah === 0) {
       add(atClock(day, n.baqarahTime, t), 'سورة البقرة', '«لا تجعلوا بيوتكم مقابر، إن الشيطان ينفر من البيت الذي تُقرأ فيه سورة البقرة»', '#/surah/baqarah', 'baqarah');
-    }
-    if (n.khatma && state.khatma.page < PAGES) {
-      add(atClock(day, n.khatmaTime, t), 'وردك من القرآن', `وردك اليوم ${num(dailyPages(state.khatma, day))} صفحة لتختم في موعدك`, '#/quran', 'khatma');
     }
     if (n.fasting && (weekday === 0 || weekday === 3)) {
       add(atClock(day, n.fastingTime || '21:00', t), `غداً ${weekday === 0 ? 'الاثنين' : 'الخميس'}`, 'تذكير بصيام التطوع، وتُعرض الأعمال فيه على الله', '#/home', 'fasting');
@@ -176,8 +123,7 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
 export function scheduleHash(state) {
   const s = state.settings;
   const custom = state.custom.filter((c) => c.reminder).map((c) => [c.id, c.reminder, c.text]);
-  const k = state.khatma;
-  const text = JSON.stringify([s.location, s.method, s.asr, s.offsets, s.iqama, s.hijriAdjust, s.clock24, s.digits, s.notify, custom, k.days, k.start, k.page]);
+  const text = JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust, s.clock24, s.digits, s.notify, custom]);
   let h = 0;
   for (let i = 0; i < text.length; i++) h = (Math.imul(31, h) + text.charCodeAt(i)) | 0;
   return String(h);

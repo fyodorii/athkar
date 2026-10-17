@@ -1,6 +1,6 @@
 # Builds the Windows app (desktop/, Tauri) into an installer .exe on a Windows machine and
 # publishes it as a GitHub Release: Actions → "Windows app (exe)" → Run workflow, or push
-# a tag like v14.0.0. The version comes from desktop/src-tauri/tauri.conf.json.
+# a tag like v15.0.0. The version comes from desktop/src-tauri/tauri.conf.json.
 name: Windows app (exe)
 
 on:

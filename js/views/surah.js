@@ -5,7 +5,8 @@
 import { num } from '../dates.js';
 import { JUZ, SURAHS } from '../quran-data.js';
 import { icon } from '../icons.js';
-import { BASMALA } from '../ruqyah-data.js';
+// بسم الله الرحمن الرحيم (King Fahd Complex Uthmani script).
+const BASMALA = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
 import { save, state } from '../store.js';
 import { today } from '../today.js';
 import { $, esc, haptic, pageHeader, toast } from '../ui.js';

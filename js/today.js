@@ -1,10 +1,12 @@
-// "Now" at the chosen location: today's date, prayer times and the next prayer.
+// "Now" at the chosen location: today's date, the day's times and the next moment among the
+// ones the app shows (sunrise, Duha, the middle of the night and its last third).
 
-import { addDays, dateAt, dayKey, dayTimes, forbiddenTimes, prayerEnd, tzOffset } from './prayer.js';
+import { addDays, dateAt, dayKey, dayTimes, forbiddenTimes, tzOffset } from './prayer.js';
 import { hijri } from './dates.js';
 import { state } from './store.js';
 
-const FARD = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+// The moments of a night and a morning that the app counts down to.
+export const MOMENTS = ['sunrise', 'duha', 'midnight', 'lastThird'];
 
 let cache = { key: '', value: null };
 
@@ -16,44 +18,49 @@ function timesFor(day) {
 export function today(now = new Date()) {
   const s = state.settings;
   const day = dateAt(s.location.tz, now);
-  const key = dayKey(day) + JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust, s.iqama]);
+  const key = dayKey(day) + JSON.stringify([s.location, s.method, s.asr, s.offsets, s.hijriAdjust]);
   if (cache.key !== key) {
-    cache = { key, value: { day, key: dayKey(day), times: timesFor(day), tomorrow: timesFor(addDays(day, 1)) } };
+    cache = { key, value: { day, key: dayKey(day), times: timesFor(day), tomorrow: timesFor(addDays(day, 1)), yesterday: timesFor(addDays(day, -1)) } };
   }
-  const { times, tomorrow } = cache.value;
+  const { times, tomorrow, yesterday } = cache.value;
   const t = now.getTime();
-
-  // Next and current fard prayer (with tomorrow's Fajr after Isha).
-  const list = FARD.map((k) => times[k]);
-  let next = list.find((p) => p.at > t) || tomorrow.fajr;
-  let prev = [...list].reverse().find((p) => p.at <= t);
-  if (!prev) prev = { ...times.isha, at: times.isha.at - 86400000 };
   const weekday = new Date(Date.UTC(day.y, day.m - 1, day.d)).getUTCDay();
-  const isFriday = weekday === 5;
-  if (isFriday && next.key === 'dhuhr') next = { ...next, name: 'الجمعة' };
 
-  // The prayer whose time is running now, and when it runs out (none between sunrise
-  // and Dhuhr, or between the middle of the night and Fajr).
-  let current = null;
-  const yIsha = { ...times.isha, at: times.isha.at - 86400000 };
-  const yMid = { ...times.midnight, at: times.midnight.at - 86400000 };
-  if (t < times.fajr.at && t < yMid.at) current = { ...yIsha, end: yMid };
-  else {
-    const p = list.filter((x) => x.at <= t).pop();
-    if (p) {
-      const end = prayerEnd(times, p.key);
-      if (t < end.at) current = { ...p, name: isFriday && p.key === 'dhuhr' ? 'الجمعة' : p.name, end };
-    }
-  }
+  // Before Fajr the night still running is yesterday's: its middle and last third.
+  const night = t < times.fajr.at ? yesterday : times;
+  const timeline = [
+    night.midnight,
+    night.lastThird,
+    times.sunrise,
+    times.duha,
+    times.midnight,
+    times.lastThird,
+    tomorrow.sunrise,
+    tomorrow.duha,
+  ].sort((a, b) => a.at - b.at);
+  const next = timeline.find((x) => x.at > t) || tomorrow.duha;
+  const prev = [...timeline].reverse().find((x) => x.at <= t) || { ...yesterday.lastThird };
+
   const forbidden = forbiddenTimes(times).find((f) => t >= f.from.at && t < f.to.at) || null;
-  // Between a prayer's adhan and its iqama.
-  let iqama = null;
-  if (current) {
-    const min = s.iqama?.[current.key] || 0;
-    const at = current.at + min * 60000;
-    if (min && t < at) iqama = { key: current.key, name: current.name, at, hours: current.hours + min / 60, minutes: min };
+  return { ...cache.value, next, prev, forbidden, weekday, isFriday: weekday === 5, period: periodNow(times, night, t, forbidden) };
+}
+
+// What kind of time it is: a forbidden time, Duha, the afternoon or a part of the night.
+function periodNow(times, night, t, forbidden) {
+  const qiyam = { key: 'qiyam', title: 'الثلث الأخير من الليل', sub: 'وقت النزول والاستجابة — قيام ودعاء واستغفار' };
+  const after = { key: 'midnight', title: 'بعد منتصف الليل', sub: 'وقت الوتر والقيام، فاجعل آخر صلاتك وتراً' };
+  if (t < times.fajr.at) {
+    if (t >= night.lastThird.at) return qiyam;
+    if (t >= night.midnight.at) return after;
+    return { key: 'night', title: 'أول الليل', sub: 'وقت مفتوح للنوافل والأذكار قبل النوم' };
   }
-  return { ...cache.value, next, prev, current, forbidden, iqama, weekday, isFriday };
+  if (t >= times.sunrise.at && t < times.duha.at) return { key: 'sunrise', title: 'وقت الشروق', sub: 'انتظر حتى ترتفع الشمس قيد رمح، ثم صلِّ الضحى' };
+  if (forbidden) return { key: 'nahy', title: 'وقت نهي', sub: `${forbidden.name} — لا تُصلَّ فيه نافلة مطلقة` };
+  if (t >= times.duha.at && t < times.dhuhr.at) return { key: 'duha', title: 'وقت الضحى', sub: 'ركعتان فأكثر، تجزئان عن صدقة كل مفاصلك' };
+  if (t >= times.lastThird.at) return qiyam;
+  if (t >= times.midnight.at) return after;
+  if (t >= times.maghrib.at) return { key: 'night', title: 'أول الليل', sub: 'وقت مفتوح للنوافل والأذكار قبل النوم' };
+  return { key: 'day', title: 'وقت النافلة', sub: 'يجوز التطوع المطلق ما لم يدخل وقت نهي' };
 }
 
 // Current wall-clock time at the location as decimal hours (for the big clock).

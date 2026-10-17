@@ -15,8 +15,7 @@ import * as qibla from './views/qibla.js';
 import * as notebook from './views/notebook.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
-import * as quran from './views/quran.js';
-import * as hifz from './views/hifz.js';
+import * as radioView from './views/radio.js';
 import * as calendar from './views/calendar.js';
 import * as surah from './views/surah.js';
 import * as tools from './views/tools.js';
@@ -26,7 +25,7 @@ import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from '
 const TABS = [
   ['home', 'الرئيسية', 'home', '#/home'],
   ['mine', 'أذكاري', 'heart', '#/mine'],
-  ['quran', 'القرآن', 'quran', '#/quran'],
+  ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
   ['worship', 'عباداتي', 'check', '#/worship'],
 ];
@@ -37,13 +36,10 @@ const ROUTES = [
   [/^#\/mine(?:\/([\w-]+))?$/, 'mine', (v, id) => adhkar.renderMine(v, id)],
   [/^#\/adhkar\/(morning|evening|sleep)$/, 'mine', (v, id) => adhkar.renderWird(v, id)],
   [/^#\/adhkar(?:\/[\w-]+)?$/, 'mine', (v) => adhkar.renderMine(v)], // old links
-  [/^#\/quran$/, 'quran', (v) => quran.renderKhatma(v)],
-  [/^#\/hifz$/, 'quran', (v) => hifz.renderHifz(v)],
-  [/^#\/surah\/(kahf|mulk|baqarah)$/, 'quran', (v, id) => surah.renderSurah(v, id)],
+  [/^#\/surah\/(kahf|mulk|baqarah)$/, 'home', (v, id) => surah.renderSurah(v, id)],
   [/^#\/calendar(?:\/(\d{4}-\d{2}-\d{2}))?$/, 'home', (v, key) => calendar.renderCalendar(v, key)],
   [/^#\/occasions$/, 'home', (v) => calendar.renderOccasions(v)],
-  [/^#\/ruqyah$/, 'quran', (v) => quran.renderRuqyah(v)],
-  [/^#\/radio$/, 'quran', (v) => quran.renderRadio(v)],
+  [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/qibla$/, 'qibla', (v) => qibla.render(v)],
@@ -56,7 +52,6 @@ const ROUTES = [
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],
   [/^#\/settings\/notify$/, 'settings', (v) => settings.renderNotify(v)],
-  [/^#\/settings\/widget$/, 'settings', (v) => settings.renderWidget(v)],
   [/^#\/settings\/icon$/, 'settings', (v) => settings.renderIcon(v)],
 ];
 
@@ -66,6 +61,11 @@ let currentHash = '';
 
 function route() {
   const hash = location.hash || '#/home';
+  // Links to what the app no longer has (the khatma, memorization, ruqyah, widget) open the home screen.
+  if (/^#\/(quran|hifz|ruqyah|settings\/widget)$/.test(hash)) {
+    location.replace('#/home');
+    return;
+  }
   const match = ROUTES.map(([re, tab, fn]) => [hash.match(re), tab, fn]).find(([m]) => m);
   if (!match) {
     location.replace('#/home');
@@ -169,7 +169,7 @@ function renderMini() {
   el.hidden = false;
   const live = status === 'playing' || status === 'loading';
   el.innerHTML = `
-    <a href="#/radio" class="mini-info">${icon('radio', 20)}<span><b>${esc(station.name)}</b><small>${quran.statusText(status)}</small></span></a>
+    <a href="#/radio" class="mini-info">${icon('radio', 20)}<span><b>${esc(station.name)}</b><small>${radioView.statusText(status)}</small></span></a>
     <button class="icon-btn ghost sm" data-mini="toggle" aria-label="${live ? 'إيقاف مؤقت' : 'تشغيل'}">${icon(live ? 'pause' : 'play', 20)}</button>
     <button class="icon-btn ghost sm" data-mini="stop" aria-label="إيقاف">${icon('close', 20)}</button>`;
 }

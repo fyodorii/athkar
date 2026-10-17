@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline,
 // and shows the reminders that push/cron.php sends.
 
-const VERSION = 'v14'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v15'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const MUSHAF_CACHE = 'mushaf-fonts-v1'; // not named adhkar-…, so updates keep it
 const FILES = [
@@ -14,21 +14,17 @@ const FILES = [
   'js/cities.js',
   'js/config.js',
   'js/daily-data.js',
-  'js/khatma.js',
-  'js/hifz.js',
   'js/occasions.js',
   'js/desktop.js',
   'js/mushaf/kahf.js',
   'js/mushaf/mulk.js',
   'js/mushaf/baqarah.js',
-  'js/sunnah.js',
   'js/surahs/kahf.js',
   'js/surahs/mulk.js',
   'js/surahs/baqarah.js',
   'js/qailulah-data.js',
   'js/quran-data.js',
   'js/radio.js',
-  'js/ruqyah-data.js',
   'js/dates.js',
   'js/icons.js',
   'js/prayer.js',
@@ -38,16 +34,14 @@ const FILES = [
   'js/timers.js',
   'js/today.js',
   'js/ui.js',
-  'js/widget.js',
   'js/wird-data.js',
   'js/views/adhkar.js',
   'js/views/home.js',
   'js/views/notebook.js',
-  'js/views/quran.js',
   'js/views/qibla.js',
+  'js/views/radio.js',
   'js/views/settings.js',
   'js/views/tools.js',
-  'js/views/hifz.js',
   'js/views/calendar.js',
   'js/views/surah.js',
   'js/views/worship.js',

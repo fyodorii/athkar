@@ -12,8 +12,6 @@ export const DEFAULTS = {
     method: 'umm_al_qura',
     asr: 1,
     offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
-    // Minutes from the adhan to the iqama.
-    iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
     hijriAdjust: 0,
     clock24: false,
     digits: 'arab',
@@ -25,21 +23,13 @@ export const DEFAULTS = {
     uiBold: false,
     haptics: true,
     quranGoal: 5,
-    prayerLayout: 'list', // list | grid (the prayer times on the home screen)
     appIcon: 'emerald', // icons/alt/<name>.png for the home screen
     mushafMode: 'pages', // al-Kahf, al-Mulk, al-Baqarah: the mushaf's pages | continuous text
     mushafInk: 'blue', // blue | black
     notify: {
       enabled: false,
-      prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
-      // Minutes before each adhan for a heads-up (0 = only at the adhan); unset → `before`.
-      beforeBy: {},
-      iqama: true,
       sunrise: false,
       sunriseBefore: 0, // minutes before sunrise (0 = at sunrise), to catch Fajr in time
-      fajrInfo: false, // at a set hour (say 11 pm): when the coming Fajr and sunrise are
-      fajrInfoTime: '23:00',
-      before: 10,
       morning: true,
       morningDelay: 30,
       evening: true,
@@ -57,11 +47,9 @@ export const DEFAULTS = {
       salawat: false,
       salawatHours: 3,
       worship: false,
-      afterAdhan: 0,
       duha: false,
       duhaDelay: 30,
       midnight: false,
-      prayerEnd: 0,
       nahy: false,
       qailulah: false,
       kahf: true,
@@ -70,8 +58,6 @@ export const DEFAULTS = {
       mulkTime: '21:45',
       baqarah: 0,
       baqarahTime: '17:00',
-      khatma: false,
-      khatmaTime: '05:30',
     },
   },
   progress: { day: '', counts: {} },
@@ -79,13 +65,11 @@ export const DEFAULTS = {
   notebook: [],
   saved: [],
   tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'emerald', ink: '', dim: 0 },
-  khatma: { page: 0, days: 30, start: '', done: 0, log: {} },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},
   worshipCustom: [],
   diary: {},
-  hifz: { on: false, day: 1, checks: {} },
   migrated: {}, // one-time data changes done
   surahs: {}, // kahf | mulk | baqarah → { ayah: where reading stopped, done: day finished }
   tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
@@ -107,10 +91,24 @@ function merge(base, value) {
   return value === undefined || value === null ? base : value;
 }
 
+// Data of features the app no longer has (khatma, memorization, iqama, the per-prayer
+// reminders) is dropped when loading, so old saves and backups stay light.
+function prune(data) {
+  delete data.khatma;
+  delete data.hifz;
+  const s = data.settings;
+  if (s) {
+    delete s.iqama;
+    delete s.prayerLayout;
+    for (const k of ['prayers', 'beforeBy', 'iqama', 'before', 'fajrInfo', 'fajrInfoTime', 'afterAdhan', 'prayerEnd', 'khatma', 'khatmaTime']) delete s.notify?.[k];
+  }
+  return data;
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    return merge(fresh(), raw ? JSON.parse(raw) : {});
+    return prune(merge(fresh(), raw ? JSON.parse(raw) : {}));
   } catch (e) {
     return merge(fresh(), {});
   }
@@ -209,7 +207,7 @@ export function exportData() {
 export function importData(text) {
   const data = JSON.parse(text);
   if (!data || data.app !== 'adhkar') throw new Error('ليس ملف نسخة احتياطية من التطبيق');
-  const merged = merge(fresh(), data);
+  const merged = prune(merge(fresh(), data));
   for (const k of Object.keys(DEFAULTS)) state[k] = merged[k];
   state.sync = { hash: '', at: 0 };
   save();
