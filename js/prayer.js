@@ -19,7 +19,6 @@ export const METHODS = {
   singapore: { name: 'سنغافورة وماليزيا وإندونيسيا', fajr: 20, isha: 18 },
 };
 
-export const PRAYERS = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 export const PRAYER_NAMES = {
   fajr: 'الفجر',
   sunrise: 'الشروق',
@@ -30,12 +29,10 @@ export const PRAYER_NAMES = {
   isha: 'العشاء',
   midnight: 'منتصف الليل',
   lastThird: 'الثلث الأخير',
-  asr2: 'مصير ظل الشيء مثليه',
 };
 
 // Times for one day as decimal hours in the location's time zone.
 // opts: { fajr, isha | ishaMinutes, asr (1 = majority, 2 = Hanafi) }
-// Self-contained (no outside references) so the widget script can embed it as text.
 export function solarTimes(year, month, day, lat, lng, tz, opts) {
   const R = Math.PI / 180;
   const sin = (d) => Math.sin(d * R);
@@ -85,8 +82,6 @@ export function solarTimes(year, month, day, lat, lng, tz, opts) {
     sunrise: angleTime(0.833, 6 / 24, true),
     dhuhr: midDay(12 / 24),
     asr: asrTime(opts.asr || 1, 13 / 24),
-    // A shadow twice an object's length: the end of Asr's chosen time (hadith of Jibril).
-    asr2: asrTime(2, 13 / 24),
     maghrib: angleTime(0.833, 18 / 24),
     isha: opts.ishaMinutes ? 0 : angleTime(opts.isha, 18 / 24),
   };
@@ -168,42 +163,4 @@ export function dayTimes(day, settings, isRamadan = false) {
   // Duha begins once the sun has risen about a spear's length, ~15 minutes after sunrise.
   out.duha = { key: 'duha', name: PRAYER_NAMES.duha, hours: out.sunrise.hours + 0.25, at: out.sunrise.at + 15 * 60000 };
   return out;
-}
-
-// When each obligatory prayer's time runs out: Fajr at sunrise, Dhuhr at Asr, Asr at
-// Maghrib, Maghrib at Isha, and Isha at the middle of the night (Muslim, from Ibn ʿAmr).
-export const PRAYER_END = { fajr: 'sunrise', dhuhr: 'asr', asr: 'maghrib', maghrib: 'isha', isha: 'midnight' };
-
-// The iqama: a set number of minutes after the adhan (settings.iqama).
-export function iqamaTime(times, key, iqama) {
-  const min = iqama?.[key] || 0;
-  return { key, hours: times[key].hours + min / 60, at: times[key].at + min * 60000, minutes: min };
-}
-
-// The times voluntary prayer is forbidden: after Fajr until the sun is a spear's length
-// up, when the sun stands at its height until it passes the meridian (taken as the 10
-// minutes before Dhuhr), and after Asr until sunset.
-export const ZAWAL_MINUTES = 10;
-export function forbiddenTimes(times) {
-  const zawal = { hours: times.dhuhr.hours - ZAWAL_MINUTES / 60, at: times.dhuhr.at - ZAWAL_MINUTES * 60000 };
-  return [
-    { key: 'fajr', name: 'بعد الفجر', desc: 'من صلاة الفجر حتى تطلع الشمس وترتفع قيد رمح', from: times.fajr, to: times.duha },
-    { key: 'zawal', name: 'قيام الشمس', desc: 'حين تتوسط الشمس كبد السماء حتى تزول، قُبيل الظهر', from: zawal, to: times.dhuhr },
-    { key: 'asr', name: 'بعد العصر', desc: 'من صلاة العصر حتى تغرب الشمس', from: times.asr, to: times.maghrib },
-  ];
-}
-export function prayerEnd(times, key) {
-  return times[PRAYER_END[key]];
-}
-
-// Great-circle direction (degrees from true north) and distance (km) to the Kaaba.
-const KAABA = { lat: 21.422487, lng: 39.826206 };
-export function qibla(lat, lng) {
-  const R = Math.PI / 180;
-  const p1 = lat * R;
-  const p2 = KAABA.lat * R;
-  const dl = (KAABA.lng - lng) * R;
-  const bearing = Math.atan2(Math.sin(dl), Math.cos(p1) * Math.tan(p2) - Math.sin(p1) * Math.cos(dl)) / R;
-  const a = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
-  return { bearing: (bearing + 360) % 360, km: 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) };
 }

@@ -1,5 +1,5 @@
-// Worship tracker: a daily checklist of prayers, voluntary prayers, Quran, adhkar and
-// good deeds, with the last week at a glance and a streak for the five prayers.
+// «متابعتي»: a daily checklist of voluntary prayers, Quran, adhkar and good deeds, with
+// the last week at a glance.
 
 import { CATEGORY_BY_ID } from '../adhkar-data.js';
 import { hijriText, num, WEEKDAYS } from '../dates.js';
@@ -9,13 +9,9 @@ import { save, state, uid } from '../store.js';
 import { today } from '../today.js';
 import { $, confirmSheet, esc, haptic, openSheet, pageHeader, ring, toast } from '../ui.js';
 
-const FARD = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-const FARD_NAMES = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
-
-// type: prayer (0 none / 1 prayed / 2 in congregation), check, or count (with a daily goal, or an
+// type: check, or count (with a daily goal, or an
 // open count with goal 0 that is done from the first one).
 const GROUPS = [
-  { title: 'الصلوات المفروضة', icon: 'mosque', items: FARD.map((id) => ({ id, name: FARD_NAMES[id], type: 'prayer' })) },
   {
     title: 'النوافل',
     icon: 'moonStar',
@@ -32,9 +28,6 @@ const GROUPS = [
     icon: 'book',
     items: [
       { id: 'quran', name: 'ورد القرآن', type: 'count', goal: 'quranGoal', step: 1, unit: 'صفحة' },
-      { id: 'hifz', name: 'ورد الحفظ', type: 'check' },
-      { id: 'review', name: 'ورد المراجعة', type: 'check' },
-      { id: 'baqarah', name: 'سورة البقرة', type: 'check' },
       { id: 'mulk', name: 'سورة الملك', type: 'check' },
     ],
   },
@@ -102,32 +95,6 @@ export function dayScore(key) {
   return { done, total: items.length, fraction: items.length ? done / items.length : 0 };
 }
 
-// Days in a row (ending today, or yesterday if today is not finished yet) with all five prayers.
-export function prayerStreak() {
-  const t = today();
-  const full = (key) => FARD.every((p) => (state.worship[key]?.[p] || 0) > 0);
-  let day = t.day;
-  if (!full(t.key)) day = addDays(day, -1);
-  let n = 0;
-  while (full(dayKey(day)) && n < 3660) {
-    n++;
-    day = addDays(day, -1);
-  }
-  return n;
-}
-
-// Cycles a prayer: not yet → prayed → in congregation → not yet.
-export function cyclePrayer(key, id) {
-  const r = record(key);
-  r[id] = ((r[id] || 0) + 1) % 3;
-  save();
-  haptic();
-  return r[id];
-}
-
-export const PRAYER_STATE = ['لم تُسجَّل', 'صليتها', 'في جماعة'];
-export const prayerIcon = (v) => (v === 2 ? icon('mosque', 18) : v === 1 ? icon('check', 18) : '');
-
 let selected = null; // dayKey shown in the tracker
 
 export function render(view) {
@@ -142,14 +109,12 @@ export function render(view) {
     const sel = keyDay(selected);
     const week = Array.from({ length: 7 }, (_, i) => addDays(t.day, i - 6));
     const score = dayScore(selected);
-    const streak = prayerStreak();
     const weekKeys = week.map(dayKey);
-    const jamaah = weekKeys.reduce((s, k) => s + FARD.filter((p) => state.worship[k]?.[p] === 2).length, 0);
     const pages = weekKeys.reduce((s, k) => s + (state.worship[k]?.quran || 0), 0);
     const isToday = selected === t.key;
 
     view.innerHTML = `
-      ${pageHeader('عباداتي', { sub: `${isToday ? 'اليوم' : WEEKDAYS[new Date(Date.UTC(sel.y, sel.m - 1, sel.d)).getUTCDay()]} • ${hijriText(sel, state.settings.hijriAdjust)}` })}
+      ${pageHeader('متابعتي', { sub: `${isToday ? 'اليوم' : WEEKDAYS[new Date(Date.UTC(sel.y, sel.m - 1, sel.d)).getUTCDay()]} • ${hijriText(sel, state.settings.hijriAdjust)}` })}
       <div class="week">
         ${week
           .map((d) => {
@@ -167,15 +132,14 @@ export function render(view) {
       <section class="card score">
         <div class="score-ring">${ring(score.fraction, 92, 8)}<span><b>${num(Math.round(score.fraction * 100))}٪</b><small>${num(score.done)} من ${num(score.total)}</small></span></div>
         <div class="score-stats">
-          <div><b>${num(streak)}</b><span>${streak === 1 ? 'يوم' : 'أيام'} متتالية على الصلوات الخمس</span></div>
-          <div><b>${num(jamaah)}</b><span>صلاة في جماعة هذا الأسبوع</span></div>
+          <div><b>${num(weekKeys.filter((k) => dayScore(k).fraction >= 0.5).length)}</b><span>أيام أنجزت فيها نصف متابعتك أو أكثر هذا الأسبوع</span></div>
           <div><b>${num(pages)}</b><span>صفحة من القرآن هذا الأسبوع</span></div>
         </div>
       </section>
 
       ${GROUPS.map((g) => group(g.title, g.icon, g.items)).join('')}
       ${group(
-        'عباداتي الخاصة',
+        'متابعاتي الخاصة',
         'stars',
         state.worshipCustom.map((c) => ({ id: c.id, name: c.name, type: 'check', custom: true })),
         `<button class="btn ghost wide" data-add-habit>${icon('plus', 18)} أضف عبادة تتابعها</button>`
@@ -184,7 +148,7 @@ export function render(view) {
         <div class="card-head"><h2>${icon('edit', 18)} يومياتي</h2><small class="muted" data-diary-saved></small></div>
         <textarea data-diary rows="5" placeholder="اكتب خواطرك اليوم، ما تعلمته، وما تحمد الله عليه…">${esc(state.diary[selected] || '')}</textarea>
       </section>
-      <p class="hint center">اضغط على الصلاة مرة لتسجيلها، ومرة ثانية إن صليتها في جماعة. سجلّك محفوظ على جهازك فقط.</p>`;
+      <p class="hint center">اضغط على العبادة لتسجيلها. سجلّك محفوظ على جهازك فقط.</p>`;
   };
 
   const group = (title, ic, items, extra = '') => `
@@ -197,11 +161,6 @@ export function render(view) {
   const trackRow = (x) => {
     const v = value(x, selected);
     const done = isDone(x, selected);
-    if (x.type === 'prayer') {
-      return `<button class="track-row" data-prayer="${x.id}">
-        <span class="row-label">${esc(x.name)}<small>${PRAYER_STATE[v]}</small></span>
-        <span class="tick-box p${v}">${prayerIcon(v)}</span></button>`;
-    }
     if (x.open) {
       return `<div class="track-row">
         <span class="row-label">${esc(x.name)}<small>عدد مفتوح — ${timesText(v)} • <a href="#" data-enter="${x.id}">إدخال العدد</a></small></span>
@@ -236,11 +195,6 @@ export function render(view) {
         draw();
       }
       return;
-    }
-    const p = e.target.closest('[data-prayer]');
-    if (p) {
-      cyclePrayer(selected, p.dataset.prayer);
-      return draw();
     }
     const c = e.target.closest('[data-check]');
     if (c) {

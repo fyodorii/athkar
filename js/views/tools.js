@@ -3,6 +3,7 @@
 
 import { clockText, num } from '../dates.js';
 import { icon } from '../icons.js';
+import { PAGES, SURAHS } from '../quran-data.js';
 import {
   pauseFocus,
   pauseWalk,
@@ -41,7 +42,7 @@ const TOOLS = [
   ['#/qailulah', 'القيلولة', 'حاسبة وقتها من شمس موقعك، بنصوص الفقهاء، ومؤقّت', 'moon', 'teal'],
   ['#/walk', 'المشي الياباني', '٥ جولات: ٣ دقائق سريع و٣ بطيء = ٣٠ دقيقة', 'stars', 'amber'],
   ['#/focus', 'قاعدة العشر دقائق', 'اكتب ما تسوّفه، والتزم به عشر دقائق فقط', 'clock', 'rose'],
-  ['#/qibla', 'اتجاه القبلة', 'بوصلة القبلة والمسافة إلى مكة', 'compass', 'emerald'],
+  ['#/ahzab', 'تحزيب الصحابة', 'القرآن في سبعة أحزاب، حزب كل يوم: «فمي بشوق»', 'quran', 'indigo'],
 ];
 
 export function renderTools(view) {
@@ -140,7 +141,7 @@ export function renderQailulah(view) {
           running
             ? `<div><small>يبقى على التنبيه</small><b class="nap-left" data-left>${mmss(Math.ceil((tools().napEnd - Date.now()) / 1000))}</b></div>
                <button class="btn ghost" data-stop>إيقاف</button>`
-            : `<div><b>مؤقّت القيلولة</b><small>ينبّهك بصوت بعد ${num(nap)} دقيقة ويُسجّلها في «عباداتي». منبّه الجوال أوثق إذا قُفلت الشاشة.</small></div>
+            : `<div><b>مؤقّت القيلولة</b><small>ينبّهك بصوت بعد ${num(nap)} دقيقة ويُسجّلها في «متابعتي». منبّه الجوال أوثق إذا قُفلت الشاشة.</small></div>
                <button class="btn primary" data-start>${icon('moon', 18)} ابدأ قيلولة ${num(nap)} دقيقة</button>`
         }
       </section>
@@ -266,7 +267,7 @@ export function renderWalk(view) {
           }
           ${w && !(s.done && w) ? `<button class="btn ghost" data-reset aria-label="إعادة">${icon('reset', 18)}</button>` : ''}
         </div>
-        <p class="hint center">ثلاث دقائق مشياً سريعاً تتسارع فيه الأنفاس، ثم ثلاث دقائق مشياً هادئاً، خمس مرات. ينبّهك بصوت عند تغيّر المرحلة، ويُسجَّل «المشي ٣٠ دقيقة» في عباداتي عند إتمامه.</p>
+        <p class="hint center">ثلاث دقائق مشياً سريعاً تتسارع فيه الأنفاس، ثم ثلاث دقائق مشياً هادئاً، خمس مرات. ينبّهك بصوت عند تغيّر المرحلة، ويُسجَّل «المشي ٣٠ دقيقة» في متابعتي عند إتمامه.</p>
       </section>`;
   };
   const dots = (s) =>
@@ -365,4 +366,70 @@ export function renderFocus(view) {
     },
     destroy: () => (view.onclick = view.oninput = null),
   };
+}
+
+// ---- The Companions' ahzab ----
+
+// The Companions' division of the Quran into seven ahzab, one a day for a weekly khatma
+// (Aws ibn Hudhayfa, in Abu Dawud and Ibn Majah): 3, 5, 7, 9, 11 and 13 surahs after
+// al-Fatiha, then al-Mufassal — remembered as «فمي بشوق».
+const AHZAB_FIRST = [1, 5, 10, 17, 26, 37, 50];
+const AHZAB = AHZAB_FIRST.map((first, i) => {
+  const next = AHZAB_FIRST[i + 1];
+  const last = next ? next - 1 : 114;
+  return { n: i + 1, from: SURAHS[first - 1][1], to: next ? SURAHS[next - 1][1] : PAGES, name: `من ${SURAHS[first - 1][0]} إلى ${SURAHS[last - 1][0]}`, surahs: last - first + 1 };
+});
+const AHZAB_ORDINAL = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع'];
+
+export function renderAhzab(view) {
+  const a = (state.tools.ahzab ??= { start: '', done: {} });
+  const dayNum = ({ y, m, d }) => Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+  const keyDay = (k) => {
+    const [y, m, d] = k.split('-').map(Number);
+    return { y, m, d };
+  };
+  const draw = () => {
+    const t = today();
+    // The hizb of today in the weekly cycle that began on the start day.
+    const idx = a.start ? (((dayNum(t.day) - dayNum(keyDay(a.start))) % 7) + 7) % 7 : -1;
+    const read = AHZAB.filter((h) => a.done[h.n]).length;
+    view.innerHTML = `
+      ${pageHeader('تحزيب الصحابة', { back: '#/tools', sub: 'ختمة في أسبوع، حزب كل يوم' })}
+      <section class="card khatma-intro">
+        <div class="khatma-art">${icon('quran', 36)}</div>
+        <h2>فمي بشوق</h2>
+        <p>كان أصحاب النبي ﷺ يحزّبون القرآن سبعة أحزاب: ثلاث سور، ثم خمس، ثم سبع، ثم تسع، ثم إحدى عشرة، ثم ثلاث عشرة، ثم المفصّل من «ق» إلى آخر القرآن. (رواه أبو داود وابن ماجه)</p>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>${icon('calendar', 18)} الأحزاب السبعة</h2><span class="link">${num(read)} من ${num(7)}</span></div>
+        <ol class="ahzab">${AHZAB.map((h, i) => `<li class="${a.done[h.n] ? 'done' : ''} ${i === idx ? 'today' : ''}">
+          <button class="ahzab-n" data-hizb="${h.n}" aria-label="تعليم الحزب ${AHZAB_ORDINAL[i]}">${a.done[h.n] ? icon('check', 16) : num(h.n)}</button>
+          <div><b>الحزب ${AHZAB_ORDINAL[i]}${i === idx ? ' <em>اليوم</em>' : ''}</b><small>${h.name} • ص ${num(h.from)}–${num(h.to)} • ${num(h.surahs)} ${h.surahs <= 10 ? 'سور' : 'سورة'}</small></div></li>`).join('')}</ol>
+        <div class="sheet-actions">
+          ${a.start ? `<button class="btn ghost" data-reset>${icon('reset', 18)} بدء أسبوع جديد</button>` : `<button class="btn primary" data-start>${icon('check', 20)} ابدأ من اليوم</button>`}
+        </div>
+        <p class="hint">${a.start ? 'اضغط رقم الحزب لتعليمه مقروءاً. يتبدّل حزب اليوم تلقائياً كل يوم.' : 'ابدأ لتُعرَف حصة كل يوم، أو علّم ما قرأت متى شئت.'}</p>
+      </section>`;
+  };
+  draw();
+  view.onclick = (e) => {
+    const h = e.target.closest('[data-hizb]');
+    if (h) {
+      const n = h.dataset.hizb;
+      if (a.done[n]) delete a.done[n];
+      else a.done[n] = true;
+      save();
+      return draw();
+    }
+    if (e.target.closest('[data-start]')) {
+      a.start = today().key;
+      a.done = {};
+    } else if (e.target.closest('[data-reset]')) {
+      a.start = today().key;
+      a.done = {};
+    } else return;
+    save();
+    draw();
+  };
+  return { destroy: () => (view.onclick = null) };
 }

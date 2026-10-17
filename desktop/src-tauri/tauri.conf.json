@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Athkar",
-  "mainBinaryName": "Athkar",
-  "version": "14.0.0",
+  "productName": "Mogait",
+  "mainBinaryName": "Mogait",
+  "version": "17.0.0",
   "identifier": "uk.waliud.athkar",
   "build": {
     "frontendDist": "../dist",
@@ -14,11 +14,12 @@
       {
         "label": "main",
         "title": "أذكار ومواقيت",
-        "width": 460,
-        "height": 880,
-        "minWidth": 360,
+        "width": 1400,
+        "height": 860,
+        "minWidth": 380,
         "minHeight": 560,
-        "center": true
+        "center": true,
+        "maximized": true
       }
     ],
     "security": {
@@ -30,7 +31,7 @@
     "targets": ["nsis"],
     "publisher": "waliud.uk",
     "shortDescription": "أذكار ومواقيت",
-    "longDescription": "الأذكار ومواقيت الصلاة والقبلة والسبحة وورد الحفظ والتقويم والمناسبات وصفحات مصحف المدينة، مع تنبيهات ويندوز",
+    "longDescription": "الأذكار وأوقات الشروق والضحى والثلث الأخير وأوقات النهي والقبلة والسبحة والإذاعة والتقويم والمناسبات وصفحات مصحف المدينة، مع تنبيهات ويندوز",
     "copyright": "خط مصحف المدينة © مجمع الملك فهد لطباعة المصحف الشريف",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
     "windows": {

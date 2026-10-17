@@ -1,10 +1,9 @@
-// My adhkar (the user's own list, with counters and reminders, which can also be
+// My adhkar (the user's own list, with counters, which can also be
 // filled from the authentic adhkar), and the full-screen tasbeeh.
 
 import { CATEGORIES, CATEGORY_BY_ID } from '../adhkar-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
-import { syncSchedule } from '../push.js';
 import { isSaved, newDay, save, state, toggleSaved, uid } from '../store.js';
 import { today } from '../today.js';
 import { $, $$, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
@@ -205,7 +204,6 @@ function mineCard(c) {
       <p class="mine-text ${c.quran ? 'hafs' : ''}">${esc(c.text)}</p>
       ${c.ref ? `<p class="mine-ref">${esc(c.ref)}</p>` : ''}
       <div class="mine-meta">
-        ${c.reminder ? `<span class="pill">${icon('bell', 14)} ${num(c.reminder)}</span>` : ''}
         <span class="pill soft">المجموع ${num(c.total || 0)}</span>
       </div>
     </div>
@@ -248,7 +246,6 @@ function customMenu(item, redraw) {
         if (a === 'delete' && (await confirmSheet('حذف هذا الذكر من أذكاري؟'))) {
           state.custom = state.custom.filter((c) => c.id !== item.id);
           save();
-          syncSchedule();
           redraw();
         }
       });
@@ -260,7 +257,7 @@ function customMenu(item, redraw) {
 const TARGETS = [0, 3, 7, 10, 33, 100, 1000];
 
 export function editCustom(item, onDone, preset = {}) {
-  const c = item || { text: preset.text || '', target: 33, reminder: '' };
+  const c = item || { text: preset.text || '', target: 33 };
   openSheet(
     `<form class="form" data-form>
        <label class="field"><span>نص الذكر</span>
@@ -271,9 +268,6 @@ export function editCustom(item, onDone, preset = {}) {
          </div>
          <input type="number" name="target" inputmode="numeric" min="0" max="100000" value="${c.target || ''}" placeholder="أو اكتب عدداً">
        </div>
-       <label class="field row"><span>${icon('bell', 18)} تذكير يومي</span>
-         <input type="time" name="reminder" value="${esc(c.reminder || '')}"></label>
-       <p class="hint">يصلك التذكير في هذا الوقت كل يوم إذا فعّلت التنبيهات من الإعدادات. اتركه فارغاً لإيقافه.</p>
        <div class="sheet-actions">
          <button class="btn primary" type="submit">${item ? 'حفظ' : 'إضافة'}</button>
          <button class="btn ghost" type="button" data-close>إلغاء</button>
@@ -292,11 +286,9 @@ export function editCustom(item, onDone, preset = {}) {
         const text = form.text.value.trim();
         if (!text) return;
         const target = Math.max(0, Math.min(100000, parseInt(form.target.value, 10) || 0));
-        const reminder = form.reminder.value || '';
-        if (item) Object.assign(item, { text, target, reminder });
-        else state.custom.unshift({ id: uid(), text, target, reminder, today: 0, total: 0, created: Date.now() });
+        if (item) Object.assign(item, { text, target });
+        else state.custom.unshift({ id: uid(), text, target, today: 0, total: 0, created: Date.now() });
         save();
-        syncSchedule();
         close();
         toast(`${icon('check', 18)} ${item ? 'حُفظ التعديل' : 'أُضيف الذكر إلى أذكاري'}`);
         onDone?.();
@@ -333,7 +325,7 @@ function pickAdhkar(redraw) {
           const x = items[id];
           if (!x || have.has(x.text)) continue;
           const text = (x.before ? x.before + '\n' : '') + x.text;
-          state.custom.push({ id: uid(), text, target: x.count, ref: x.ref || '', reminder: '', today: 0, total: 0, created: Date.now() });
+          state.custom.push({ id: uid(), text, target: x.count, ref: x.ref || '', today: 0, total: 0, created: Date.now() });
           have.add(x.text);
           n++;
         }
@@ -387,7 +379,7 @@ const DIM_STEPS = [0, 30, 50, 70];
 const DIM_MAX = 85;
 const tsbBg = (t) => T_BGS.find((b) => b.id === t.bg) || T_BGS[0];
 
-// Istighfar has no fixed number: it is counted openly, and each one also goes to «عباداتي».
+// Istighfar has no fixed number: it is counted openly, and each one also goes to «متابعتي».
 export const isIstighfar = (text) => /[أا]ستغفر/.test(text || '');
 
 // With an id, the screen counts one of «أذكاري» towards its daily number instead of the
@@ -438,11 +430,6 @@ export function renderTasbeeh(view, mineId) {
         },
         reset: () => (t.count = 0),
       };
-  const frac = () => {
-    const [c, n] = [src.count(), src.target()];
-    if (!n) return 0;
-    return mine ? Math.min(1, c / n) : (c % n || (c ? n : 0)) / n;
-  };
   const roundText = () => {
     const [c, n] = [src.count(), src.target()];
     if (!n) return 'عدّ مفتوح بلا حد';
@@ -469,7 +456,6 @@ export function renderTasbeeh(view, mineId) {
         ${mine ? `<p class="tsb-from">من أذكاري${mine.ref ? ` • ${esc(mine.ref)}` : ''}</p>` : ''}
         <div class="tsb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(src.phrase())}</span></div>
         <div class="tsb-counter">
-          <span data-ring>${ring(frac(), 250, 8)}</span>
           <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
         </div>
         <p class="tsb-hint">اضغط في أي مكان للتسبيح • باعد بإصبعين لتكبير الذكر</p>
@@ -504,7 +490,6 @@ export function renderTasbeeh(view, mineId) {
     const reached = n && (mine ? c === n : c % n === 0);
     haptic(reached ? 40 : 10);
     if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
-    $('[data-ring]', view).innerHTML = ring(frac(), 250, 8);
     $('[data-count]', view).textContent = num(c);
     $('[data-round]', view).textContent = roundText();
     $('[data-total]', view).textContent = num(src.total());

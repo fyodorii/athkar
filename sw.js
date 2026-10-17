@@ -1,9 +1,7 @@
-// Service worker: keeps the app on the device so it opens instantly and offline,
-// and shows the reminders that push/cron.php sends.
+// Service worker: keeps the app on the device so it opens instantly and offline.
 
-const VERSION = 'v14'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v17'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
-const MUSHAF_CACHE = 'mushaf-fonts-v1'; // not named adhkar-…, so updates keep it
 const FILES = [
   './',
   'index.html',
@@ -14,42 +12,27 @@ const FILES = [
   'js/cities.js',
   'js/config.js',
   'js/daily-data.js',
-  'js/khatma.js',
-  'js/hifz.js',
   'js/occasions.js',
   'js/desktop.js',
-  'js/mushaf/kahf.js',
-  'js/mushaf/mulk.js',
-  'js/mushaf/baqarah.js',
-  'js/sunnah.js',
-  'js/surahs/kahf.js',
-  'js/surahs/mulk.js',
-  'js/surahs/baqarah.js',
   'js/qailulah-data.js',
   'js/quran-data.js',
   'js/radio.js',
-  'js/ruqyah-data.js',
   'js/dates.js',
   'js/icons.js',
   'js/prayer.js',
   'js/push.js',
-  'js/schedule.js',
   'js/store.js',
   'js/timers.js',
   'js/today.js',
   'js/ui.js',
-  'js/widget.js',
   'js/wird-data.js',
   'js/views/adhkar.js',
   'js/views/home.js',
   'js/views/notebook.js',
-  'js/views/quran.js',
-  'js/views/qibla.js',
+  'js/views/radio.js',
   'js/views/settings.js',
   'js/views/tools.js',
-  'js/views/hifz.js',
-  'js/views/calendar.js',
-  'js/views/surah.js',
+  'js/views/occasions.js',
   'js/views/worship.js',
   'fonts/plex-arabic-400.woff2',
   'fonts/plex-arabic-600.woff2',
@@ -101,22 +84,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-  if (url.origin !== location.origin || url.pathname.includes('/push/')) return;
-  // The mushaf's page fonts never change: kept in their own cache across app updates and
-  // fetched once, only when their page is opened.
-  if (url.pathname.includes('/fonts/qpc/')) {
-    event.respondWith(
-      (async () => {
-        const cache = await caches.open(MUSHAF_CACHE);
-        const saved = await cache.match(request);
-        if (saved) return saved;
-        const res = await fetch(request);
-        if (res.ok) event.waitUntil(cache.put(request, res.clone()));
-        return res;
-      })()
-    );
-    return;
-  }
+  if (url.origin !== location.origin) return;
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
@@ -133,63 +101,6 @@ self.addEventListener('fetch', (event) => {
         return saved;
       }
       return fresh;
-    })()
-  );
-});
-
-// ---- Push notifications ----
-
-self.addEventListener('push', (event) => {
-  event.waitUntil(
-    (async () => {
-      let msg = {};
-      try {
-        msg = event.data ? event.data.json() : {};
-      } catch (e) {
-        msg = { body: event.data ? event.data.text() : '' };
-      }
-      // Servers whose PHP cannot encrypt payloads send an empty push; fetch the text instead.
-      if (!event.data) {
-        try {
-          const sub = await self.registration.pushManager.getSubscription();
-          const res = await fetch(new URL('push/pending.php', self.registration.scope), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoint: sub && sub.endpoint }),
-          });
-          msg = await res.json();
-        } catch (e) {
-          // Show the generic notification below.
-        }
-      }
-      // iOS requires every push to show a notification, so always show one.
-      await self.registration.showNotification(msg.title || 'أذكار ومواقيت', {
-        body: msg.body || '',
-        icon: 'icons/icon-192.png',
-        badge: 'icons/icon-192.png',
-        tag: msg.tag || undefined,
-        lang: 'ar',
-        dir: 'rtl',
-        data: { url: msg.url || '#/home' },
-      });
-    })()
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const url = new URL((event.notification.data && event.notification.data.url) || '#/home', self.registration.scope).href;
-  event.waitUntil(
-    (async () => {
-      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      for (const client of windows) {
-        if (client.url.startsWith(self.registration.scope)) {
-          await client.focus();
-          client.postMessage({ type: 'open', url });
-          return;
-        }
-      }
-      await self.clients.openWindow(url);
     })()
   );
 });

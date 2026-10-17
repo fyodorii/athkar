@@ -179,8 +179,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "athkar"
-version = "13.0.0"
+name = "mogait"
+version = "17.0.0"
 dependencies = [
  "tauri",
  "tauri-build",

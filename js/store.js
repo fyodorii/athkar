@@ -12,8 +12,6 @@ export const DEFAULTS = {
     method: 'umm_al_qura',
     asr: 1,
     offsets: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
-    // Minutes from the adhan to the iqama.
-    iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
     hijriAdjust: 0,
     clock24: false,
     digits: 'arab',
@@ -25,70 +23,20 @@ export const DEFAULTS = {
     uiBold: false,
     haptics: true,
     quranGoal: 5,
-    prayerLayout: 'list', // list | grid (the prayer times on the home screen)
     appIcon: 'emerald', // icons/alt/<name>.png for the home screen
-    mushafMode: 'pages', // al-Kahf, al-Mulk, al-Baqarah: the mushaf's pages | continuous text
-    mushafInk: 'blue', // blue | black
-    notify: {
-      enabled: false,
-      prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
-      // Minutes before each adhan for a heads-up (0 = only at the adhan); unset → `before`.
-      beforeBy: {},
-      iqama: true,
-      sunrise: false,
-      sunriseBefore: 0, // minutes before sunrise (0 = at sunrise), to catch Fajr in time
-      fajrInfo: false, // at a set hour (say 11 pm): when the coming Fajr and sunrise are
-      fajrInfoTime: '23:00',
-      before: 10,
-      morning: true,
-      morningDelay: 30,
-      evening: true,
-      eveningDelay: 30,
-      sleep: false,
-      sleepTime: '22:30',
-      lastThird: false,
-      friday: true,
-      fasting: false,
-      fastingTime: '21:00',
-      whiteDays: false,
-      whiteDaysTime: '21:00',
-      occasions: false, // the evening before Ramadan, Arafah, Ashura and the other occasions
-      occasionsTime: '21:00',
-      salawat: false,
-      salawatHours: 3,
-      worship: false,
-      afterAdhan: 0,
-      duha: false,
-      duhaDelay: 30,
-      midnight: false,
-      prayerEnd: 0,
-      nahy: false,
-      qailulah: false,
-      kahf: true,
-      kahfTime: '09:00',
-      mulk: false,
-      mulkTime: '21:45',
-      baqarah: 0,
-      baqarahTime: '17:00',
-      khatma: false,
-      khatmaTime: '05:30',
-    },
   },
   progress: { day: '', counts: {} },
   custom: [],
   notebook: [],
   saved: [],
   tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'emerald', ink: '', dim: 0 },
-  khatma: { page: 0, days: 30, start: '', done: 0, log: {} },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},
   worshipCustom: [],
   diary: {},
-  hifz: { on: false, day: 1, checks: {} },
   migrated: {}, // one-time data changes done
-  surahs: {}, // kahf | mulk | baqarah → { ayah: where reading stopped, done: day finished }
-  tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
+  tools: { ahzab: { start: '', done: {} }, nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };
 
@@ -107,10 +55,19 @@ function merge(base, value) {
   return value === undefined || value === null ? base : value;
 }
 
+// Data of features the app no longer has (khatma, memorization, prayer times, notifications,
+// the qibla, al-Mulk) is dropped when loading, so old saves and backups stay light.
+function prune(data) {
+  for (const k of ['khatma', 'hifz', 'surahs']) delete data[k];
+  const s = data.settings;
+  if (s) for (const k of ['iqama', 'prayerLayout', 'notify', 'mushafMode', 'mushafInk', 'quranScale']) delete s[k];
+  return data;
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    return merge(fresh(), raw ? JSON.parse(raw) : {});
+    return prune(merge(fresh(), raw ? JSON.parse(raw) : {}));
   } catch (e) {
     return merge(fresh(), {});
   }
@@ -144,7 +101,7 @@ if (state.seeded < SEED_VERSION) {
   const have = new Set(state.custom.map((c) => c.text));
   const now = Date.now();
   SEED.forEach((x, i) => {
-    if (!have.has(x.text)) state.custom.push({ id: `seed${i + 1}`, reminder: '', today: 0, total: 0, created: now, ...x });
+    if (!have.has(x.text)) state.custom.push({ id: `seed${i + 1}`, today: 0, total: 0, created: now, ...x });
   });
   state.seeded = SEED_VERSION;
   try {
@@ -209,7 +166,7 @@ export function exportData() {
 export function importData(text) {
   const data = JSON.parse(text);
   if (!data || data.app !== 'adhkar') throw new Error('ليس ملف نسخة احتياطية من التطبيق');
-  const merged = merge(fresh(), data);
+  const merged = prune(merge(fresh(), data));
   for (const k of Object.keys(DEFAULTS)) state[k] = merged[k];
   state.sync = { hash: '', at: 0 };
   save();
