@@ -387,7 +387,7 @@ const DIM_STEPS = [0, 30, 50, 70];
 const DIM_MAX = 85;
 const tsbBg = (t) => T_BGS.find((b) => b.id === t.bg) || T_BGS[0];
 
-// Istighfar has no fixed number: it is counted openly, and each one also goes to «عباداتي».
+// Istighfar has no fixed number: it is counted openly, and each one also goes to «متابعتي».
 export const isIstighfar = (text) => /[أا]ستغفر/.test(text || '');
 
 // With an id, the screen counts one of «أذكاري» towards its daily number instead of the

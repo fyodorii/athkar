@@ -1,6 +1,6 @@
 // Reading al-Mulk: as the pages of the Madinah mushaf (each page in
 // its own King Fahd Complex font, swiped like a mushaf), or as continuous text. The place you
-// stopped at is kept for next time; finishing it ticks it in «عباداتي».
+// stopped at is kept for next time; finishing it ticks it in «متابعتي».
 
 import { num } from '../dates.js';
 import { JUZ, SURAHS } from '../quran-data.js';
@@ -101,7 +101,7 @@ export function renderSurah(view, id) {
       save();
       haptic(30);
       e.target.closest('[data-done]').innerHTML = `${icon('check', 20)} قرأتها اليوم`;
-      toast(`${icon('check', 18)} تقبّل الله منك — سُجّلت في عباداتي`);
+      toast(`${icon('check', 18)} تقبّل الله منك — سُجّلت في متابعتي`);
     }
   };
   return {

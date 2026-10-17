@@ -68,7 +68,7 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
       add(t.lastThird.at, 'الثلث الأخير من الليل', '«ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر…»', '#/home', 'last-third');
     }
     if (n.worship) {
-      add(atClock(day, '21:30', t), 'عباداتي اليوم', 'سجّل صلواتك وعباداتك، وحاسب نفسك قبل أن تنام', '#/worship', 'worship');
+      add(atClock(day, '21:30', t), 'متابعتي اليوم', 'سجّل عباداتك وأعمالك، وحاسب نفسك قبل أن تنام', '#/worship', 'worship');
     }
     if (n.friday && weekday === 5) {
       add(atClock(day, '10:00', t), 'يوم الجمعة', 'أكثر من الصلاة على النبي ﷺ، وتحرَّ ساعة الإجابة آخر ساعة بعد العصر', '#/home', 'friday');

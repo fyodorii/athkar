@@ -27,7 +27,7 @@ const TABS = [
   ['mine', 'أذكاري', 'heart', '#/mine'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
-  ['worship', 'عباداتي', 'check', '#/worship'],
+  ['worship', 'متابعتي', 'check', '#/worship'],
 ];
 
 // [pattern, tab, view(viewEl, ...params)]

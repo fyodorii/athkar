@@ -140,7 +140,7 @@ export function renderQailulah(view) {
           running
             ? `<div><small>يبقى على التنبيه</small><b class="nap-left" data-left>${mmss(Math.ceil((tools().napEnd - Date.now()) / 1000))}</b></div>
                <button class="btn ghost" data-stop>إيقاف</button>`
-            : `<div><b>مؤقّت القيلولة</b><small>ينبّهك بصوت بعد ${num(nap)} دقيقة ويُسجّلها في «عباداتي». منبّه الجوال أوثق إذا قُفلت الشاشة.</small></div>
+            : `<div><b>مؤقّت القيلولة</b><small>ينبّهك بصوت بعد ${num(nap)} دقيقة ويُسجّلها في «متابعتي». منبّه الجوال أوثق إذا قُفلت الشاشة.</small></div>
                <button class="btn primary" data-start>${icon('moon', 18)} ابدأ قيلولة ${num(nap)} دقيقة</button>`
         }
       </section>
@@ -266,7 +266,7 @@ export function renderWalk(view) {
           }
           ${w && !(s.done && w) ? `<button class="btn ghost" data-reset aria-label="إعادة">${icon('reset', 18)}</button>` : ''}
         </div>
-        <p class="hint center">ثلاث دقائق مشياً سريعاً تتسارع فيه الأنفاس، ثم ثلاث دقائق مشياً هادئاً، خمس مرات. ينبّهك بصوت عند تغيّر المرحلة، ويُسجَّل «المشي ٣٠ دقيقة» في عباداتي عند إتمامه.</p>
+        <p class="hint center">ثلاث دقائق مشياً سريعاً تتسارع فيه الأنفاس، ثم ثلاث دقائق مشياً هادئاً، خمس مرات. ينبّهك بصوت عند تغيّر المرحلة، ويُسجَّل «المشي ٣٠ دقيقة» في متابعتي عند إتمامه.</p>
       </section>`;
   };
   const dots = (s) =>

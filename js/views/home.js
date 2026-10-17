@@ -11,7 +11,7 @@ import { syncSchedule } from '../push.js';
 import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
-import { cyclePrayer, dayScore, prayerIcon, prayerStreak } from './worship.js';
+import { dayScore } from './worship.js';
 import { daysText, nextOccasion, rangeText } from './calendar.js';
 import { quickSurahs } from './surah.js';
 
@@ -41,7 +41,6 @@ const MOMENT_NOTE = {
   midnight: 'نصف الليل بين المغرب والفجر',
   lastThird: 'وقت نزول ربنا واستجابة الدعاء',
 };
-const FARD_NAMES = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
 
 function bigClock() {
   const { h, m, s } = hoursAt();
@@ -183,17 +182,6 @@ export function render(view) {
       const [kind, what] = act.dataset.cardAct.split(':');
       return what === 'copy' ? copyText(texts[kind]) : shareText(texts[kind]);
     }
-    const quick = e.target.closest('[data-quick]');
-    if (quick) {
-      e.preventDefault();
-      const v = cyclePrayer(info.key, quick.dataset.quick);
-      quick.className = `qp p${v}`;
-      quick.querySelector('.qp-mark').innerHTML = prayerIcon(v) || '';
-      const sc = dayScore(info.key);
-      $('[data-wscore]', view).innerHTML = ring(sc.fraction, 54, 6);
-      $('[data-wpct]', view).textContent = `${num(Math.round(sc.fraction * 100))}٪`;
-      return;
-    }
     const bell = e.target.closest('[data-bell]');
     if (!bell) return;
     e.preventDefault();
@@ -300,29 +288,16 @@ function nahyCard(info) {
   </section>`;
 }
 
-// Today's worship at a glance, with the five prayers to tick off right here.
+// Today's follow-up at a glance: the share done and the link to the full list.
 function worshipCard(info) {
   const sc = dayScore(info.key);
-  const rec = state.worship[info.key] || {};
-  const streak = prayerStreak();
-  return `<section class="card worship-card">
-    <a class="card-head" href="#/worship">
-      <h2>${icon('check', 18)} عباداتي اليوم</h2>
-      <span class="link">${streak ? `${num(streak)} ${streak === 1 ? 'يوم' : 'أيام'} متتالية` : 'السجل'} ${icon('chevron', 14)}</span>
-    </a>
+  return `<a class="card worship-card" href="#/worship">
     <div class="worship-row">
-      <a class="w-score" href="#/worship"><span data-wscore>${ring(sc.fraction, 54, 6)}</span><b data-wpct>${num(Math.round(sc.fraction * 100))}٪</b></a>
-      <div class="qps">
-        ${Object.keys(FARD_NAMES)
-          .map((k) => {
-            const v = rec[k] || 0;
-            const name = k === 'dhuhr' && info.isFriday ? 'الجمعة' : FARD_NAMES[k];
-            return `<button class="qp p${v}" data-quick="${k}" aria-label="${name}"><span class="qp-mark">${prayerIcon(v)}</span><small>${name}</small></button>`;
-          })
-          .join('')}
-      </div>
+      <span class="w-score"><span>${ring(sc.fraction, 54, 6)}</span><b>${num(Math.round(sc.fraction * 100))}٪</b></span>
+      <span class="km-text"><b>متابعتي اليوم</b><small>${num(sc.done)} من ${num(sc.total)} — اضغط للتسجيل</small></span>
+      ${icon('chevron', 18, 'muted')}
     </div>
-  </section>`;
+  </a>`;
 }
 
 function todayCard(kind, label, ic, html, ref) {
