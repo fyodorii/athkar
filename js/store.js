@@ -68,7 +68,7 @@ export const DEFAULTS = {
   diary: {},
   migrated: {}, // one-time data changes done
   surahs: {}, // mulk → { ayah: where reading stopped, done: day finished }
-  tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
+  tools: { ahzab: { start: '', done: {} }, nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };
 

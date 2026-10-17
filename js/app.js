@@ -44,6 +44,7 @@ const ROUTES = [
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/qibla$/, 'qibla', (v) => qibla.render(v)],
   [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
+  [/^#\/ahzab$/, 'tools', (v) => tools.renderAhzab(v)],
   [/^#\/qailulah$/, 'tools', (v) => tools.renderQailulah(v)],
   [/^#\/walk$/, 'tools', (v) => tools.renderWalk(v)],
   [/^#\/focus$/, 'tools', (v) => tools.renderFocus(v)],
