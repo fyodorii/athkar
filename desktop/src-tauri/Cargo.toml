@@ -1,5 +1,5 @@
 [package]
-name = "athkar"
+name = "mogait"
 version = "15.0.0"
 description = "أذكار ومواقيت"
 edition = "2021"

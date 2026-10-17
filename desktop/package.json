@@ -1,5 +1,5 @@
 {
-  "name": "athkar-desktop",
+  "name": "mogait-desktop",
   "private": true,
   "description": "أذكار ومواقيت لويندوز: التطبيق نفسه داخل نافذة Tauri، مع أيقونة بجانب الساعة وتنبيهات النظام",
   "scripts": {
