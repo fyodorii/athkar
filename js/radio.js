@@ -7,17 +7,9 @@ export const STATIONS = [
   { id: 'saudi', name: 'إذاعة القرآن الكريم', sub: 'المملكة العربية السعودية — بث مباشر', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
   // HLS from the Saudi Broadcasting Authority; Safari on the iPhone plays it in an <audio> element.
   { id: 'nidaa', name: 'إذاعة نداء الإسلام', sub: 'من مكة المكرمة — بث مباشر', url: 'https://live.kwikmotion.com/sbrksanedaradiolive/srpksanedaradio/playlist.m3u8' },
-  { id: 'tarateel', name: 'تلاوات خاشعة', sub: 'مختارات من القراء', url: 'https://qurango.net/radio/tarateel' },
-  { id: 'sudais', name: 'عبدالرحمن السديس', sub: 'إمام الحرم المكي', url: 'https://qurango.net/radio/abdulrahman_alsudaes' },
-  { id: 'shuraim', name: 'سعود الشريم', sub: 'إمام الحرم المكي', url: 'https://qurango.net/radio/saud_alshuraim' },
-  { id: 'maher', name: 'ماهر المعيقلي', sub: 'إمام الحرم المكي', url: 'https://qurango.net/radio/maher' },
-  { id: 'yasser', name: 'ياسر الدوسري', sub: 'إمام الحرم المكي', url: 'https://qurango.net/radio/yasser_aldosari' },
-  { id: 'afasy', name: 'مشاري العفاسي', sub: 'تلاوات متواصلة', url: 'https://qurango.net/radio/mishary_alafasi' },
-  { id: 'ruqyah', name: 'الرقية الشرعية', sub: 'آيات الرقية متواصلة', url: 'https://qurango.net/radio/roqiah' },
 ];
 
 export function stationById(id) {
-  if (id === 'custom') return { id: 'custom', name: 'محطتي', sub: state.radio.custom, url: state.radio.custom };
   return STATIONS.find((s) => s.id === id) || STATIONS[0];
 }
 

@@ -11,12 +11,10 @@ import { save, state } from '../store.js';
 import { hoursAt, today } from '../today.js';
 import { $, copyText, esc, ring, shareText, toast } from '../ui.js';
 import { dayScore } from './worship.js';
-import { daysText, nextOccasion, rangeText } from './calendar.js';
+import { daysText, nextOccasion, rangeText } from './occasions.js';
 
 const QUICK = [
   ['#/notebook', 'أدعيتي', 'hand', 'teal'],
-  ['#/calendar', 'التقويم', 'grid', 'teal'],
-  ['#/occasions', 'المناسبات', 'calendar', 'rose'],
   ['#/qailulah', 'القيلولة', 'moon', 'teal'],
   ['#/walk', 'المشي الياباني', 'stars', 'amber'],
   ['#/focus', '١٠ دقائق', 'clock', 'rose'],
@@ -91,7 +89,6 @@ export function render(view) {
   <div class="home-grid">
     <div class="home-col">
       <section class="now-tiles">
-        <div class="card analog" aria-label="الساعة">${analogClock()}</div>
         <div class="card period tp-${info.period.key}" data-period-tile>${periodTile(info)}</div>
       </section>
 
@@ -125,7 +122,6 @@ export function render(view) {
     <a href="#/settings">${icon('gear', 18)} الإعدادات</a>
   </div>`;
 
-  setHands(view);
   let lastTile = periodTile(info);
   view.addEventListener('click', onClick);
   const cards = $('[data-cards]', view);
@@ -147,8 +143,7 @@ export function render(view) {
       if (p) p.textContent = c2.period;
       $('[data-countdown]', view).textContent = countdown(info2.next.at - Date.now());
       $('[data-progress]', view).style.width = `${progress(info2)}%`;
-      setHands(view);
-      const p2 = periodTile(info2);
+          const p2 = periodTile(info2);
       if (p2 !== lastTile) $('[data-period-tile]', view).innerHTML = lastTile = p2;
     },
     destroy() {
@@ -270,30 +265,6 @@ function wirdSuggestion(info) {
       <span>${finished ? 'تقبّل الله منك' : done ? `قرأت ${num(done)} من ${num(all)}` : esc(cat.subtitle)}</span></div>
     <span class="suggest-ring tone-${cat.tone}">${ring(done / all, 40, 4)}</span>
   </a>`;
-}
-
-// A small analog clock; its hands turn in tick().
-function analogClock() {
-  const ticks = Array.from({ length: 12 }, (_, i) => {
-    const a = (i * Math.PI) / 6;
-    const r1 = i % 3 ? 40 : 37;
-    return `<line x1="${50 + r1 * Math.sin(a)}" y1="${50 - r1 * Math.cos(a)}" x2="${50 + 44 * Math.sin(a)}" y2="${50 - 44 * Math.cos(a)}" class="${i % 3 ? '' : 'major'}"/>`;
-  }).join('');
-  return `<svg viewBox="0 0 100 100" class="analog-svg">
-    <circle cx="50" cy="50" r="48" class="face"/>${ticks}
-    <line x1="50" y1="54" x2="50" y2="28" class="hand-h" data-hh/>
-    <line x1="50" y1="56" x2="50" y2="16" class="hand-m" data-hm/>
-    <line x1="50" y1="58" x2="50" y2="12" class="hand-s" data-hs/>
-    <circle cx="50" cy="50" r="3" class="pin"/>
-  </svg>`;
-}
-
-function setHands(view) {
-  const { h, m, s } = hoursAt();
-  const set = (sel, deg) => $(sel, view)?.setAttribute('transform', `rotate(${deg} 50 50)`);
-  set('[data-hh]', ((h % 12) + m / 60) * 30);
-  set('[data-hm]', (m + s / 60) * 6);
-  set('[data-hs]', s * 6);
 }
 
 // The moon as it looks on this Hijri day: lit from the right while waxing, from the left

@@ -13,7 +13,7 @@ import * as notebook from './views/notebook.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as radioView from './views/radio.js';
-import * as calendar from './views/calendar.js';
+import * as occasions from './views/occasions.js';
 import * as tools from './views/tools.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
@@ -22,6 +22,7 @@ const TABS = [
   ['home', 'الرئيسية', 'home', '#/home'],
   ['mine', 'أذكاري', 'heart', '#/mine'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
+  ['occasions', 'المناسبات', 'calendar', '#/occasions'],
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
   ['worship', 'متابعتي', 'check', '#/worship'],
 ];
@@ -32,8 +33,7 @@ const ROUTES = [
   [/^#\/mine(?:\/([\w-]+))?$/, 'mine', (v, id) => adhkar.renderMine(v, id)],
   [/^#\/adhkar\/(morning|evening|sleep)$/, 'mine', (v, id) => adhkar.renderWird(v, id)],
   [/^#\/adhkar(?:\/[\w-]+)?$/, 'mine', (v) => adhkar.renderMine(v)], // old links
-  [/^#\/calendar(?:\/(\d{4}-\d{2}-\d{2}))?$/, 'home', (v, key) => calendar.renderCalendar(v, key)],
-  [/^#\/occasions$/, 'home', (v) => calendar.renderOccasions(v)],
+  [/^#\/occasions$/, 'occasions', (v) => occasions.renderOccasions(v)],
   [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
@@ -56,7 +56,7 @@ let currentHash = '';
 function route() {
   const hash = location.hash || '#/home';
   // Links to what the app no longer has (the khatma, memorization, ruqyah, widget) open the home screen.
-  if (/^#\/(quran|hifz|ruqyah|surah\/\w+|qibla|settings\/(widget|notify))$/.test(hash)) {
+  if (/^#\/(quran|hifz|ruqyah|calendar(\/[\d-]+)?|surah\/\w+|qibla|settings\/(widget|notify))$/.test(hash)) {
     location.replace('#/home');
     return;
   }

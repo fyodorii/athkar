@@ -1,10 +1,10 @@
-// Radio: live Quran stations (the Saudi Quran radio, Nidaa al-Islam and reciters), with the
+// Radio: the two live Quran stations (the Saudi Quran radio and Nidaa al-Islam), with the
 // player shared with the mini bar above the tabs.
 
 import { icon } from '../icons.js';
+import { state } from '../store.js';
 import { onRadio, play, radioStatus, STATIONS, stationById, stop, toggle } from '../radio.js';
-import { save, state } from '../store.js';
-import { esc, openSheet, pageHeader, toast } from '../ui.js';
+import { esc, pageHeader } from '../ui.js';
 
 // The two live Saudi stations share the big player; a switch picks which one it shows.
 const LIVE = ['saudi', 'nidaa'];
@@ -27,20 +27,6 @@ export function renderRadio(view) {
         <button class="radio-play" data-play="${hero}" aria-label="تشغيل">${icon(heroOn && live ? 'pause' : 'play', 34)}</button>
         <small class="radio-status">${statusText(heroOn ? status : 'stopped')}</small>
       </section>
-      <div class="group list">
-        <h4>محطات أخرى</h4>
-        ${STATIONS.filter((s) => !LIVE.includes(s.id))
-          .map((s) => {
-            const on = station?.id === s.id;
-            return `<button class="row station ${on ? 'on' : ''}" data-play="${s.id}">
-              <span class="row-icon">${icon(on && live ? 'pause' : 'play', 18)}</span>
-              <span class="row-label">${esc(s.name)}<small>${on ? statusText(status) : esc(s.sub)}</small></span></button>`;
-          })
-          .join('')}
-        <button class="row station ${station?.id === 'custom' ? 'on' : ''}" data-custom>
-          <span class="row-icon">${icon('plus', 18)}</span>
-          <span class="row-label">رابط بث آخر<small>${state.radio.custom ? esc(state.radio.custom) : 'أضف رابط إذاعة تفضّلها'}</small></span></button>
-      </div>
       ${station ? `<button class="btn ghost wide" data-stop>${icon('close', 18)} إيقاف البث</button>` : ''}
       <p class="hint center">يستمر البث وأنت تتنقل في التطبيق، وتظهر أزرار التحكم في شاشة القفل. يحتاج اتصالاً بالإنترنت.</p>`;
   };
@@ -64,25 +50,6 @@ export function renderRadio(view) {
       return;
     }
     if (e.target.closest('[data-stop]')) return stop();
-    if (e.target.closest('[data-custom]')) {
-      openSheet(
-        `<form class="form"><label class="field"><span>رابط البث (https)</span><input name="url" type="url" dir="ltr" value="${esc(state.radio.custom)}" placeholder="https://…"></label>
-         <div class="sheet-actions"><button class="btn primary" type="submit">تشغيل</button><button class="btn ghost" type="button" data-close>إلغاء</button></div></form>`,
-        (el, close) => {
-          const form = el.querySelector('form');
-          form.addEventListener('submit', (ev) => {
-            ev.preventDefault();
-            const url = form.url.value.trim();
-            if (!/^https:\/\//.test(url)) return toast('أدخل رابطاً يبدأ بـ https://');
-            state.radio.custom = url;
-            save();
-            close();
-            play('custom');
-          });
-        },
-        { title: 'إذاعة أخرى' }
-      );
-    }
   };
   return {
     destroy() {

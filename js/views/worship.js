@@ -28,6 +28,7 @@ const GROUPS = [
     icon: 'book',
     items: [
       { id: 'quran', name: 'ورد القرآن', type: 'count', goal: 'quranGoal', step: 1, unit: 'صفحة' },
+      { id: 'mulk', name: 'سورة الملك', type: 'check' },
     ],
   },
   {
