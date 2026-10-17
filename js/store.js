@@ -24,7 +24,7 @@ export const DEFAULTS = {
     haptics: true,
     quranGoal: 5,
     appIcon: 'emerald', // icons/alt/<name>.png for the home screen
-    mushafMode: 'pages', // al-Kahf, al-Mulk, al-Baqarah: the mushaf's pages | continuous text
+    mushafMode: 'pages', // al-Mulk: the mushaf's pages | continuous text
     mushafInk: 'blue', // blue | black
     notify: {
       enabled: false,
@@ -52,12 +52,8 @@ export const DEFAULTS = {
       midnight: false,
       nahy: false,
       qailulah: false,
-      kahf: true,
-      kahfTime: '09:00',
       mulk: false,
       mulkTime: '21:45',
-      baqarah: 0,
-      baqarahTime: '17:00',
     },
   },
   progress: { day: '', counts: {} },
@@ -71,7 +67,7 @@ export const DEFAULTS = {
   worshipCustom: [],
   diary: {},
   migrated: {}, // one-time data changes done
-  surahs: {}, // kahf | mulk | baqarah → { ayah: where reading stopped, done: day finished }
+  surahs: {}, // mulk → { ayah: where reading stopped, done: day finished }
   tools: { nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
   sync: { hash: '', at: 0 },
 };
@@ -96,11 +92,13 @@ function merge(base, value) {
 function prune(data) {
   delete data.khatma;
   delete data.hifz;
+  delete data.surahs?.kahf;
+  delete data.surahs?.baqarah;
   const s = data.settings;
   if (s) {
     delete s.iqama;
     delete s.prayerLayout;
-    for (const k of ['prayers', 'beforeBy', 'iqama', 'before', 'fajrInfo', 'fajrInfoTime', 'afterAdhan', 'prayerEnd', 'khatma', 'khatmaTime']) delete s.notify?.[k];
+    for (const k of ['prayers', 'beforeBy', 'iqama', 'before', 'fajrInfo', 'fajrInfoTime', 'afterAdhan', 'prayerEnd', 'khatma', 'khatmaTime', 'kahf', 'kahfTime', 'baqarah', 'baqarahTime']) delete s.notify?.[k];
   }
   return data;
 }

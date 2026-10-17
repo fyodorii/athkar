@@ -352,12 +352,8 @@ export function renderNotify(view) {
       </div>
       <div class="group">
         <h4>القرآن</h4>
-        <div class="row">${lab('mountain', 'سورة الكهف', 'كل يوم جمعة')}${toggle('kahf', n.kahf)}</div>
-        ${n.kahf ? timeRow('kahfTime') : ''}
         <div class="row">${lab('crown', 'سورة الملك', 'كل ليلة')}${toggle('mulk', n.mulk)}</div>
         ${n.mulk ? timeRow('mulkTime') : ''}
-        <div class="row">${lab('shield', 'سورة البقرة')}${select('baqarah', [0, 1, 2, 3, 7], n.baqarah, (v) => ({ 0: 'متوقف', 1: 'كل يوم', 2: 'كل يومين', 3: 'كل ٣ أيام', 7: 'كل أسبوع' })[v])}</div>
-        ${n.baqarah ? timeRow('baqarahTime') : ''}
       </div>
       <div class="group">
         <h4>الأذكار</h4>
@@ -438,7 +434,7 @@ export function renderNotify(view) {
     else n[t.name] = Number(t.value);
     save();
     syncSchedule();
-    if (['morning', 'evening', 'sleep', 'salawat', 'duha', 'kahf', 'mulk', 'baqarah', 'fasting', 'whiteDays', 'occasions'].includes(t.name)) draw();
+    if (['morning', 'evening', 'sleep', 'salawat', 'duha', 'mulk', 'fasting', 'whiteDays', 'occasions'].includes(t.name)) draw();
   };
   view.onclick = async (e) => {
     if (!e.target.closest('[data-test]')) return;

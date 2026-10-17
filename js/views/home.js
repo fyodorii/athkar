@@ -107,7 +107,7 @@ export function render(view) {
         <div class="card period tp-${info.period.key}" data-period-tile>${periodTile(info)}</div>
       </section>
 
-      ${info.isFriday ? `<a class="banner gold" href="#/surah/kahf">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>سورة الكهف، والإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></a>` : ''}
+      ${info.isFriday ? `<a class="banner gold" href="#/settings/notify">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>الإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></a>` : ''}
 
       ${timesCard(info)}
 

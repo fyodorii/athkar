@@ -1,6 +1,6 @@
-// Reading al-Kahf, al-Mulk and al-Baqarah: as the pages of the Madinah mushaf (each page in
+// Reading al-Mulk: as the pages of the Madinah mushaf (each page in
 // its own King Fahd Complex font, swiped like a mushaf), or as continuous text. The place you
-// stopped at is kept for next time; finishing al-Mulk or al-Baqarah ticks it in «عباداتي».
+// stopped at is kept for next time; finishing it ticks it in «عباداتي».
 
 import { num } from '../dates.js';
 import { JUZ, SURAHS } from '../quran-data.js';
@@ -12,15 +12,13 @@ import { today } from '../today.js';
 import { $, esc, haptic, pageHeader, toast } from '../ui.js';
 
 export const QUICK_SURAHS = [
-  { id: 'kahf', name: 'الكهف', icon: 'mountain', when: 'كل جمعة', virtue: '«من قرأ سورة الكهف يوم الجمعة أضاء له من النور ما بين الجمعتين»', ref: 'رواه الحاكم والبيهقي، وصححه الألباني' },
   { id: 'mulk', name: 'الملك', icon: 'crown', when: 'كل ليلة', virtue: '«سورة من القرآن ثلاثون آية شفعت لرجل حتى غُفر له، وهي: تبارك الذي بيده الملك»', ref: 'رواه أبو داود والترمذي وحسّنه' },
-  { id: 'baqarah', name: 'البقرة', icon: 'shield', when: 'في البيت', virtue: '«لا تجعلوا بيوتكم مقابر، إن الشيطان ينفر من البيت الذي تُقرأ فيه سورة البقرة»', ref: 'رواه مسلم' },
 ];
 
-// The «وصول سريع» card: the three surahs a tap away.
+// The «وصول سريع» card: al-Mulk, a tap away.
 export function quickSurahs() {
   return `<section class="card quick-surahs">
-    <h3>وصول سريع</h3>
+    <h3>سورة الملك</h3>
     <div>${QUICK_SURAHS.map((q) => `<a href="#/surah/${q.id}"><span class="qs-ic">${icon(q.icon, 22)}</span><b>${q.name}</b></a>`).join('')}</div>
   </section>`;
 }
@@ -31,7 +29,7 @@ const INKS = { blue: 'أزرق', black: 'أسود' };
 export function renderSurah(view, id) {
   const meta = QUICK_SURAHS.find((q) => q.id === id);
   if (!meta) {
-    location.replace('#/quran');
+    location.replace('#/home');
     return null;
   }
   const mark = (state.surahs[id] ??= { ayah: 0, done: '', page: 0 });
@@ -47,8 +45,8 @@ export function renderSurah(view, id) {
     const ink = state.settings.mushafInk || 'blue';
     view.innerHTML = `
       ${pageHeader(`سورة ${meta.name}`, {
-        back: '#/quran',
-        sub: meta.when === 'كل جمعة' ? 'تُقرأ يوم الجمعة' : meta.when === 'كل ليلة' ? 'تُقرأ كل ليلة' : 'تُقرأ في البيت',
+        back: '#/home',
+        sub: 'تُقرأ كل ليلة',
         actions: `<button class="icon-btn ghost" data-mode aria-label="${pages ? 'نص متصل' : 'صفحات المصحف'}">${icon(pages ? 'rows' : 'book', 22)}</button>${
           pages
             ? `<button class="icon-btn ghost" data-ink aria-label="لون الخط: ${INKS[ink]}"><span class="ink-dot ${ink}"></span></button>`
@@ -99,11 +97,11 @@ export function renderSurah(view, id) {
       mark.done = key;
       mark.ayah = 0;
       mark.page = 0;
-      if (id === 'mulk' || id === 'baqarah') (state.worship[key] ??= {})[id] = 1;
+      if (id === 'mulk') (state.worship[key] ??= {})[id] = 1;
       save();
       haptic(30);
       e.target.closest('[data-done]').innerHTML = `${icon('check', 20)} قرأتها اليوم`;
-      toast(`${icon('check', 18)} تقبّل الله منك${id === 'kahf' ? '' : ' — سُجّلت في عباداتي'}`);
+      toast(`${icon('check', 18)} تقبّل الله منك — سُجّلت في عباداتي`);
     }
   };
   return {
@@ -162,7 +160,7 @@ function mushafPages(view, id, mark, alive) {
   let saveTimer;
   import(`../mushaf/${id}.js`).then(({ PAGES }) => {
     if (!alive()) return;
-    const surahNo = { kahf: 18, mulk: 67, baqarah: 2 }[id];
+    const surahNo = { mulk: 67 }[id];
     $('[data-body]', view).innerHTML = `
       <div class="mp-bar">
         <button class="icon-btn ghost sm flip" data-mp-step="-1" aria-label="الصفحة السابقة">${icon('chevron', 20)}</button>

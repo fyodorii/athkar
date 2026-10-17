@@ -14,7 +14,6 @@ const SALAWAT = [
 ];
 
 const isRamadan = (day, adj) => hijri(day, adj).month === 9;
-const dayNumber = ({ y, m, d }) => Math.floor(Date.UTC(y, m - 1, d) / 86400000);
 
 // Moment of "HH:MM" on a calendar day at the location.
 function atClock(day, hhmm, times) {
@@ -74,14 +73,8 @@ export function buildSchedule(state, { days = SCHEDULE_DAYS, from = Date.now() }
     if (n.friday && weekday === 5) {
       add(atClock(day, '10:00', t), 'يوم الجمعة', 'أكثر من الصلاة على النبي ﷺ، وتحرَّ ساعة الإجابة آخر ساعة بعد العصر', '#/home', 'friday');
     }
-    if (n.kahf && weekday === 5) {
-      add(atClock(day, n.kahfTime, t), 'سورة الكهف 📖', '«من قرأ سورة الكهف يوم الجمعة أضاء له من النور ما بين الجمعتين»', '#/surah/kahf', 'kahf');
-    }
     if (n.mulk) {
       add(atClock(day, n.mulkTime, t), 'سورة الملك', '«سورة من القرآن ثلاثون آية شفعت لرجل حتى غُفر له: تبارك الذي بيده الملك»', '#/surah/mulk', 'mulk');
-    }
-    if (n.baqarah > 0 && dayNumber(day) % n.baqarah === 0) {
-      add(atClock(day, n.baqarahTime, t), 'سورة البقرة', '«لا تجعلوا بيوتكم مقابر، إن الشيطان ينفر من البيت الذي تُقرأ فيه سورة البقرة»', '#/surah/baqarah', 'baqarah');
     }
     if (n.fasting && (weekday === 0 || weekday === 3)) {
       add(atClock(day, n.fastingTime || '21:00', t), `غداً ${weekday === 0 ? 'الاثنين' : 'الخميس'}`, 'تذكير بصيام التطوع، وتُعرض الأعمال فيه على الله', '#/home', 'fasting');
