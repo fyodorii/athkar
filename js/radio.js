@@ -59,7 +59,7 @@ export function play(id) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: st.name,
       artist: st.sub || 'إذاعة القرآن الكريم',
-      album: 'أذكار ومواقيت',
+      album: 'مواقيت',
       artwork: [{ src: new URL('icons/icon-512.png', location.href).href, sizes: '512x512', type: 'image/png' }],
     });
   }

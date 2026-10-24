@@ -4,7 +4,6 @@ import { setDigits } from './dates.js';
 import { FONTS } from './ui.js';
 import { icon } from './icons.js';
 import { checkForUpdate, isIOS, isStandalone, registerServiceWorker } from './push.js';
-import { startDesktop } from './desktop.js';
 import { onChange, persistStorage, state } from './store.js';
 import { $, esc, toast } from './ui.js';
 import * as home from './views/home.js';
@@ -172,7 +171,6 @@ document.addEventListener('visibilitychange', () => {
   if (anyTimerRunning()) keepAwake(true);
 });
 
-startDesktop();
 registerServiceWorker();
 persistStorage();
 installHint();
