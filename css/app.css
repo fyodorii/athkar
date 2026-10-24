@@ -335,71 +335,7 @@ select, input[type='time'] {
 [data-theme='dark'] .tone-indigo { --tone: #949cf5; }
 [data-theme='dark'] .tone-teal { --tone: #4cc5d4; }
 
-/* ---------- Home: hero ---------- */
-
-.hero {
-  position: relative;
-  margin: 0 -16px 16px;
-  padding: calc(var(--safe-top) + 14px) 20px 20px;
-  color: #fff;
-  background:
-    radial-gradient(120% 80% at 85% 0%, rgba(227, 194, 122, 0.22), transparent 55%),
-    linear-gradient(160deg, var(--hero-3) 0%, var(--hero-2) 45%, var(--hero-1) 100%);
-  border-radius: 0 0 34px 34px;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-}
-.hero-art {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.09;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.2'%3E%3Crect x='21' y='21' width='30' height='30'/%3E%3Crect x='21' y='21' width='30' height='30' transform='rotate(45 36 36)'/%3E%3Ccircle cx='36' cy='36' r='6'/%3E%3Cpath d='M0 36h15M57 36h15M36 0v15M36 57v15'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 72px 72px;
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
-}
-.hero::after {
-  /* crescent */
-  content: '';
-  position: absolute;
-  top: calc(var(--safe-top) + 40px);
-  left: 26px;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  box-shadow: -12px 10px 0 0 var(--gold-2);
-  opacity: 0.35;
-  transform: rotate(-20deg);
-  pointer-events: none;
-}
-.hero > * { position: relative; z-index: 1; }
-.hero-top { display: flex; align-items: center; justify-content: space-between; }
-.hero-clock {
-  margin: 22px 0 2px;
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  direction: ltr;
-  justify-content: flex-end;
-  font-variant-numeric: tabular-nums;
-}
-.hero-clock .t { font-size: 64px; font-weight: 600; line-height: 1; letter-spacing: -1px; }
-.hero-clock .s { font-size: 22px; font-weight: 600; opacity: 0.6; min-width: 1.8em; }
-.hero-clock .s::before { content: ':'; }
-.hero-clock .p { order: -1; font-size: 20px; font-weight: 600; color: var(--gold-2); margin-right: 6px; }
-.hero-dates { display: grid; gap: 4px; margin-bottom: 16px; }
-.hero-dates > div { display: flex; align-items: center; gap: 8px; }
-.hero-dates .hijri { font-size: 18px; color: var(--gold-2); }
-.hero-dates .hijri b { color: #fff; font-weight: 700; }
-.hero-dates .greg { font-size: 14.5px; opacity: 0.78; }
-.next { border-radius: 20px; padding: 14px 16px 12px; }
-.next-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.next small { display: block; font-size: 12.5px; opacity: 0.75; }
-.next-name strong { font-size: 26px; font-weight: 700; line-height: 1.3; }
-.next-time { text-align: left; }
-.next-time small { font-size: 14px; opacity: 0.85; }
-.countdown { display: block; font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; direction: ltr; line-height: 1.2; color: var(--gold-2); }
+/* Progress bar of the timers (walk, ten minutes). */
 .bar { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.15); margin-top: 10px; overflow: hidden; }
 .bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--gold-2), #fff3d4); transition: width 1s linear; }
 
@@ -420,74 +356,6 @@ select, input[type='time'] {
 .banner.info { background: var(--primary-soft); }
 .banner.info .ic { color: var(--primary); }
 .banner .ic.inline, .banner span .ic { display: inline; vertical-align: -3px; }
-
-/* ---------- Home: prayer list ---------- */
-
-.prayer-list { list-style: none; margin: 0; padding: 0; }
-.prayer {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 10px;
-  margin: 0 -6px;
-  border-radius: 16px;
-  transition: background 0.2s;
-}
-.prayer { position: relative; }
-.prayer + .prayer::before { content: ''; position: absolute; top: 0; right: 60px; left: 10px; border-top: 1px solid var(--line); }
-.prayer.next::before, .prayer.next + .prayer::before { display: none; }
-.p-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--bg-2); color: var(--ink-2); }
-.p-name { flex: 1; font-weight: 600; font-size: 16.5px; display: grid; gap: 0; min-width: 0; }
-.p-name > span { display: flex; align-items: center; gap: 8px; }
-.p-end { font-size: 11.5px; font-weight: 500; color: var(--ink-3); line-height: 1.5; }
-.p-name em { font-style: normal; font-size: 11.5px; padding: 1px 8px; border-radius: 99px; background: var(--primary); color: var(--primary-ink); }
-.p-time { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; display: grid; justify-items: end; line-height: 1.3; }
-.p-time > span { display: flex; align-items: baseline; gap: 4px; }
-.p-iqama { font-size: 11.5px; font-weight: 600; color: var(--gold); white-space: nowrap; }
-.p-time small { font-size: 12.5px; color: var(--ink-3); font-weight: 600; min-width: 10px; }
-.prayer.passed { opacity: 0.55; }
-.prayer.minor .p-name, .prayer.minor .p-time { font-size: 15px; color: var(--ink-2); }
-.prayer.next { background: var(--primary-soft); }
-.prayer.next .p-icon { background: var(--primary); color: var(--primary-ink); }
-.prayer.next .p-time { color: var(--primary); }
-.bell, .bell-space { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; color: var(--ink-3); }
-.bell.on { color: var(--gold); }
-.night-times { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 13px; color: var(--ink-2); }
-.night-times span { display: flex; align-items: center; gap: 4px; }
-.night-times b { color: var(--ink); font-weight: 600; }
-
-.suggest { display: flex; align-items: center; gap: 14px; }
-.suggest-icon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--tone-soft); color: var(--tone); }
-.suggest-text { flex: 1; display: grid; }
-.suggest-text b { font-size: 16.5px; }
-.suggest-text span { color: var(--ink-2); font-size: 13.5px; }
-
-.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-.quick-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 4px 10px;
-  border-radius: 18px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.35;
-  transition: transform 0.15s;
-}
-.quick-tile:active { transform: scale(0.95); }
-.quick-tile .ic { color: var(--tone); padding: 9px; border-radius: 14px; background: var(--tone-soft); box-sizing: content-box; }
-
-.daily { background: linear-gradient(135deg, var(--card) 0%, var(--card-2) 100%); position: relative; overflow: hidden; }
-.daily .card-head h2 { color: var(--gold); font-size: 15px; }
-.daily-text { font-family: var(--font-text); font-size: 24px; line-height: 1.8; margin: 4px 0; font-weight: 700; }
-.daily-note { margin: 0; color: var(--ink-2); font-size: 14px; }
-
-.foot-links { display: flex; gap: 10px; }
-.foot-links a { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; border-radius: 16px; background: var(--primary-soft); color: var(--primary); font-weight: 600; font-size: 14px; }
 
 /* ---------- Adhkar ---------- */
 
@@ -528,6 +396,7 @@ select, input[type='time'] {
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;
+  scroll-margin-top: calc(var(--safe-top) + 92px); /* below the sticky header and progress bar */
 }
 .dhikr:active { transform: scale(0.992); }
 .dhikr.quran { background: linear-gradient(180deg, var(--gold-soft), transparent 140px), var(--card); box-shadow: var(--shadow), inset 0 0 0 1px var(--gold-soft); }
@@ -548,7 +417,6 @@ select, input[type='time'] {
 .dhikr footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 10px; }
 .dhikr-meta { display: grid; gap: 4px; min-width: 0; }
 .ref { font-size: 12.5px; color: var(--ink-3); }
-.dhikr-actions { display: flex; gap: 2px; margin-inline-start: -8px; }
 .counter { position: relative; width: 58px; height: 58px; flex-shrink: 0; display: grid; place-items: center; color: var(--primary); transition: transform 0.15s; }
 .counter .counter-ring { position: absolute; inset: 0; }
 .counter-num { position: relative; font-size: 20px; font-weight: 700; color: var(--ink); }
@@ -574,10 +442,8 @@ select, input[type='time'] {
 .mine-list { display: grid; gap: 12px; }
 .mine {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
+  overflow: hidden;
+  padding: 16px 18px 18px;
   border-radius: var(--radius);
   background: var(--card);
   box-shadow: var(--shadow);
@@ -589,17 +455,18 @@ select, input[type='time'] {
 .mine:active { transform: scale(0.985); }
 .mine.flash { animation: flash 1.6s ease; }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: var(--shadow); } }
-.mine-body { flex: 1; min-width: 0; padding-left: 20px; }
-.mine-text { margin: 0 0 8px; font-family: var(--font-text); font-size: 20px; line-height: 1.85; }
-.mine-meta { display: flex; gap: 6px; flex-wrap: wrap; }
-.mine-count { position: relative; width: 64px; height: 64px; margin-bottom: 18px; display: grid; place-items: center; color: var(--primary); }
-.mine-count em { position: absolute; top: calc(100% + 4px); font-style: normal; font-size: 11.5px; font-weight: 700; padding: 1px 10px; border-radius: 99px; background: var(--primary); color: var(--primary-ink); white-space: nowrap; }
-.mine.done .mine-count em { background: var(--gold); color: #3a2a0c; }
-.mine-count .ring { position: absolute; inset: 0; }
-.mine-count span { display: grid; justify-items: center; line-height: 1.1; color: var(--ink); }
-.mine-count b { font-size: 18px; }
-.mine-count small { font-size: 11px; color: var(--ink-3); }
-.mine.done .mine-count { color: var(--gold); }
+.mine-text { margin: 0 0 10px; padding-left: 30px; font-family: var(--font-text); font-size: 20px; line-height: 1.85; }
+.mine-foot { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.mine-num { display: flex; align-items: baseline; gap: 6px; }
+.mine-num b { font-size: 24px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+.mine-num small { font-size: 12.5px; color: var(--ink-3); }
+.mine-total { font-size: 12px; color: var(--ink-3); }
+.mine-go { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px 5px 12px; border-radius: 99px; background: var(--primary-soft); color: var(--primary); font-size: 13px; font-weight: 700; }
+.mine.done .mine-num b { color: var(--gold); }
+.mine.done .mine-go { padding: 5px 12px; background: var(--gold-soft); color: var(--gold); }
+.mine-bar { position: absolute; inset: auto 0 0; height: 4px; background: var(--bg-2); }
+.mine-bar i { display: block; height: 100%; background: var(--primary); border-radius: 4px 0 0 4px; transition: width 0.4s ease; }
+.mine.done .mine-bar i { background: var(--gold); }
 .mine .more { position: absolute; top: 6px; left: 6px; }
 
 /* ---------- Notebook ---------- */
@@ -754,8 +621,6 @@ select, input[type='time'] {
 .toast .ic { display: inline; }
 
 @media (min-width: 700px) {
-  .hero { margin: 0 0 16px; border-radius: 0 0 34px 34px; }
-  .quick-tile { font-size: 13.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -763,8 +628,6 @@ select, input[type='time'] {
 
 /* ---------- Home additions: actions, today's cards, worship ---------- */
 
-.hero-actions { display: flex; gap: 8px; }
-.hero-top .chip { max-width: 48%; }
 
 .today-cards {
   display: flex;
@@ -814,12 +677,7 @@ select, input[type='time'] {
 .dots i { width: 6px; height: 6px; border-radius: 6px; background: var(--line); transition: width 0.25s, background 0.25s; }
 .dots i.on { width: 18px; background: var(--primary); }
 
-.worship-card .card-head { margin-bottom: 10px; }
-.worship-card .link { display: flex; align-items: center; gap: 2px; }
 .worship-row { display: flex; align-items: center; gap: 12px; }
-.w-score { position: relative; width: 54px; height: 54px; display: grid; place-items: center; color: var(--primary); flex-shrink: 0; }
-.w-score > span { position: absolute; inset: 0; }
-.w-score b { position: relative; font-size: 13px; color: var(--ink); }
 .qps { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .qp { display: grid; justify-items: center; gap: 3px; font-weight: 600; }
 .qp small { font-size: 11.5px; color: var(--ink-2); }
@@ -864,17 +722,7 @@ select, input[type='time'] {
 .hafs { font-family: 'KFGQPC Hafs', 'Amiri', serif; font-weight: 400; }
 .tc-text .hafs { font-size: 1.12em; line-height: 2; }
 
-/* ---------- Home: the line under the countdown ---------- */
-
-.ends { margin-top: 10px; font-size: 13.5px; opacity: 0.92; }
-.ends span { display: flex; align-items: center; gap: 6px; }
-.ends b { font-variant-numeric: tabular-nums; direction: ltr; color: var(--gold-2); }
-.ends .warn b { color: #ffb4a8; }
-
 .km-icon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); }
-.km-ring { position: relative; width: 52px; height: 52px; display: grid; place-items: center; color: var(--primary); flex-shrink: 0; }
-.km-ring .ring { position: absolute; inset: 0; }
-.km-ring b { position: relative; font-size: 12px; }
 .km-text { flex: 1; display: grid; min-width: 0; }
 .km-text b { font-size: 16px; }
 .km-text small { color: var(--ink-2); font-size: 13px; }
@@ -937,7 +785,7 @@ body:has(.mini:not([hidden])) .view { padding-bottom: calc(var(--tabs-h) + 96px)
 
 /* ---------- My adhkar additions ---------- */
 
-.mine-ref { margin: -4px 0 8px; font-size: 12.5px; color: var(--ink-3); }
+.mine-ref { margin: -4px 0 10px; font-size: 12.5px; color: var(--ink-3); }
 .mine-text.hafs { font-size: 21px; line-height: 2.1; }
 .pick-more { margin-top: 14px; }
 .pick-cat { border-radius: 16px; background: var(--bg-2); margin-bottom: 8px; padding: 0 12px; }
@@ -1067,8 +915,6 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .dhikr-text.hafs .before { font-family: 'KFGQPC Hafs', 'Amiri', serif; font-size: 0.85em; }
 .dhikr-note { display: flex; gap: 6px; align-items: flex-start; margin: 8px 0 0; padding: 6px 10px; border-radius: 12px; background: var(--gold-soft); color: var(--ink-2); font-size: 13px; line-height: 1.7; }
 .dhikr-note .ic { color: var(--gold); margin-top: 3px; }
-.suggest-ring { position: relative; width: 40px; height: 40px; color: var(--tone); }
-.suggest.done .suggest-icon { background: var(--primary); color: var(--primary-ink); }
 
 /* ---------- Tasbeeh list editor ---------- */
 
@@ -1087,13 +933,7 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 
 /* ---------- Current time ---------- */
 
-.prayer.current { box-shadow: inset 0 0 0 1.5px var(--primary-soft); }
-.prayer.current .p-icon { color: var(--primary); background: var(--primary-soft); }
-.p-name em.now { background: var(--gold-soft); color: var(--gold); }
-.prayer.current .p-end { color: var(--primary); font-weight: 600; }
 
-.ends .iqama { margin-bottom: 6px; color: #fff; }
-.ends .iqama b { color: var(--gold-2); }
 
 /* Weight of the adhkar text (bold or regular, from the settings); verses keep the mushaf font. */
 .dhikr-text, .mine-text, .note-text, .note-full-text, .daily-text, .tc-text, .tsb-phrase, .sheet-preview,
@@ -1186,14 +1026,8 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .aya.flash { border-radius: 8px; animation: aya-flash 2s ease; }
 @keyframes aya-flash { 0%, 50% { background: var(--gold-soft); } 100% { background: transparent; } }
 
-/* ---------- Home: following prayer, clock and part of the day, day picker ---------- */
+/* ---------- Home: day picker of the times card ---------- */
 
-.next-after { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 14px; opacity: 0.85; }
-.next-after b { color: var(--gold-2); }
-.period { display: grid; align-content: center; justify-items: center; gap: 4px; text-align: center; }
-.period .pt-ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--gold-soft); color: var(--gold); margin-bottom: 4px; }
-.period b { font-size: 17px; }
-.period small { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
 .pday { display: flex; align-items: center; gap: 8px; margin: -2px 0 6px; }
 .pday-label { flex: 1; display: grid; justify-items: center; gap: 1px; padding: 7px 10px; border-radius: 16px; background: var(--bg-2); }
 .pday-label b { font-size: 15px; }
@@ -1225,17 +1059,8 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .occ-when span { font-size: 13.5px; color: var(--ink-2); }
 .occ-text { margin: 0; font-family: var(--font-text); font-size: 19px; line-height: 1.9; }
 
-/* ---------- Home: sunnah now, moon, prayer cards ---------- */
+/* ---------- Page header tools ---------- */
 
-.pt-since { font-style: normal; font-size: 12px; font-weight: 600; color: var(--danger, #c0392b); padding-right: 8px; border-right: 3px solid currentColor; margin-bottom: 4px; }
-.pt-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-.pt-now { font-size: 12px; font-weight: 700; color: var(--primary); }
-.period { justify-items: start; text-align: right; }
-.period .pt-ic { width: 44px; height: 44px; border-radius: 14px; margin: 0; }
-.hero-dates { position: relative; }
-.hero-moon { position: absolute; left: 0; top: -2px; filter: drop-shadow(0 0 10px rgba(255, 240, 200, 0.35)); }
-.hero-moon .moon-dark { fill: rgba(255, 255, 255, 0.12); }
-.hero-moon .moon-lit { fill: #fbf1d3; }
 .ph-tools { display: flex; align-items: center; gap: 6px; }
 
 /* ---------- App icon ---------- */
@@ -1264,29 +1089,15 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 :root { --tabs-h: calc(86px + var(--safe-bottom)); }
 .mini { bottom: calc(82px + var(--safe-bottom)); }
 
-.hero { margin: 0 -16px 18px; padding-bottom: 22px; border-radius: 0 0 38px 38px; }
-.hero-clock .t { font-size: 72px; }
-.next { background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
-.next-name strong { font-size: 28px; }
 
 .card { box-shadow: var(--shadow); }
 .card-head h2 small { font-size: 12.5px; font-weight: 500; margin-right: 4px; }
-.prayer.moment { padding: 12px 10px; }
-.prayer.moment .p-name { font-size: 17px; }
-.prayer.moment .p-time { font-size: 20px; }
-.prayer.moment .p-icon { background: var(--gold-soft); color: var(--gold); }
-.prayer.moment.next .p-icon { background: var(--primary); color: var(--primary-ink); }
-.period.tp-qiyam { background: linear-gradient(160deg, var(--hero-2), var(--hero-1)); color: #fff; }
-.period.tp-qiyam small { color: rgba(255, 255, 255, 0.78); }
-.period.tp-qiyam .pt-ic { color: var(--gold-2); }
 
-.home-grid { display: block; }
-.home-col { min-width: 0; }
 
 /* Radio as a tab. */
 .view-radio .page-title h1 { font-size: 30px; }
 
-/* Wide screens (the Windows app, tablets): tabs on the right, two columns on the home screen. */
+/* Wide screens (tablets, computers): tabs on the right. */
 @media (min-width: 900px) {
   :root { --tabs-h: 0px; --rail: 96px; }
   body { padding-right: var(--rail); }
@@ -1309,25 +1120,13 @@ body[data-tab='tasbeeh'] { background: #04201b; }
   .view { max-width: 1040px; padding-bottom: 40px; }
   .view-tasbeeh { max-width: none; }
   .mini { right: calc(var(--rail) + 16px); left: 16px; bottom: 16px; max-width: 520px; margin: 0 auto; }
-  .hero { margin: 0 0 20px; border-radius: 0 0 36px 36px; padding: 20px 28px 26px; display: grid; grid-template-columns: 1.1fr 1fr; column-gap: 28px; }
-  .hero-top { grid-column: 1 / -1; }
-  .hero-main { align-self: center; }
-  .hero-clock .t { font-size: 88px; }
-  .next { align-self: center; }
-  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }
   .today-cards { max-width: none; }
   .page-head { margin: 0 -16px 8px; }
 }
 
-/* Very wide screens (the Windows app opens maximized): a wider page, a bigger clock. */
+/* Very wide screens: a wider page. */
 @media (min-width: 1400px) {
   .view { max-width: 1480px; padding-left: 32px; padding-right: 32px; }
-  .hero { padding: 26px 40px 32px; }
-  .hero-clock .t { font-size: 104px; }
-  .next-name strong { font-size: 34px; }
-  .countdown { font-size: 36px; }
-  .home-grid { gap: 0 24px; }
-  .quick { grid-template-columns: repeat(4, 1fr); }
 }
 
 /* ---------- Tools: the Companions' ahzab ---------- */
@@ -1347,7 +1146,100 @@ body[data-tab='tasbeeh'] { background: #04201b; }
 .ahzab li.today { background: var(--primary-soft); box-shadow: inset 0 0 0 1.5px var(--primary); }
 .ahzab em { font-style: normal; font-size: 11.5px; padding: 1px 8px; border-radius: 99px; background: var(--primary); color: var(--primary-ink); }
 
-.now-tiles { margin-bottom: 14px; }
-.now-tiles .card { margin: 0; }
 #tabs a { font-size: 10.5px; }
 #tabs a .ic { padding: 2px 10px; }
+
+/* ---------- Version 18: the home screen ---------- */
+
+/* Header: place and settings, a centred clock, the dates with the moon, and the kind of time now. */
+.h-hero {
+  position: relative;
+  margin: 0 -16px;
+  padding: calc(var(--safe-top) + 12px) 20px 64px;
+  color: #fff;
+  text-align: center;
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgba(227, 194, 122, 0.2), transparent 70%),
+    linear-gradient(180deg, var(--hero-3) 0%, var(--hero-2) 50%, var(--hero-1) 100%);
+  border-radius: 0 0 32px 32px;
+}
+.h-top { display: flex; align-items: center; justify-content: space-between; }
+.h-top .chip { max-width: 70%; }
+.h-clock { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin: 18px 0 4px; direction: ltr; font-variant-numeric: tabular-nums; }
+.h-clock .t { font-size: 76px; font-weight: 600; line-height: 1; letter-spacing: -1.5px; }
+.h-clock .s { font-size: 22px; font-weight: 600; opacity: 0.55; min-width: 1.8em; text-align: left; }
+.h-clock .s::before { content: ':'; }
+.h-clock .p { order: -1; font-size: 20px; font-weight: 600; color: var(--gold-2); margin-right: 6px; }
+.h-dates { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.h-dates > span:last-child { display: grid; text-align: center; font-size: 16px; color: var(--gold-2); line-height: 1.5; }
+.h-dates b { color: #fff; }
+.h-dates small { font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+.h-moon svg { width: 36px; height: 36px; filter: drop-shadow(0 0 8px rgba(255, 240, 200, 0.35)); }
+.h-moon .moon-dark { fill: rgba(255, 255, 255, 0.12); }
+.h-moon .moon-lit { fill: #fbf1d3; }
+.h-now { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; margin-top: 16px; padding: 8px 14px 8px 18px; border-radius: 18px; background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); text-align: right; }
+.h-now-ic { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: rgba(227, 194, 122, 0.18); color: var(--gold-2); }
+.h-now-text { display: grid; min-width: 0; line-height: 1.45; }
+.h-now-text b { font-size: 15px; }
+.h-now-text b small { font-size: 12px; font-weight: 600; color: var(--gold-2); }
+.h-now-text > small { font-size: 12.5px; color: rgba(255, 255, 255, 0.75); }
+.h-now.tp-zawal .h-now-ic { background: rgba(255, 180, 168, 0.2); color: #ffb4a8; }
+
+/* The next moment, on a card over the foot of the header. */
+.h-next { position: relative; z-index: 1; margin: -46px 4px 14px; padding: 16px 18px 14px; box-shadow: var(--shadow-lg); }
+.h-next-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.h-next-name { display: grid; line-height: 1.35; }
+.h-next small { font-size: 12.5px; color: var(--ink-3); }
+.h-next-name strong { font-size: 24px; font-weight: 700; }
+.h-next-name span { font-size: 13.5px; color: var(--ink-2); }
+.h-next-count { display: grid; justify-items: end; }
+.h-next .countdown { font-size: 30px; color: var(--primary); }
+.countdown { display: block; font-weight: 600; font-variant-numeric: tabular-nums; direction: ltr; line-height: 1.2; }
+.h-bar { height: 6px; margin-top: 12px; border-radius: 6px; overflow: hidden; background: var(--bg-2); }
+.h-bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(270deg, var(--primary), var(--gold)); transition: width 1s linear; margin-inline-start: 0; }
+.h-ends { margin: 10px 0 0; font-size: 13px; color: var(--ink-2); }
+.h-ends span { display: flex; align-items: center; gap: 6px; }
+.h-ends .ic { color: var(--gold); }
+
+/* The four times as tiles, two by two. */
+.h-tiles { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.h-tile { position: relative; display: grid; gap: 2px; padding: 12px 12px 10px; border-radius: 18px; background: var(--card-2); box-shadow: inset 0 0 0 1px var(--line); }
+.h-tile-head { display: flex; align-items: center; gap: 6px; font-size: 14.5px; color: var(--ink-2); }
+.h-tile-head .ic { color: var(--gold); }
+.h-tile-head b { font-weight: 700; }
+.h-tile-head em { position: absolute; top: 10px; left: 10px; font-style: normal; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: var(--primary); color: var(--primary-ink); }
+.h-tile-time { display: flex; align-items: baseline; gap: 4px; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.h-tile-time small { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.h-tile-note { font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
+.h-tile.next { background: var(--primary-soft); box-shadow: inset 0 0 0 1.5px var(--primary); }
+.h-tile.next .h-tile-time, .h-tile.next .h-tile-head .ic { color: var(--primary); }
+.h-tile.passed { opacity: 0.5; }
+
+/* The adhkar of this time and today's follow-up, side by side. */
+.h-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.h-pair .card { margin: 0; }
+.h-mini { display: grid; justify-items: start; gap: 2px; padding: 14px; }
+.h-mini-ring { position: relative; width: 48px; height: 48px; margin-bottom: 6px; display: grid; place-items: center; color: var(--tone); }
+.h-mini-ring .ring { position: absolute; inset: 0; }
+.h-mini-ring i { position: relative; display: grid; place-items: center; }
+.h-mini-ring > b { position: relative; font-size: 12px; color: var(--ink); }
+.h-mini > b { font-size: 15px; line-height: 1.4; }
+.h-mini > small { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+.h-mini.done .h-mini-ring { color: var(--primary); }
+
+/* Shortcuts in one row that scrolls sideways. */
+.h-quick { display: flex; gap: 8px; margin: 0 -16px 14px; padding: 2px 16px 4px; overflow-x: auto; scrollbar-width: none; }
+.h-quick::-webkit-scrollbar { display: none; }
+.h-quick a { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px 9px 16px; border-radius: 99px; background: var(--card); box-shadow: var(--shadow); font-size: 13.5px; font-weight: 600; white-space: nowrap; transition: transform 0.15s; }
+.h-quick a:active { transform: scale(0.95); }
+.h-quick .ic { color: var(--tone); }
+
+@media (min-width: 900px) {
+  .h-hero { margin: 0; border-radius: 0 0 36px 36px; padding-bottom: 72px; }
+  .h-clock .t { font-size: 96px; }
+  .h-next { max-width: 640px; margin: -50px auto 18px; }
+  .h-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }
+  .h-col { min-width: 0; }
+  .h-quick { margin: 0 0 14px; padding: 2px 0 4px; flex-wrap: wrap; }
+}
+

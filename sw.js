@@ -13,7 +13,6 @@ const FILES = [
   'js/config.js',
   'js/daily-data.js',
   'js/occasions.js',
-  'js/desktop.js',
   'js/qailulah-data.js',
   'js/quran-data.js',
   'js/radio.js',

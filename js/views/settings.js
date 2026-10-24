@@ -7,8 +7,6 @@ import { METHODS, PRAYER_NAMES } from '../prayer.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { $, copyText, esc, FONT_NAMES, FONTS, pageHeader, toast, toggle } from '../ui.js';
-import { isDesktop } from '../desktop.js';
-import { APP_VERSION } from '../config.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -23,7 +21,7 @@ export function render(view) {
       <h4>الموقع والأوقات</h4>
       ${row('#/settings/location', 'pin', 'الموقع', esc(s.location.name))}
       ${row('#/settings/method', 'sun', 'طريقة الحساب', esc(METHODS[s.method]?.name.split(' — ')[0]))}
-      ${isDesktop ? '' : row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
+      ${row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
     </div>
     <div class="group">
       <h4>العرض</h4>
@@ -59,11 +57,7 @@ export function render(view) {
       <p class="hint">أذكارك ودفترك محفوظة على جهازك فقط. احفظ نسخة احتياطية في ملفاتك أو iCloud بين حين وآخر.</p>
     </div>
     <div class="group about">
-      <img src="icons/icon-192.png" alt="" width="64" height="64">
-      <b>مواقيت</b>
-      <p>الأذكار من الكتاب والسنة الصحيحة، وأوقات الشروق والضحى والثلث الأخير وأوقات النهي تُحسب على جهازك دون إنترنت.</p>
-      <p class="muted">«ألا بذكر الله تطمئن القلوب»</p>
-      <small class="muted">الإصدار ${num(APP_VERSION)}</small>
+      <p>«ألا بذكر الله تطمئن القلوب»</p>
     </div>`;
 
   const onChange = (e) => {
@@ -268,7 +262,7 @@ export function renderMethod(view) {
         <h4>تعديل يدوي بالدقائق</h4>
         ${['sunrise', 'dhuhr', 'asr', 'maghrib', 'fajr']
           .map(
-            (k) => `<div class="row"><span class="row-label">${PRAYER_NAMES[k]}<small>${k === 'sunrise' ? `الشروق ${clockText(t.sunrise.hours, s.clock24)} • الضحى ${clockText(t.duha.hours, s.clock24)}` : EDIT_NOTE[k]}</small></span>
+            (k) => `<div class="row"><span class="row-label">${PRAYER_NAMES[k]}<small>${k === 'sunrise' ? `الشروق ${clockText(t.sunrise.hours, s.clock24)} • الضحى ${clockText(t.duha.hours, s.clock24)} إلى ${clockText(t.duhaEnd.hours, s.clock24)}` : EDIT_NOTE[k]}</small></span>
               <div class="stepper" data-off="${k}"><button data-d="-1">−</button><b>${num(s.offsets[k] > 0 ? '+' + s.offsets[k] : s.offsets[k])}</b><button data-d="1">+</button></div></div>`
           )
           .join('')}
@@ -336,7 +330,7 @@ export function renderIcon(view) {
       s.appIcon = b.dataset.icon;
       save();
       const l = document.querySelector('link[rel=apple-touch-icon]');
-      if (l) l.href = s.appIcon === 'emerald' ? 'icons/apple-touch-icon.png' : `icons/alt/${s.appIcon}.png`;
+      if (l) l.href = `${s.appIcon === 'emerald' ? 'icons/apple-touch-icon' : `icons/alt/${s.appIcon}`}.png?v=2`; // ?v= as in index.html: a new address so iOS fetches the icon afresh
       return draw();
     }
     const c = e.target.closest('[data-icon-link]');

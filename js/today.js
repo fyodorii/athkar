@@ -54,7 +54,8 @@ function periodNow(times, night, t) {
     return { key: 'night', title: 'أول الليل', sub: 'وقت مفتوح للنوافل والأذكار قبل النوم' };
   }
   if (t >= times.sunrise.at && t < times.duha.at) return { key: 'sunrise', title: 'وقت الشروق', sub: 'انتظر حتى ترتفع الشمس قيد رمح، ثم صلِّ الضحى' };
-  if (t >= times.duha.at && t < times.dhuhr.at) return { key: 'duha', title: 'وقت الضحى', sub: 'ركعتان فأكثر، تجزئان عن صدقة كل مفاصلك' };
+  if (t >= times.duha.at && t < times.duhaEnd.at) return { key: 'duha', title: 'وقت الضحى', sub: 'ركعتان فأكثر، تجزئان عن صدقة كل مفاصلك' };
+  if (t >= times.duhaEnd.at && t < times.dhuhr.at) return { key: 'zawal', title: 'وقت النهي قبل الظهر', sub: 'قامت الشمس، فأمسك عن النافلة حتى يدخل الظهر' };
   if (t >= times.lastThird.at) return qiyam;
   if (t >= times.midnight.at) return after;
   if (t >= times.maghrib.at) return { key: 'night', title: 'أول الليل', sub: 'وقت مفتوح للنوافل والأذكار قبل النوم' };

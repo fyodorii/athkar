@@ -4,9 +4,9 @@
 import { CATEGORIES, CATEGORY_BY_ID } from '../adhkar-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
-import { isSaved, newDay, save, state, toggleSaved, uid } from '../store.js';
+import { newDay, save, state, uid } from '../store.js';
 import { today } from '../today.js';
-import { $, $$, confirmSheet, copyText, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
+import { $, $$, confirmSheet, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
 
 export const MINE_TABS = [
   ['#/mine', 'أذكاري'],
@@ -73,9 +73,12 @@ export function renderWird(view, id) {
     const done = wirdDone(cat);
     $('[data-done]', view).textContent = num(done);
     $('[data-bar]', view).style.width = `${(done / cat.items.length) * 100}%`;
-    const nextCard = $$('.dhikr:not(.done)', view)[0];
-    if (nextCard) setTimeout(() => nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
-    else $('[data-finish]', view).classList.add('show');
+    if (done === cat.items.length) return $('[data-finish]', view).classList.add('show');
+    // On to the next one still to read below this card, its start just under the header; never
+    // back up to one skipped above, and never past the start of a long one.
+    const cards = $$('.dhikr', view);
+    const nextCard = cards.slice(cards.indexOf(card) + 1).find((x) => !x.classList.contains('done'));
+    if (nextCard) setTimeout(() => nextCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
   };
 
   view.onclick = async (e) => {
@@ -90,15 +93,6 @@ export function renderWird(view, id) {
     const card = e.target.closest('.dhikr');
     if (!card) return;
     const item = cat.items.find((x) => x.id === card.dataset.id);
-    const action = e.target.closest('[data-act]')?.dataset.act;
-    const full = (item.before ? item.before + '\n' : '') + item.text + (item.ref && item.quran ? ` ﴿${item.ref}﴾` : '');
-    if (action === 'save') {
-      const on = toggleSaved({ ...item, text: full });
-      e.target.closest('[data-act]').innerHTML = icon(on ? 'bookmarkOn' : 'bookmark', 20);
-      return toast(on ? `${icon('bookmarkOn', 18)} حُفظ في المحفوظات` : 'أُزيل من المحفوظات');
-    }
-    if (action === 'copy') return copyText(full);
-    if (action === 'share') return shareText(full);
     if (e.target.closest('summary, details')) return;
     count(card, item);
   };
@@ -116,11 +110,6 @@ function wirdCard(x, n, no) {
     <footer>
       <div class="dhikr-meta">
         ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
-        <div class="dhikr-actions">
-          <button class="icon-btn ghost sm" data-act="save" aria-label="حفظ">${icon(isSaved(x.id) ? 'bookmarkOn' : 'bookmark', 20)}</button>
-          <button class="icon-btn ghost sm" data-act="copy" aria-label="نسخ">${icon('copy', 20)}</button>
-          <button class="icon-btn ghost sm" data-act="share" aria-label="مشاركة">${icon('share', 20)}</button>
-        </div>
       </div>
       <button class="counter" aria-label="عدّ">
         <span class="counter-ring">${ring(n / x.count, 58, 4)}</span>
@@ -197,21 +186,21 @@ export function renderMine(view, focusId) {
   return { destroy: () => view.removeEventListener('click', onClick) };
 }
 
+// The text, then a row with today's count, the total and the way into the counter, over a
+// thin bar along the card's foot for today's share (no ring).
 function mineCard(c) {
-  const done = c.target && c.today >= c.target;
+  const n = c.today || 0;
+  const done = c.target && n >= c.target;
+  const share = c.target ? Math.min(1, n / c.target) : 0;
   return `<article class="mine ${done ? 'done' : ''}" data-id="${c.id}">
-    <div class="mine-body">
-      <p class="mine-text ${c.quran ? 'hafs' : ''}">${esc(c.text)}</p>
-      ${c.ref ? `<p class="mine-ref">${esc(c.ref)}</p>` : ''}
-      <div class="mine-meta">
-        <span class="pill soft">المجموع ${num(c.total || 0)}</span>
-      </div>
+    <p class="mine-text ${c.quran ? 'hafs' : ''}">${esc(c.text)}</p>
+    ${c.ref ? `<p class="mine-ref">${esc(c.ref)}</p>` : ''}
+    <div class="mine-foot">
+      <span class="mine-num"><b>${num(n)}</b><small>${c.target ? `من ${num(c.target)}` : 'عدد مفتوح'}</small></span>
+      <span class="mine-total">المجموع ${num(c.total || 0)}</span>
+      <span class="mine-go" role="button" aria-label="عُدّ هذا الذكر">${done ? `${icon('check', 16)} تمّ` : `عُدّ ${icon('chevron', 16)}`}</span>
     </div>
-    <div class="mine-count" role="button" aria-label="عُدّ هذا الذكر">
-      ${ring(c.target ? Math.min(1, (c.today || 0) / c.target) : 0, 64, 5)}
-      <span><b>${num(c.today || 0)}</b>${c.target ? `<small>/${num(c.target)}</small>` : ''}</span>
-      <em>${done ? 'تمّ' : 'عُدّ'}</em>
-    </div>
+    ${c.target ? `<i class="mine-bar"><i style="width:${share * 100}%"></i></i>` : ''}
     <button class="icon-btn ghost sm more" data-more aria-label="خيارات">${icon('more', 20)}</button>
   </article>`;
 }
