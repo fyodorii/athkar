@@ -1,7 +1,7 @@
 {
   "name": "mogait-desktop",
   "private": true,
-  "description": "أذكار ومواقيت لويندوز: التطبيق نفسه داخل نافذة Tauri، مع أيقونة بجانب الساعة وتنبيهات النظام",
+  "description": "مواقيت لويندوز: التطبيق نفسه داخل نافذة Tauri، مع أيقونة بجانب الساعة وتنبيهات النظام",
   "scripts": {
     "tauri": "tauri",
     "build": "tauri build"

@@ -1,4 +1,4 @@
-// أذكار ومواقيت for Windows: the web app in a Tauri window. Closing the window keeps the
+// مواقيت for Windows: the web app in a Tauri window. Closing the window keeps the
 // app running by the clock (the tray) so reminders still show; "خروج" in the tray menu quits.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -24,11 +24,11 @@ fn main() {
         // Started with Windows: begins hidden by the clock (see --minimized below).
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
         .setup(|app| {
-            let open = MenuItem::with_id(app, "open", "فتح أذكار ومواقيت", true, None::<&str>)?;
+            let open = MenuItem::with_id(app, "open", "فتح مواقيت", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "خروج", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
             let mut tray = TrayIconBuilder::with_id("tray")
-                .tooltip("أذكار ومواقيت")
+                .tooltip("مواقيت")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -59,5 +59,5 @@ fn main() {
             }
         })
         .run(tauri::generate_context!())
-        .expect("error while running أذكار ومواقيت");
+        .expect("error while running مواقيت");
 }

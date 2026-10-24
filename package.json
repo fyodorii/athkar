@@ -2,7 +2,7 @@
   "name": "mogait",
   "private": true,
   "type": "module",
-  "description": "أذكار ومواقيت — تطبيق ويب للآيفون",
+  "description": "مواقيت — تطبيق ويب للآيفون",
   "scripts": {
     "zip": "node scripts/package.mjs"
   },

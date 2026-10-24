@@ -1,6 +1,6 @@
 // Service worker: keeps the app on the device so it opens instantly and offline.
 
-const VERSION = 'v17'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v18'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const FILES = [
   './',

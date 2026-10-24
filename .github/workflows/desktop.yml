@@ -38,7 +38,7 @@ jobs:
         with:
           projectPath: desktop
           tagName: v__VERSION__
-          releaseName: 'أذكار ومواقيت لويندوز __VERSION__'
+          releaseName: 'مواقيت لويندوز __VERSION__'
           releaseBody: |
             ثبّت التطبيق بملف `Mogait_…_x64-setup.exe` أدناه.
             أول مرة قد يظهر تحذير «Windows protected your PC» لأن الملف غير موقّع بشهادة: اضغط «More info» ثم «Run anyway».

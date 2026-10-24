@@ -60,7 +60,7 @@ export function render(view) {
     </div>
     <div class="group about">
       <img src="icons/icon-192.png" alt="" width="64" height="64">
-      <b>أذكار ومواقيت</b>
+      <b>مواقيت</b>
       <p>الأذكار من الكتاب والسنة الصحيحة، وأوقات الشروق والضحى والثلث الأخير وأوقات النهي تُحسب على جهازك دون إنترنت.</p>
       <p class="muted">«ألا بذكر الله تطمئن القلوب»</p>
       <small class="muted">الإصدار ${num(APP_VERSION)}</small>
@@ -132,7 +132,7 @@ async function exportBackup() {
   const file = new File([text], name, { type: 'application/json' });
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: 'نسخة احتياطية — أذكار ومواقيت' });
+      await navigator.share({ files: [file], title: 'نسخة احتياطية — مواقيت' });
       return;
     } catch (e) {
       if (e.name === 'AbortError') return;
