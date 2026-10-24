@@ -1,0 +1,177 @@
+// App shell: hash routes, bottom tabs, theme and the one-second clock.
+
+import { setDigits } from './dates.js';
+import { FONTS } from './ui.js';
+import { icon } from './icons.js';
+import { checkForUpdate, isIOS, isStandalone, registerServiceWorker } from './push.js';
+import { onChange, persistStorage, state } from './store.js';
+import { $, esc, toast } from './ui.js';
+import * as home from './views/home.js';
+import * as adhkar from './views/adhkar.js';
+import * as notebook from './views/notebook.js';
+import * as settings from './views/settings.js';
+import * as worship from './views/worship.js';
+import * as radioView from './views/radio.js';
+import * as occasions from './views/occasions.js';
+import * as tools from './views/tools.js';
+import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
+import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
+
+const TABS = [
+  ['home', 'الرئيسية', 'home', '#/home'],
+  ['mine', 'أذكاري', 'heart', '#/mine'],
+  ['radio', 'الإذاعة', 'radio', '#/radio'],
+  ['occasions', 'المناسبات', 'calendar', '#/occasions'],
+  ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
+  ['worship', 'متابعتي', 'check', '#/worship'],
+];
+
+// [pattern, tab, view(viewEl, ...params)]
+const ROUTES = [
+  [/^#\/home$/, 'home', (v) => home.render(v)],
+  [/^#\/mine(?:\/([\w-]+))?$/, 'mine', (v, id) => adhkar.renderMine(v, id)],
+  [/^#\/adhkar\/(morning|evening|sleep)$/, 'mine', (v, id) => adhkar.renderWird(v, id)],
+  [/^#\/adhkar(?:\/[\w-]+)?$/, 'mine', (v) => adhkar.renderMine(v)], // old links
+  [/^#\/occasions$/, 'occasions', (v) => occasions.renderOccasions(v)],
+  [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
+  [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
+  [/^#\/worship$/, 'worship', (v) => worship.render(v)],
+  [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
+  [/^#\/ahzab$/, 'tools', (v) => tools.renderAhzab(v)],
+  [/^#\/qailulah$/, 'tools', (v) => tools.renderQailulah(v)],
+  [/^#\/walk$/, 'tools', (v) => tools.renderWalk(v)],
+  [/^#\/focus$/, 'tools', (v) => tools.renderFocus(v)],
+  [/^#\/notebook(?:\/(saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)],
+  [/^#\/settings$/, 'settings', (v) => settings.render(v)],
+  [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
+  [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],
+  [/^#\/settings\/icon$/, 'settings', (v) => settings.renderIcon(v)],
+];
+
+const view = $('#view');
+let current = null;
+let currentHash = '';
+
+function route() {
+  const hash = location.hash || '#/home';
+  // Links to what the app no longer has (the khatma, memorization, ruqyah, widget) open the home screen.
+  if (/^#\/(quran|hifz|ruqyah|calendar(\/[\d-]+)?|surah\/\w+|qibla|settings\/(widget|notify))$/.test(hash)) {
+    location.replace('#/home');
+    return;
+  }
+  const match = ROUTES.map(([re, tab, fn]) => [hash.match(re), tab, fn]).find(([m]) => m);
+  if (!match) {
+    location.replace('#/home');
+    return;
+  }
+  const [m, tab, fn] = match;
+  current?.destroy?.();
+  view.innerHTML = '';
+  view.className = `view view-${tab}`;
+  if (hash !== currentHash) window.scrollTo(0, 0);
+  currentHash = hash;
+  current = fn(view, ...m.slice(1)) || null;
+  for (const a of document.querySelectorAll('#tabs a')) a.classList.toggle('on', a.dataset.tab === tab);
+  document.body.dataset.tab = tab;
+  renderMini();
+  view.classList.remove('enter');
+  void view.offsetWidth;
+  view.classList.add('enter');
+}
+
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map(
+    ([id, label, ic, href]) => `<a href="${href}" data-tab="${id}">${icon(ic, 24)}<span>${label}</span></a>`
+  ).join('');
+}
+
+// ---- Theme ----
+
+const media = window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme() {
+  const dark = state.settings.theme === 'dark' || (state.settings.theme === 'auto' && media.matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#08201d' : '#0b3b34');
+  setDigits(state.settings.digits);
+  const s = state.settings;
+  const root = document.documentElement.style;
+  root.setProperty('--font-text', FONTS[s.fontText] || FONTS.amiri);
+  root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.plex);
+  root.setProperty('--text-weight', s.textBold ? '700' : '400');
+  root.setProperty('--ui-weight', s.uiBold ? '700' : '400');
+}
+media.addEventListener?.('change', applyTheme);
+
+// ---- Radio mini player (above the tabs while a station is on) ----
+
+function renderMini() {
+  const el = $('#mini');
+  const { status, station } = radioStatus();
+  const onRadioPage = location.hash === '#/radio';
+  if (!station || onRadioPage || document.body.dataset.tab === 'tasbeeh') {
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  const live = status === 'playing' || status === 'loading';
+  el.innerHTML = `
+    <a href="#/radio" class="mini-info">${icon('radio', 20)}<span><b>${esc(station.name)}</b><small>${radioView.statusText(status)}</small></span></a>
+    <button class="icon-btn ghost sm" data-mini="toggle" aria-label="${live ? 'إيقاف مؤقت' : 'تشغيل'}">${icon(live ? 'pause' : 'play', 20)}</button>
+    <button class="icon-btn ghost sm" data-mini="stop" aria-label="إيقاف">${icon('close', 20)}</button>`;
+}
+$('#mini').addEventListener('click', (e) => {
+  const a = e.target.closest('[data-mini]')?.dataset.mini;
+  if (a === 'toggle') toggleRadio();
+  if (a === 'stop') stopRadio();
+});
+onRadio(renderMini);
+
+// ---- Install hint (iPhone Safari, not yet on the home screen) ----
+
+function installHint() {
+  if (!isIOS() || isStandalone()) return;
+  try {
+    if (localStorage.getItem('adhkar-app:install-hint')) return;
+    localStorage.setItem('adhkar-app:install-hint', '1');
+  } catch (e) {
+    return;
+  }
+  setTimeout(
+    () =>
+      toast(
+        `${icon('share', 18)} لتثبيت التطبيق: اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية»`,
+        'reminder long'
+      ),
+    1500
+  );
+}
+
+// ---- Start ----
+
+applyTheme();
+renderTabs();
+route();
+window.addEventListener('hashchange', route);
+onChange(() => {
+  applyTheme();
+});
+
+setInterval(() => {
+  if (document.visibilityState !== 'visible') return;
+  checkTimers();
+  if (current?.tick?.() === 'rerender') route();
+}, 1000);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (current?.tick) route();
+  checkForUpdate();
+  checkTimers();
+  // The screen lock is dropped when the app is hidden; take it again for a running timer.
+  if (anyTimerRunning()) keepAwake(true);
+});
+
+registerServiceWorker();
+persistStorage();
+installHint();
+document.documentElement.classList.add('ready');
