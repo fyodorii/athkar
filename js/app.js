@@ -1,4 +1,4 @@
-// App shell: hash routes, bottom tabs, theme and the one-second tick (countdowns, timers, reminders).
+// App shell: hash routes, the side menu, theme and the one-second tick (countdowns, timers, reminders).
 
 import { setDigits } from './dates.js';
 import { FONTS } from './ui.js';
@@ -18,25 +18,38 @@ import * as khatma from './views/khatma.js';
 import * as debts from './views/debts.js';
 import * as datecalc from './views/datecalc.js';
 import * as rawatib from './views/rawatib.js';
+import * as reminders from './views/reminders.js';
+import { CATEGORY_BY_ID } from './adhkar-data.js';
+import { APP_NAME } from './config.js';
 import { checkReminders } from './notify.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
+// The side menu: the sections, then the tools, then the settings ('' is a divider).
 const TABS = [
   ['home', 'الرئيسية', 'home', '#/home'],
   ['mine', 'أذكاري', 'heart', '#/mine'],
+  ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
+  ['worship', 'متابعة العبادات', 'check', '#/worship'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['occasions', 'المناسبات', 'calendar', '#/occasions'],
-  ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
-  ['worship', 'متابعتي', 'check', '#/worship'],
+  '',
+  ['khatma', 'ختمتي', 'quran', '#/khatma'],
+  ['rawatib', 'السنن الرواتب', 'mosque', '#/rawatib'],
+  ['reminders', 'تذكيراتي', 'bell', '#/reminders'],
+  ['debts', 'الديون', 'wallet', '#/debts'],
+  ['datecalc', 'حاسبة التاريخ', 'grid', '#/datecalc'],
+  ['tools', 'الأدوات', 'widget', '#/tools'],
+  '',
+  ['settings', 'الإعدادات', 'gear', '#/settings'],
 ];
 
 // [pattern, tab, view(viewEl, ...params)]
 const ROUTES = [
   [/^#\/home$/, 'home', (v) => home.render(v)],
   [/^#\/mine(?:\/([\w-]+))?$/, 'mine', (v, id) => adhkar.renderMine(v, id)],
-  [/^#\/adhkar\/(morning|evening|sleep)$/, 'mine', (v, id) => adhkar.renderWird(v, id)],
-  [/^#\/adhkar(?:\/[\w-]+)?$/, 'mine', (v) => adhkar.renderMine(v)], // old links
+  // A set of adhkar (morning, evening, sleep, or one of the day's occasions); an unknown one opens «أذكاري».
+  [/^#\/adhkar(?:\/([\w-]+))?$/, 'mine', (v, id) => (CATEGORY_BY_ID[id] ? adhkar.renderWird(v, id) : adhkar.renderMine(v))],
   [/^#\/occasions$/, 'occasions', (v) => occasions.renderOccasions(v)],
   [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
@@ -46,10 +59,11 @@ const ROUTES = [
   [/^#\/qailulah$/, 'tools', (v) => tools.renderQailulah(v)],
   [/^#\/walk$/, 'tools', (v) => tools.renderWalk(v)],
   [/^#\/focus$/, 'tools', (v) => tools.renderFocus(v)],
-  [/^#\/khatma$/, 'tools', (v) => khatma.render(v)],
-  [/^#\/debts$/, 'tools', (v) => debts.render(v)],
-  [/^#\/datecalc$/, 'tools', (v) => datecalc.render(v)],
-  [/^#\/rawatib$/, 'tools', (v) => rawatib.render(v)],
+  [/^#\/khatma$/, 'khatma', (v) => khatma.render(v)],
+  [/^#\/debts$/, 'debts', (v) => debts.render(v)],
+  [/^#\/datecalc$/, 'datecalc', (v) => datecalc.render(v)],
+  [/^#\/rawatib$/, 'rawatib', (v) => rawatib.render(v)],
+  [/^#\/reminders$/, 'reminders', (v) => reminders.render(v)],
   [/^#\/notebook(?:\/(saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)],
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
@@ -81,6 +95,7 @@ function route() {
   view.className = `view view-${tab}`;
   if (hash !== currentHash) window.scrollTo(0, 0);
   currentHash = hash;
+  closeNav();
   current = fn(view, ...m.slice(1)) || null;
   for (const a of document.querySelectorAll('#tabs a')) a.classList.toggle('on', a.dataset.tab === tab);
   document.body.dataset.tab = tab;
@@ -91,10 +106,26 @@ function route() {
 }
 
 function renderTabs() {
-  $('#tabs').innerHTML = TABS.map(
-    ([id, label, ic, href]) => `<a href="${href}" data-tab="${id}">${icon(ic, 24)}<span>${label}</span></a>`
-  ).join('');
+  $('#tabs').innerHTML =
+    `<div class="nav-head"><b>${APP_NAME}</b><button class="icon-btn ghost" data-nav aria-label="إغلاق القائمة">${icon('close', 22)}</button></div>` +
+    TABS.map((t) => (t ? `<a href="${t[3]}" data-tab="${t[0]}">${icon(t[2], 22)}<span>${t[1]}</span></a>` : '<hr>')).join('');
 }
+
+// ---- Side menu (phones): opened by the menu button of each screen ----
+
+const closeNav = () => document.body.classList.remove('nav-open');
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-nav]')) return document.body.classList.toggle('nav-open');
+  // A tap on the dimmed page, or on a section (also the one already open), closes the menu.
+  if (e.target.closest('#nav-backdrop, #tabs a')) closeNav();
+});
+document.addEventListener('keydown', (e) => e.key === 'Escape' && closeNav());
+
+// ---- No zooming: the app is laid out for the screen, like a native one. The viewport and
+// `touch-action` in the CSS stop the double tap; these stop the pinch where Safari ignores them. ----
+
+for (const type of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', (e) => e.touches.length > 1 && e.preventDefault(), { passive: false });
 
 // ---- Theme ----
 

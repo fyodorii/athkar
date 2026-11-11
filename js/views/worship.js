@@ -277,7 +277,7 @@ export function render(view) {
   const draw = () => {
     view.innerHTML = `
       ${pageHeader('متابعة العبادات', {
-        actions: `<a class="icon-btn" href="#/settings/notify" aria-label="التنبيهات">${icon('bell', 20)}</a><a class="icon-btn" href="#/settings" aria-label="الإعدادات">${icon('gear', 20)}</a>`,
+        actions: `<a class="icon-btn" href="#/settings/notify" aria-label="التنبيهات">${icon('bell', 20)}</a>`,
       })}
       <div class="w-tabs" role="tablist">
         <button class="${tab === 'track' ? 'on' : ''}" data-seg="track" role="tab">المتابعة</button>

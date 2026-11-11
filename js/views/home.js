@@ -16,6 +16,7 @@ import { daysText, nextOccasion, rangeText } from './occasions.js';
 const QUICK = [
   ['#/khatma', 'ختمتي', 'quran', 'indigo'],
   ['#/rawatib', 'السنن الرواتب', 'mosque', 'teal'],
+  ['#/reminders', 'تذكيراتي', 'bell', 'rose'],
   ['#/notebook', 'أدعيتي', 'hand', 'teal'],
   ['#/debts', 'الديون', 'wallet', 'amber'],
   ['#/datecalc', 'حاسبة التاريخ', 'calendar', 'indigo'],
@@ -58,10 +59,10 @@ export function render(view) {
   view.innerHTML = `
   <section class="h-hero">
     <div class="h-top">
+      <button class="icon-btn glass nav-btn" data-nav aria-label="القائمة">${icon('rows', 20)}</button>
       <a class="chip glass" href="#/settings/location">${icon('pin', 16)}<span>${esc(s.location.name)}</span></a>
       <span class="h-top-btns">
         <a class="icon-btn glass" href="#/settings/notify" aria-label="التنبيهات">${icon(s.notify.on ? 'bell' : 'bellOff', 20)}</a>
-        <a class="icon-btn glass" href="#/settings" aria-label="الإعدادات">${icon('gear', 20)}</a>
       </span>
     </div>
     <div class="h-dates">

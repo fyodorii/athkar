@@ -6,7 +6,8 @@ import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
 import { today } from '../today.js';
-import { $, $$, confirmSheet, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast } from '../ui.js';
+import { chime, unlockAudio } from '../timers.js';
+import { $, $$, confirmSheet, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
 
 export const MINE_TABS = [
   ['#/mine', 'أذكاري'],
@@ -43,7 +44,7 @@ export function renderWird(view, id) {
         sub: `<span data-done>${num(done)}</span> من ${num(cat.items.length)} • ${esc(cat.subtitle)}`,
         actions: `<button class="icon-btn ghost" data-reset aria-label="البدء من جديد">${icon('reset', 22)}</button>`,
       })}
-      ${segmented(WIRD_TABS, `#/adhkar/${id}`)}
+      ${WIRDS.includes(id) ? segmented(WIRD_TABS, `#/adhkar/${id}`) : ''}
       <div class="cat-bar"><i data-bar style="width:${(done / cat.items.length) * 100}%"></i></div>
       <section class="dhikr-list" style="--scale:${scale};--qscale:${state.settings.quranScale || 1}">
         ${cat.items.map((x, i) => wirdCard(x, c[x.id] || 0, i + 1)).join('')}
@@ -147,6 +148,12 @@ export function renderMine(view, focusId) {
       })}
       ${segmented(TABS, '#/mine')}
       ${wirdCards()}
+      <h3 class="section-title small">${icon('book', 16)} أذكار اليوم والليلة</h3>
+      <section class="occ-grid">
+        ${CATEGORIES.filter((c) => !WIRDS.includes(c.id))
+          .map((c) => `<a class="tone-${c.tone}" href="#/adhkar/${c.id}"><span>${icon(c.icon, 20)}</span><b>${esc(c.title)}</b><small>${num(c.items.length)}</small></a>`)
+          .join('')}
+      </section>
       <h3 class="section-title small">${icon('heart', 16)} أذكاري الخاصة</h3>
       ${
         list.length
@@ -438,6 +445,7 @@ export function renderTasbeeh(view, mineId) {
             <button class="icon-btn glass" data-font="-6" aria-label="تصغير الذكر">${icon('minus', 20)}</button>
             <button class="icon-btn glass" data-font="6" aria-label="تكبير الذكر">${icon('plus', 20)}</button>
             <button class="icon-btn glass" data-look aria-label="الألوان والحجم">${icon('palette', 20)}</button>
+            <button class="icon-btn glass" data-alerts aria-label="تنبيه الأعداد">${icon(t.alerts.length && (t.alertSound || t.alertVibrate) ? 'bell' : 'bellOff', 20)}</button>
             <button class="icon-btn glass ${t.dim ? 'on' : ''}" data-dim aria-label="تعتيم الصفحة">${icon('moon', 20)}</button>
             ${mine ? '' : `<button class="icon-btn glass" data-phrases aria-label="اختيار الذكر">${icon('beads', 20)}</button>`}
             <button class="icon-btn glass" data-reset aria-label="تصفير">${icon('reset', 20)}</button>
@@ -470,6 +478,7 @@ export function renderTasbeeh(view, mineId) {
   paint();
 
   const tap = (x, y) => {
+    if (t.alertSound && t.alerts.length) unlockAudio(); // sound needs a touch to start
     src.add();
     if (isIstighfar(src.phrase())) {
       const r = (state.worship[dayNow] ??= {});
@@ -478,7 +487,13 @@ export function renderTasbeeh(view, mineId) {
     save();
     const [c, n] = [src.count(), src.target()];
     const reached = n && (mine ? c === n : c % n === 0);
-    haptic(reached ? 40 : 10);
+    // The numbers the user asked to be told about, by sound or vibration or both.
+    const alert = t.alerts.includes(c) && (t.alertSound || t.alertVibrate);
+    if (alert) {
+      if (t.alertSound) chime([0, 0.25], false);
+      if (t.alertVibrate) haptic(200, true);
+      if (!reached) toast(`${icon('bell', 18)} بلغت ${num(c)}`);
+    } else haptic(reached ? 40 : 10);
     if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
     $('[data-count]', view).textContent = num(c);
     $('[data-round]', view).textContent = roundText();
@@ -512,6 +527,7 @@ export function renderTasbeeh(view, mineId) {
     }
     if (e.target.closest('[data-phrases]')) return choosePhrase(draw);
     if (e.target.closest('[data-look]')) return tasbeehLook(paint, box);
+    if (e.target.closest('[data-alerts]')) return tasbeehAlerts(paint);
     if (e.target.closest('[data-dim]')) {
       // Steps through the dimming levels; from a level set on the slider, to the next one up.
       const next = DIM_STEPS.find((d) => d > t.dim);
@@ -740,5 +756,58 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
       });
     },
     { title: 'ألوان السبحة وحجمها' }
+  );
+}
+
+// The counts at which the tasbeeh tells the user, by sound or vibration: add to them or remove.
+function tasbeehAlerts(redraw) {
+  const t = state.tasbeeh;
+  openSheet(
+    `<div data-body></div>`,
+    (el) => {
+      const body = el.querySelector('[data-body]');
+      const draw = () => {
+        body.innerHTML = `
+          <p class="hint">ينبّهك التطبيق بالصوت أو بالاهتزاز أثناء التسبيح عند الوصول لأحد الأعداد التالية، ويمكنك الإضافة إليها أو إلغاء بعضها.</p>
+          <div class="menu alerts">
+            ${t.alerts.map((n) => `<div><b>${num(n)}</b><button class="icon-btn ghost sm danger-ic" data-del="${n}" aria-label="حذف">${icon('close', 18)}</button></div>`).join('') || '<p class="hint center">لا أعداد. أضف عدداً بالأسفل.</p>'}
+          </div>
+          <form class="alert-add" data-add>
+            <input name="n" type="number" inputmode="numeric" min="1" max="100000" placeholder="عدد جديد، مثل ${num(99)}" required>
+            <button class="btn primary" type="submit">${icon('plus', 18)} إضافة</button>
+          </form>
+          <div class="row"><span class="row-label">الصوت</span>${toggle('alertSound', t.alertSound)}</div>
+          <div class="row"><span class="row-label">الاهتزاز</span>${toggle('alertVibrate', t.alertVibrate)}</div>
+          <p class="hint">الصوت لا يُسمع والجوال على الصامت. والاهتزاز على الآيفون نقرة خفيفة، ويحتاج iOS 17.4 أو أحدث.</p>`;
+      };
+      draw();
+      body.addEventListener('click', (e) => {
+        const d = e.target.closest('[data-del]');
+        if (!d) return;
+        t.alerts = t.alerts.filter((n) => n !== Number(d.dataset.del));
+        save();
+        draw();
+        redraw();
+      });
+      body.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const n = Math.round(Number(e.target.n.value));
+        if (!(n > 0) || n > 100000) return;
+        if (!t.alerts.includes(n)) t.alerts = [...t.alerts, n].sort((a, b) => a - b);
+        save();
+        draw();
+        redraw();
+      });
+      body.addEventListener('change', (e) => {
+        const name = e.target.name;
+        if (name !== 'alertSound' && name !== 'alertVibrate') return;
+        t[name] = e.target.checked;
+        save();
+        // Let the choice be heard or felt at once.
+        if (t[name]) name === 'alertSound' ? (unlockAudio(), chime([0, 0.25], false)) : haptic(200, true);
+        redraw();
+      });
+    },
+    { title: 'تنبيه الأعداد' }
   );
 }

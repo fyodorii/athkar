@@ -47,7 +47,7 @@ export const DEFAULTS = {
   custom: [],
   notebook: [],
   saved: [],
-  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0 },
+  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0, alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},
@@ -59,6 +59,7 @@ export const DEFAULTS = {
   khatma: { pos: 1, read: 0, startedAt: 0, history: [] },
   // { id, dir: 'owe' | 'lent', person, amount, date, due, remind, note, paid, paidAt }
   debts: [],
+  reminders: [], // «تذكيراتي»: { id, text, time: "HH:MM", on }, every day
   notifyLog: {}, // reminders already shown: { "<day>:<event>": time }
   sync: { hash: '', at: 0 },
 };
@@ -104,12 +105,7 @@ export const state = load();
 const SEED_VERSION = 1;
 const SEED = [
   { text: 'لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير.', target: 100, ref: 'رواه البخاري ومسلم' },
-  { text: 'لا حول ولا قوة إلا بالله.', target: 100, ref: '«كنز من كنوز الجنة» — متفق عليه' },
-  {
-    text: 'اللهم صل على محمد وعلى آل محمد، كما صليت على إبراهيم وعلى آل إبراهيم، إنك حميد مجيد. اللهم بارك على محمد وعلى آل محمد، كما باركت على إبراهيم وعلى آل إبراهيم، إنك حميد مجيد.',
-    target: 10,
-    ref: 'رواه البخاري',
-  },
+  { text: 'سبحان الله وبحمده.', target: 100, ref: '«حُطّت خطاياه وإن كانت مثل زبد البحر» — متفق عليه' },
 ];
 // Istighfar was a «مائة مرة» checkbox (1) and is now a count: a ticked past day counts as 100.
 if (!state.migrated.istighfar) {
@@ -149,6 +145,18 @@ if (state.seeded < SEED_VERSION) {
     // Storage blocked: the seed shows again next time, which is harmless.
   }
 }
+// Release 20: «أذكاري الخاصة» keeps only the two it now starts with (their counts stay).
+if (!state.migrated.mine2) {
+  const now = Date.now();
+  state.custom = SEED.map((x, i) => state.custom.find((c) => c.text === x.text) || { id: `seed${i + 1}`, today: 0, total: 0, created: now, ...x });
+  state.migrated.mine2 = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
 const listeners = new Set();
 
 export function save() {
