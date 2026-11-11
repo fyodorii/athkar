@@ -7,9 +7,35 @@ import { EVENING, MORNING, SLEEP } from './wird-data.js';
 
 const list = (cat, items) => items.map((x, i) => ({ ...x, id: `${cat}-${i + 1}`, count: x.count || 1 }));
 
+// The adhkar of «أذكاري الخاصة» and of the tasbeeh, as the user keeps them.
+export const MY_ADHKAR = [
+  'لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير.',
+  'اللهم صل وسلم وبارك على نبينا محمد.',
+  'سبحان الله وبحمده.',
+  'لا حول ولا قوة إلا بالله.',
+  'أستغفر الله وأتوب إليه.',
+  'لا حول ولا قوة إلا بالله العلي العظيم.',
+  'أستغفر الله الذي لا إله إلا هو الحي القيوم وأتوب إليه.',
+  'اللهم صل على محمد وعلى آل محمد، كما صليت على إبراهيم وعلى آل إبراهيم، إنك حميد مجيد. اللهم بارك على محمد وعلى آل محمد، كما باركت على إبراهيم وعلى آل إبراهيم، إنك حميد مجيد.',
+];
+
+// Morning and evening open, in the user's order, with the crown of dhikr, then the prayer upon
+// the Prophet ﷺ, then the ta'awwudhat gathered together (the fuller isti'adha three times);
+// the rest follows as in wird-data.js. `p` is the id prefix (am, pm).
+const WIRD_FIRST = [13, 17, 1, 2, 37, 38, 39, 40];
+const WIRD_TITLES = { 13: 'تاج الذكر', 17: 'الصلاة على النبي' };
+function ordered(items, p) {
+  const ids = WIRD_FIRST.map((n) => `${p}-${n}`);
+  const head = WIRD_FIRST.map((n) => {
+    const x = items.find((i) => i.id === `${p}-${n}`);
+    return x && { ...x, ...(WIRD_TITLES[n] ? { title: WIRD_TITLES[n] } : {}), ...(n === 2 ? { count: 3 } : {}) };
+  }).filter(Boolean);
+  return [...head, ...items.filter((x) => !ids.includes(x.id))];
+}
+
 export const CATEGORIES = [
-  { id: 'morning', title: 'أذكار الصباح', subtitle: 'من الفجر إلى طلوع الشمس', icon: 'sunrise', tone: 'amber', items: MORNING },
-  { id: 'evening', title: 'أذكار المساء', subtitle: 'من العصر إلى الغروب', icon: 'sunset', tone: 'rose', items: EVENING },
+  { id: 'morning', title: 'أذكار الصباح', subtitle: 'من الفجر إلى طلوع الشمس', icon: 'sunrise', tone: 'amber', items: ordered(MORNING, 'am') },
+  { id: 'evening', title: 'أذكار المساء', subtitle: 'من العصر إلى الغروب', icon: 'sunset', tone: 'rose', items: ordered(EVENING, 'pm') },
   { id: 'sleep', title: 'أذكار النوم', subtitle: 'وِرد النوم قبل أن تنام', icon: 'moon', tone: 'indigo', items: SLEEP },
   {
     id: 'waking',

@@ -1,6 +1,7 @@
 // Everything the user keeps (settings, progress, custom adhkar, notebook) lives on
 // the device in localStorage, saved after every change.
 
+import { MY_ADHKAR } from './adhkar-data.js';
 import { CITIES } from './cities.js';
 
 const KEY = 'adhkar-app:v1';
@@ -47,7 +48,7 @@ export const DEFAULTS = {
   custom: [],
   notebook: [],
   saved: [],
-  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0, alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
+  tasbeeh: { phrase: 'سبحان الله وبحمده', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0, alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},
@@ -59,6 +60,9 @@ export const DEFAULTS = {
   khatma: { pos: 1, read: 0, startedAt: 0, history: [] },
   // { id, dir: 'owe' | 'lent', person, amount, date, due, remind, note, paid, paidAt }
   debts: [],
+  // Groups of the tasbeeh: adhkar counted one after another, each to its number; `i` and
+  // `count` are where the group has reached.
+  groups: [{ id: 'daily', name: 'برنامج يومي', i: 0, count: 0, items: [0, 6, 3, 7].map((n) => ({ text: MY_ADHKAR[n].replace(/\.$/, ''), target: 1000 })) }],
   reminders: [], // «تذكيراتي»: { id, text, time: "HH:MM", on }, every day
   notifyLog: {}, // reminders already shown: { "<day>:<event>": time }
   sync: { hash: '', at: 0 },
@@ -103,10 +107,9 @@ export const state = load();
 
 // Adhkar every new user starts with in "my adhkar"; existing users get them once.
 const SEED_VERSION = 1;
-const SEED = [
-  { text: 'لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير.', target: 100, ref: 'رواه البخاري ومسلم' },
-  { text: 'سبحان الله وبحمده.', target: 100, ref: '«حُطّت خطاياه وإن كانت مثل زبد البحر» — متفق عليه' },
-];
+const SEED = MY_ADHKAR.map((text) => ({ text, target: 100 }));
+// The tasbeeh shows them without the closing full stop.
+const PHRASES = MY_ADHKAR.map((x) => x.replace(/\.$/, ''));
 // Istighfar was a «مائة مرة» checkbox (1) and is now a count: a ticked past day counts as 100.
 if (!state.migrated.istighfar) {
   for (const day of Object.values(state.worship)) if (day && day.istighfar === 1) day.istighfar = 100;
@@ -145,11 +148,15 @@ if (state.seeded < SEED_VERSION) {
     // Storage blocked: the seed shows again next time, which is harmless.
   }
 }
-// Release 20: «أذكاري الخاصة» keeps only the two it now starts with (their counts stay).
-if (!state.migrated.mine2) {
+// Release 21: «أذكاري الخاصة» and the tasbeeh keep only the user's eight adhkar (counts of the
+// ones already there stay).
+if (!state.migrated.mine3) {
   const now = Date.now();
-  state.custom = SEED.map((x, i) => state.custom.find((c) => c.text === x.text) || { id: `seed${i + 1}`, today: 0, total: 0, created: now, ...x });
-  state.migrated.mine2 = true;
+  state.custom = SEED.map((x, i) => state.custom.find((c) => c.text === x.text) || { id: `my${i + 1}`, today: 0, total: 0, created: now, ...x });
+  const t = state.tasbeeh;
+  t.list = [...PHRASES];
+  if (!t.list.includes(t.phrase)) Object.assign(t, { phrase: t.list[0], count: 0 });
+  state.migrated.mine3 = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {

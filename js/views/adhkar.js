@@ -1,7 +1,7 @@
 // My adhkar (the user's own list, with counters, which can also be
 // filled from the authentic adhkar), and the full-screen tasbeeh.
 
-import { CATEGORIES, CATEGORY_BY_ID } from '../adhkar-data.js';
+import { CATEGORIES, CATEGORY_BY_ID, MY_ADHKAR } from '../adhkar-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
@@ -342,18 +342,7 @@ function pickAdhkar(redraw) {
 
 // ---- Tasbeeh (السبحة): a full-screen counter; tap anywhere to count ----
 
-const PHRASES = [
-  'سبحان الله',
-  'الحمد لله',
-  'الله أكبر',
-  'لا إله إلا الله',
-  'أستغفر الله',
-  'سبحان الله وبحمده',
-  'سبحان الله وبحمده، سبحان الله العظيم',
-  'لا حول ولا قوة إلا بالله',
-  'اللهم صل وسلم على نبينا محمد',
-  'لا إله إلا أنت سبحانك إني كنت من الظالمين',
-];
+const PHRASES = MY_ADHKAR.map((x) => x.replace(/\.$/, ''));
 const T_TARGETS = [33, 99, 100, 1000, 0];
 const FONT_MIN = 22;
 const FONT_MAX = 110;
@@ -380,7 +369,8 @@ const tsbBg = (t) => T_BGS.find((b) => b.id === t.bg) || T_BGS[0];
 export const isIstighfar = (text) => /[أا]ستغفر/.test(text || '');
 
 // With an id, the screen counts one of «أذكاري» towards its daily number instead of the
-// tasbeeh's own dhikr; the look (colours, sizes, dimming) is shared.
+// tasbeeh's own dhikr; with «g-<id>» it runs a group, one dhikr after another, each to its
+// number. The look (colours, sizes, dimming) is shared.
 export function renderTasbeeh(view, mineId) {
   const t = state.tasbeeh;
   const dayNow = today().key;
@@ -394,14 +384,31 @@ export function renderTasbeeh(view, mineId) {
   t.dim ||= 0;
   tasbeehList();
   newDay(dayNow);
-  const mine = mineId ? state.custom.find((c) => c.id === mineId) : null;
-  if (mineId && !mine) {
-    location.replace('#/mine');
+  const group = mineId?.startsWith('g-') ? state.groups.find((g) => g.id === mineId.slice(2) && g.items.length) : null;
+  const mine = mineId && !group ? state.custom.find((c) => c.id === mineId) : null;
+  if (mineId && !mine && !group) {
+    location.replace(mineId.startsWith('g-') ? '#/tasbeeh' : '#/mine');
     return null;
   }
+  if (group) group.i = Math.max(0, Math.min(group.items.length - 1, group.i || 0));
+  const step = () => group.items[group.i];
   const box = mine || t; // whose text size is shown and changed (each dhikr of «أذكاري» keeps its own)
   // What is counted: the tasbeeh's dhikr (in rounds of its target) or a dhikr of «أذكاري».
-  const src = mine
+  const src = group
+    ? {
+        phrase: () => step().text,
+        count: () => group.count || 0,
+        target: () => step().target || 0,
+        today: () => t.today || 0,
+        total: () => t.total,
+        add() {
+          group.count = (group.count || 0) + 1;
+          t.total += 1;
+          t.today = (t.today || 0) + 1;
+        },
+        reset: () => (group.count = 0),
+      }
+    : mine
     ? {
         phrase: () => mine.text,
         count: () => mine.today || 0,
@@ -430,6 +437,7 @@ export function renderTasbeeh(view, mineId) {
   const roundText = () => {
     const [c, n] = [src.count(), src.target()];
     if (!n) return 'عدّ مفتوح بلا حد';
+    if (group) return `الهدف ${num(n)} • ثم ${group.i + 1 < group.items.length ? 'الذكر التالي' : 'تتم المجموعة'}`;
     if (mine) return c >= n ? `أتممت وردك اليومي (${num(n)})` : `الهدف اليومي ${num(n)}`;
     return `الدورة ${num(Math.ceil(c / n) || 1)} • الهدف ${num(n)}`;
   };
@@ -440,45 +448,57 @@ export function renderTasbeeh(view, mineId) {
     view.innerHTML = `
       <section class="tsb ${bg.light ? 'light' : ''}" data-area style="${style}">
         <header class="tsb-top" data-ui>
-          <a class="icon-btn glass" href="${mine ? `#/mine/${mine.id}` : '#/home'}" aria-label="خروج">${icon('back', 22)}</a>
+          <a class="icon-btn glass" href="${group ? '#/tasbeeh' : mine ? `#/mine/${mine.id}` : '#/home'}" aria-label="خروج">${icon('back', 22)}</a>
           <div class="tsb-tools">
             <button class="icon-btn glass" data-font="-6" aria-label="تصغير الذكر">${icon('minus', 20)}</button>
             <button class="icon-btn glass" data-font="6" aria-label="تكبير الذكر">${icon('plus', 20)}</button>
             <button class="icon-btn glass" data-look aria-label="الألوان والحجم">${icon('palette', 20)}</button>
             <button class="icon-btn glass" data-alerts aria-label="تنبيه الأعداد">${icon(t.alerts.length && (t.alertSound || t.alertVibrate) ? 'bell' : 'bellOff', 20)}</button>
             <button class="icon-btn glass ${t.dim ? 'on' : ''}" data-dim aria-label="تعتيم الصفحة">${icon('moon', 20)}</button>
-            ${mine ? '' : `<button class="icon-btn glass" data-phrases aria-label="اختيار الذكر">${icon('beads', 20)}</button>`}
+            ${mine || group ? '' : `<button class="icon-btn glass" data-phrases aria-label="اختيار الذكر">${icon('beads', 20)}</button>`}
             <button class="icon-btn glass" data-reset aria-label="تصفير">${icon('reset', 20)}</button>
           </div>
         </header>
         ${mine ? `<p class="tsb-from">من أذكاري${mine.ref ? ` • ${esc(mine.ref)}` : ''}</p>` : ''}
+        ${group ? `<p class="tsb-from">${esc(group.name)} • ${num(group.i + 1)} من ${num(group.items.length)}</p>` : ''}
         <div class="tsb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(src.phrase())}</span></div>
         <div class="tsb-counter">
           <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
         </div>
         <p class="tsb-hint">اضغط في أي مكان للتسبيح • باعد بإصبعين لتكبير الذكر</p>
         <footer class="tsb-bottom" data-ui>
-          ${mine ? '' : `<div class="tsb-targets">${T_TARGETS.map((n) => `<button class="${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : '∞'}</button>`).join('')}</div>`}
+          ${
+            group
+              ? `<div class="tsb-targets tsb-steps">
+                  <button data-step="-1" ${group.i ? '' : 'disabled'}>السابق</button>
+                  <button data-groups>${icon('layers', 16)} المجموعات</button>
+                  <button data-step="1" ${group.i + 1 < group.items.length ? '' : 'disabled'}>التالي</button>
+                </div>`
+              : mine
+                ? ''
+                : `<div class="tsb-targets">${T_TARGETS.map((n) => `<button class="${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : '∞'}</button>`).join('')}<button data-groups aria-label="المجموعات">${icon('layers', 16)}</button></div>`
+          }
           <div class="tsb-stats"><span>اليوم <b data-today>${num(src.today())}</b></span><span>المجموع <b data-total>${num(src.total())}</b></span></div>
         </footer>
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
   };
   // A dhikr of «أذكاري» starts at the largest size that shows it whole, until resized.
-  const fit = () => {
+  const fit = (from = 40) => {
     const el = $('[data-phrase]', view);
-    let size = 40;
+    let size = from;
     el.style.fontSize = `${size}px`;
     while (size > FONT_MIN && el.scrollHeight > el.clientHeight + 2) el.style.fontSize = `${(size -= 2)}px`;
   };
   const paint = () => {
     draw();
     if (mine && !mine.fontSize) fit();
+    if (group) fit(t.fontSize || 40); // a long dhikr of the group is shown whole
   };
   paint();
 
   const tap = (x, y) => {
-    if (t.alertSound && t.alerts.length) unlockAudio(); // sound needs a touch to start
+    if (t.alertSound && (t.alerts.length || group)) unlockAudio(); // sound needs a touch to start
     src.add();
     if (isIstighfar(src.phrase())) {
       const r = (state.worship[dayNow] ??= {});
@@ -486,7 +506,7 @@ export function renderTasbeeh(view, mineId) {
     }
     save();
     const [c, n] = [src.count(), src.target()];
-    const reached = n && (mine ? c === n : c % n === 0);
+    const reached = n && (mine ? c === n : group ? c >= n : c % n === 0);
     // The numbers the user asked to be told about, by sound or vibration or both.
     const alert = t.alerts.includes(c) && (t.alertSound || t.alertVibrate);
     if (alert) {
@@ -494,6 +514,16 @@ export function renderTasbeeh(view, mineId) {
       if (t.alertVibrate) haptic(200, true);
       if (!reached) toast(`${icon('bell', 18)} بلغت ${num(c)}`);
     } else haptic(reached ? 40 : 10);
+    if (reached && group) {
+      // This dhikr is done: on to the next one, or the group is complete and starts over.
+      const last = group.i + 1 >= group.items.length;
+      if (t.alertSound) chime(last ? [0, 0.25, 0.5] : [0, 0.25], false);
+      haptic(200, true);
+      toast(`${icon('check', 18)} ${last ? `أتممت «${esc(group.name)}»، تقبّل الله منك` : `أتممت ${num(n)} — إلى الذكر التالي`}`);
+      Object.assign(group, { i: last ? 0 : group.i + 1, count: 0 });
+      save();
+      return paint();
+    }
     if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
     $('[data-count]', view).textContent = num(c);
     $('[data-round]', view).textContent = roundText();
@@ -528,6 +558,13 @@ export function renderTasbeeh(view, mineId) {
     if (e.target.closest('[data-phrases]')) return choosePhrase(draw);
     if (e.target.closest('[data-look]')) return tasbeehLook(paint, box);
     if (e.target.closest('[data-alerts]')) return tasbeehAlerts(paint);
+    if (e.target.closest('[data-groups]')) return tasbeehGroups();
+    const st = e.target.closest('[data-step]');
+    if (st) {
+      Object.assign(group, { i: Math.max(0, Math.min(group.items.length - 1, group.i + Number(st.dataset.step))), count: 0 });
+      save();
+      return paint();
+    }
     if (e.target.closest('[data-dim]')) {
       // Steps through the dimming levels; from a level set on the slider, to the next one up.
       const next = DIM_STEPS.find((d) => d > t.dim);
@@ -543,7 +580,8 @@ export function renderTasbeeh(view, mineId) {
       return draw();
     }
     if (e.target.closest('[data-reset]')) {
-      if (await confirmSheet(mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: 'تصفير', danger: false })) {
+      if (await confirmSheet(group ? 'البدء من أول المجموعة؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false })) {
+        if (group) group.i = 0;
         src.reset();
         save();
         paint();
@@ -809,5 +847,101 @@ function tasbeehAlerts(redraw) {
       });
     },
     { title: 'تنبيه الأعداد' }
+  );
+}
+
+// Groups: adhkar counted in order, each to its own number; when one is done the next comes.
+function tasbeehGroups() {
+  const short = (x) => (x.length > 60 ? x.slice(0, 57) + '…' : x);
+  openSheet(
+    `<div data-body></div>`,
+    (el, close) => {
+      const body = el.querySelector('[data-body]');
+      let edit = null; // a copy of the group being edited, or a new one
+      const draw = () => {
+        if (!edit) {
+          body.innerHTML = `
+            <p class="hint">المجموعة أذكار متتابعة، لكل ذكر عدده؛ إذا أتممته جاء الذي بعده، ثم الذي بعده.</p>
+            ${state.groups
+              .map(
+                (g) => `<div class="grp">
+                  <button class="grp-go" data-run="${g.id}"><b>${esc(g.name)}</b><small>${num(g.items.length)} أذكار${g.i || g.count ? ` • وصلت إلى الذكر ${num(g.i + 1)} (${num(g.count)})` : ''}</small></button>
+                  <button class="icon-btn ghost sm" data-edit="${g.id}" aria-label="تعديل">${icon('edit', 18)}</button>
+                  <button class="icon-btn ghost sm danger-ic" data-del="${g.id}" aria-label="حذف">${icon('trash', 18)}</button>
+                </div>`
+              )
+              .join('')}
+            <button class="btn ghost wide" data-new>${icon('plus', 18)} مجموعة جديدة</button>`;
+          return;
+        }
+        body.innerHTML = `
+          <form class="form" data-save>
+            <label class="field"><span>اسم المجموعة</span><input name="name" maxlength="40" required value="${esc(edit.name)}" placeholder="مثل: برنامج يومي"></label>
+            <div class="grp-items">
+              ${edit.items
+                .map(
+                  (x, i) => `<div class="grp-item"><span>${esc(short(x.text))}</span>
+                    <input type="number" inputmode="numeric" min="1" max="100000" value="${x.target}" data-target="${i}" aria-label="العدد">
+                    <button type="button" class="icon-btn ghost sm" data-up="${i}" aria-label="تقديم" ${i ? '' : 'disabled'}>${icon('arrowUp', 16)}</button>
+                    <button type="button" class="icon-btn ghost sm danger-ic" data-rm="${i}" aria-label="حذف">${icon('close', 16)}</button></div>`
+                )
+                .join('') || '<p class="hint center">أضف الأذكار بالترتيب الذي تريده.</p>'}
+            </div>
+            <div class="alert-add">
+              <select name="pick" aria-label="ذكر من السبحة">${tasbeehList().map((p, i) => `<option value="${i}">${esc(short(p))}</option>`).join('')}</select>
+              <button class="btn ghost" type="button" data-add>${icon('plus', 18)} أضف</button>
+            </div>
+            <div class="sheet-actions"><button class="btn primary" type="submit">حفظ المجموعة</button><button class="btn ghost" type="button" data-back>رجوع</button></div>
+          </form>`;
+      };
+      draw();
+      body.addEventListener('click', async (e) => {
+        const run = e.target.closest('[data-run]');
+        if (run) {
+          close();
+          location.hash = `#/tasbeeh/g-${run.dataset.run}`;
+          return;
+        }
+        const ed = e.target.closest('[data-edit]');
+        if (ed) edit = JSON.parse(JSON.stringify(state.groups.find((g) => g.id === ed.dataset.edit)));
+        else if (e.target.closest('[data-new]')) edit = { id: '', name: '', i: 0, count: 0, items: [] };
+        else if (e.target.closest('[data-back]')) edit = null;
+        else if (e.target.closest('[data-add]')) {
+          edit.name = body.querySelector('[name=name]').value;
+          edit.items.push({ text: tasbeehList()[Number(body.querySelector('[name=pick]').value)], target: 100 });
+        } else if (e.target.closest('[data-rm]')) edit.items.splice(Number(e.target.closest('[data-rm]').dataset.rm), 1);
+        else if (e.target.closest('[data-up]')) {
+          const i = Number(e.target.closest('[data-up]').dataset.up);
+          [edit.items[i - 1], edit.items[i]] = [edit.items[i], edit.items[i - 1]];
+        } else {
+          const del = e.target.closest('[data-del]');
+          if (!del || !(await confirmSheet('حذف هذه المجموعة؟'))) return;
+          state.groups = state.groups.filter((g) => g.id !== del.dataset.del);
+          save();
+          if (location.hash === `#/tasbeeh/g-${del.dataset.del}`) location.hash = '#/tasbeeh';
+        }
+        draw();
+      });
+      body.addEventListener('input', (e) => {
+        if (e.target.name === 'name') edit.name = e.target.value;
+        const i = e.target.dataset.target;
+        if (i !== undefined) edit.items[Number(i)].target = Math.max(1, Math.min(100000, Math.round(Number(e.target.value) || 1)));
+      });
+      body.addEventListener('submit', (e) => {
+        e.preventDefault();
+        edit.name = edit.name.trim();
+        if (!edit.name) return;
+        if (!edit.items.length) return toast('أضف ذكراً واحداً على الأقل');
+        const old = state.groups.find((g) => g.id === edit.id);
+        // A changed list starts again from its first dhikr.
+        if (old) Object.assign(old, edit, { i: 0, count: 0 });
+        else state.groups.push({ ...edit, id: uid() });
+        save();
+        edit = null;
+        draw();
+        toast(`${icon('check', 18)} حُفظت المجموعة`);
+      });
+    },
+    { title: 'المجموعات' }
   );
 }

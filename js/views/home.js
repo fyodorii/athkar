@@ -9,21 +9,22 @@ import { icon, PRAYER_ICONS } from '../icons.js';
 import { addDays, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
 import { state } from '../store.js';
 import { PRAYERS, today } from '../today.js';
+import { PAGES } from '../quran-data.js';
+import { juzOf } from './khatma.js';
 import { $, copyText, esc, ring, shareText } from '../ui.js';
 import { dayScore } from './worship.js';
 import { daysText, nextOccasion, rangeText } from './occasions.js';
 
+// Shortcuts, as a grid of eight.
 const QUICK = [
-  ['#/khatma', 'ختمتي', 'quran', 'indigo'],
-  ['#/rawatib', 'السنن الرواتب', 'mosque', 'teal'],
+  ['#/tasbeeh', 'السبحة', 'beads', 'indigo'],
+  ['#/khatma', 'ختمتي', 'quran', 'teal'],
+  ['#/rawatib', 'الرواتب', 'mosque', 'emerald'],
   ['#/reminders', 'تذكيراتي', 'bell', 'rose'],
   ['#/notebook', 'أدعيتي', 'hand', 'teal'],
   ['#/debts', 'الديون', 'wallet', 'amber'],
-  ['#/datecalc', 'حاسبة التاريخ', 'calendar', 'indigo'],
-  ['#/qailulah', 'القيلولة', 'moon', 'teal'],
-  ['#/walk', 'المشي الياباني', 'stars', 'amber'],
-  ['#/focus', '١٠ دقائق', 'clock', 'rose'],
-  ['#/tools', 'الأدوات', 'widget', 'indigo'],
+  ['#/datecalc', 'التاريخ', 'calendar', 'indigo'],
+  ['#/tools', 'الأدوات', 'widget', 'rose'],
 ];
 
 let dayOffset = 0; // the day shown in the times card: 0 today, -1 yesterday, 1 tomorrow…
@@ -81,23 +82,22 @@ export function render(view) {
   ${info.isFriday ? `<div class="banner gold">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>الإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></div>` : ''}
 
   <div class="h-body">
-    <div class="h-col">
-      ${timesCard(info)}
-    </div>
-    <div class="h-col">
-      <section class="h-pair">
-        ${wirdSuggestion(info)}
-        ${worshipCard(info)}
-      </section>
-
-      <nav class="h-quick" aria-label="اختصارات">
-        ${QUICK.map(([href, label, ic, tone]) => `<a class="tone-${tone}" href="${href}">${icon(ic, 20)}<span>${label}</span></a>`).join('')}
-      </nav>
-
+    ${prayersCard(info)}
+    <section class="h-pair">
+      ${wirdSuggestion(info)}
+      ${worshipCard(info)}
+    </section>
+    <nav class="h-grid" aria-label="اختصارات">
+      ${QUICK.map(([href, label, ic, tone]) => `<a class="tone-${tone}" href="${href}"><span>${icon(ic, 22)}</span><b>${label}</b></a>`).join('')}
+    </nav>
+    <div class="h-stack">
+      ${khatmaCard()}
       ${occasionCard()}
     </div>
+    ${momentsCard(info)}
   </div>
 
+  <h3 class="section-title small h-title">${icon('stars', 16)} زاد اليوم</h3>
   <section class="today-cards" data-cards>
     ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs">${esc(d.ayah.text)}</span>`, d.ayah.ref)}
     ${todayCard('hadith', 'حديث اليوم', 'quote', esc(d.hadith.text), d.hadith.ref)}
@@ -134,7 +134,9 @@ export function render(view) {
     const nav = e.target.closest('[data-pday]');
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);
-      $('[data-times]', view).outerHTML = timesCard(today());
+      const now = today();
+      $('[data-prayers]', view).outerHTML = prayersCard(now);
+      $('[data-moments]', view).outerHTML = momentsCard(now);
       return;
     }
     const act = e.target.closest('[data-card-act]');
@@ -171,29 +173,49 @@ function periodTile(info) {
 }
 const PERIOD_ICONS = { sunrise: 'sunrise', duha: 'sun', zawal: 'sun', day: 'sun', night: 'moon', midnight: 'moon', qiyam: 'stars' };
 
-// The times card, for today or another day picked with the arrows: sunrise, Duha, the
-// middle of the night and its last third.
-function timesCard(info) {
+// The day shown in the two time cards: today, or another day picked with the arrows.
+function shownDay(info) {
   const s = state.settings;
-  let shown = info;
-  if (dayOffset) {
-    const day = addDays(info.day, dayOffset);
-    const times = dayTimes(day, s, hijri(day, s.hijriAdjust).month === 9);
-    shown = { day, times, next: {}, other: true };
-  }
+  if (!dayOffset) return info;
+  const day = addDays(info.day, dayOffset);
+  return { day, times: dayTimes(day, s, hijri(day, s.hijriAdjust).month === 9), next: {}, other: true };
+}
+
+// The five prayers of the day, with the arrows that move both time cards to another day.
+function prayersCard(info) {
+  const s = state.settings;
+  const shown = shownDay(info);
   const d = shown.day;
-  const h24 = s.clock24;
-  const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
   const now = Date.now();
+  const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
   const prayers = PRAYERS.map((key) => {
     const t = shown.times[key];
-    const c = clock(t.hours, h24);
+    const c = clock(t.hours, s.clock24);
     const isNow = !shown.other && info.lastPrayer.at === t.at;
     const isNext = !shown.other && info.nextPrayer.at === t.at;
     const passed = !shown.other && t.at <= now && !isNow;
     return `<li class="h-pr ${isNow ? 'now' : ''} ${isNext ? 'next' : ''} ${passed ? 'passed' : ''}">
       <b>${t.name}</b>${icon(PRAYER_ICONS[key], 22)}<span>${c.time}</span><small>${c.period}</small></li>`;
   }).join('');
+  return `<section class="card h-times" data-prayers>
+    <div class="card-head">
+      <h2>${icon('mosque', 18)} الصلوات</h2>
+      <a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a>
+    </div>
+    <div class="pday">
+      <button class="icon-btn ghost sm flip" data-pday="-1" aria-label="اليوم السابق">${icon('chevron', 20)}</button>
+      <button class="pday-label ${dayOffset ? 'other' : ''}" data-pday="0"><b>${label}</b><small>${weekday(d)}، ${num(d.d)} ${GREG_MONTHS[d.m - 1]} • ${hijriText(d, s.hijriAdjust)}</small></button>
+      <button class="icon-btn ghost sm" data-pday="1" aria-label="اليوم التالي">${icon('chevron', 20)}</button>
+    </div>
+    <ul class="h-prayers">${prayers}</ul>
+  </section>`;
+}
+
+// Sunrise, Duha, the middle of the night and its last third, for the same day.
+function momentsCard(info) {
+  const h24 = state.settings.clock24;
+  const shown = shownDay(info);
+  const now = Date.now();
   const tiles = MOMENTS.map((key) => {
     const t = shown.times[key];
     const c = clock(t.hours, h24);
@@ -207,19 +229,21 @@ function timesCard(info) {
       <small class="h-tile-note">${sub}</small>
     </li>`;
   }).join('');
-  return `<section class="card h-times" data-times>
-    <div class="card-head">
-      <h2>${icon('clock', 18)} المواقيت</h2>
-      <a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a>
-    </div>
-    <div class="pday">
-      <button class="icon-btn ghost sm flip" data-pday="-1" aria-label="اليوم السابق">${icon('chevron', 20)}</button>
-      <button class="pday-label ${dayOffset ? 'other' : ''}" data-pday="0"><b>${label}</b><small>${weekday(d)}، ${num(d.d)} ${GREG_MONTHS[d.m - 1]} • ${hijriText(d, s.hijriAdjust)}</small></button>
-      <button class="icon-btn ghost sm" data-pday="1" aria-label="اليوم التالي">${icon('chevron', 20)}</button>
-    </div>
-    <ul class="h-prayers">${prayers}</ul>
+  return `<section class="card h-times" data-moments>
+    <div class="card-head"><h2>${icon('clock', 18)} أوقات النهار والليل</h2>${dayOffset ? `<small class="muted">${weekday(shown.day)}</small>` : ''}</div>
     <ul class="h-tiles">${tiles}</ul>
   </section>`;
+}
+
+// Where the khatma has reached, and the way back into it.
+function khatmaCard() {
+  const k = state.khatma;
+  const pos = Math.min(PAGES, Math.max(1, k.pos));
+  const done = k.read >= PAGES;
+  return `<a class="card occ-mini kh-mini" href="#/khatma">
+    <span class="km-icon">${icon('quran', 24)}</span>
+    <span class="km-text"><small>ختمتي</small><b>${done ? 'أتممت الختمة' : k.read ? `أكمل من صفحة ${num(pos)}` : 'ابدأ ختمتك'}</b><small>${done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(pos))} • قرأت ${num(Math.min(PAGES, k.read))} من ${num(PAGES)}`}</small></span>
+    <span class="pill">${num(Math.round((Math.min(PAGES, k.read) / PAGES) * 100))}%</span></a>`;
 }
 
 // Today's follow-up at a glance: the share done and the link to the full list.

@@ -1656,3 +1656,61 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 .rem-text small { color: var(--ink-2); font-size: 13px; }
 .rem.off .rem-text { opacity: 0.5; }
 .field input[type='time'] { width: 100%; min-height: 48px; border-radius: 14px; text-align: center; font-size: 17px; color: var(--ink); }
+
+/* ---------- Version 21: the home page in sections, tasbeeh groups, sharing ---------- */
+
+.h-body { display: grid; gap: 0; }
+.h-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.h-grid a { display: grid; justify-items: center; gap: 6px; padding: 12px 2px 10px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); min-width: 0; transition: transform 0.15s; }
+.h-grid a:active { transform: scale(0.94); }
+.h-grid span { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--tone-soft); color: var(--tone); }
+.h-grid b { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.h-stack { display: grid; }
+.kh-mini .km-icon { background: var(--primary-soft); color: var(--primary); }
+.kh-mini .km-text small:first-child { color: var(--primary); }
+.h-title { margin-top: 6px; }
+.h-times .h-prayers { margin-bottom: 0; }
+@media (min-width: 900px) {
+  .h-body { grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }
+}
+
+/* Tasbeeh groups. */
+.tsb-targets button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tsb-targets button:disabled { opacity: 0.35; }
+.tsb-steps button { flex: 1; max-width: 150px; padding: 9px 12px; }
+.grp { display: flex; align-items: center; gap: 4px; padding: 6px 6px 6px 4px; margin-bottom: 8px; border-radius: 18px; background: var(--bg-2); }
+.grp-go { flex: 1; display: grid; padding: 8px 12px; text-align: right; min-width: 0; }
+.grp-go b { font-size: 17px; }
+.grp-go small { font-size: 12.5px; color: var(--ink-2); }
+.grp-items { display: grid; gap: 6px; }
+.grp-item { display: flex; align-items: center; gap: 4px; padding: 6px 10px 6px 4px; border-radius: 14px; background: var(--bg-2); }
+.grp-item span { flex: 1; min-width: 0; font-family: var(--font-text); font-size: 15px; line-height: 1.6; }
+.grp-item input { width: 74px; flex-shrink: 0; border: 0; outline: 0; border-radius: 10px; background: var(--raised); padding: 6px 8px; font-size: 16px; font-weight: 700; text-align: center; color: var(--primary); }
+.grp-item button:disabled { opacity: 0.3; }
+.alert-add select { flex: 1; min-width: 0; min-height: 46px; border-radius: 14px; font-size: 15px; color: var(--ink); }
+
+/* About, and the card for sharing the app. */
+.about { gap: 6px; }
+.about > b { font-size: calc(22px * var(--head-scale)); }
+.about .btn { margin: 8px 0 4px; }
+.about .credit { font-size: 14px; }
+.about .credit b { letter-spacing: 2px; color: var(--primary); }
+.about small { color: var(--ink-3); font-size: 12px; }
+.share-card { display: grid; justify-items: center; gap: 6px; padding: 24px 18px 18px; margin-bottom: 10px; border-radius: 28px; text-align: center; color: #fff; background: radial-gradient(90% 70% at 85% 0%, rgba(140, 200, 255, 0.45), transparent 70%), linear-gradient(165deg, var(--hero-3), var(--hero-2) 55%, var(--hero-1)); box-shadow: var(--shadow-lg); }
+.share-card img { border-radius: 22%; box-shadow: 0 12px 26px -10px rgba(0, 0, 0, 0.6); }
+.share-card > b { font-size: 26px; font-weight: 800; }
+.share-card p { margin: 0; font-size: 14.5px; line-height: 1.8; opacity: 0.9; }
+.share-card ul { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.share-card li { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; background: rgba(255, 255, 255, 0.14); font-size: 12.5px; }
+.share-card li .ic { color: var(--gold-2); }
+.share-url { direction: ltr; padding: 6px 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.22); font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.share-card small { opacity: 0.7; letter-spacing: 1.5px; font-size: 11.5px; }
+.nav-foot { display: none; }
+@media (max-width: 899.98px) {
+  .nav-foot { display: block; margin: auto 0 0; padding-top: 14px; text-align: center; font-size: 12px; letter-spacing: 1.5px; color: var(--ink-3); }
+}
+/* Long adhkar in a form (group editor) wrap inside the sheet instead of widening it. */
+.sheet-body { overflow-x: hidden; }
+.form > *, .grp-items > * { min-width: 0; }
+.grp-item span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.alert-add select { width: 0; }
