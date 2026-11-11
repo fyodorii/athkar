@@ -353,7 +353,8 @@ const FONT_MAX = 110;
 
 // Backgrounds and dhikr colours for the tasbeeh screen; `light` backgrounds get dark controls.
 const T_BGS = [
-  { id: 'emerald', name: 'زمردي', css: '' },
+  { id: 'blue', name: 'أزرق', css: '' },
+  { id: 'emerald', name: 'زمردي', css: 'linear-gradient(170deg, #0f5c4d 0%, #083a32 50%, #04201b 100%)' },
   { id: 'black', name: 'أسود', css: '#000' },
   { id: 'night', name: 'كحلي', css: 'linear-gradient(170deg, #1d2b4f 0%, #0d1730 55%, #060b1a 100%)' },
   { id: 'plum', name: 'بنفسجي', css: 'linear-gradient(170deg, #4a2a6b 0%, #2a1442 55%, #150823 100%)' },
@@ -700,7 +701,7 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         const bg = tsbBg(t);
         body.innerHTML = `
           <h4 class="sheet-sub">لون الخلفية</h4>
-          <div class="swatches">${T_BGS.map((b) => `<button class="swatch ${b.id === bg.id ? 'on' : ''}" data-bg="${b.id}" style="background:${b.css || 'linear-gradient(170deg, #0f5c4d, #04201b)'}" aria-label="${b.name}" title="${b.name}"></button>`).join('')}</div>
+          <div class="swatches">${T_BGS.map((b) => `<button class="swatch ${b.id === bg.id ? 'on' : ''}" data-bg="${b.id}" style="background:${b.css || 'linear-gradient(170deg, #2a5cc4, #070f2c)'}" aria-label="${b.name}" title="${b.name}"></button>`).join('')}</div>
           <h4 class="sheet-sub">لون الذكر</h4>
           <div class="swatches">
             <button class="swatch auto ${!t.ink ? 'on' : ''}" data-ink="" aria-label="تلقائي" title="تلقائي">${icon('reset', 16)}</button>
@@ -718,7 +719,7 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         if (b) t.bg = b.dataset.bg;
         else if (k) t.ink = k.dataset.ink;
         else if (e.target.closest('[data-look-reset]')) {
-          Object.assign(t, { bg: 'emerald', ink: '', counterSize: 1, dim: 0 });
+          Object.assign(t, { bg: 'blue', ink: '', counterSize: 1, dim: 0 });
           if (box === t) t.fontSize = 40;
           else delete box.fontSize;
         }

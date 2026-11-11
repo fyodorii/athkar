@@ -17,19 +17,37 @@ export const DEFAULTS = {
     digits: 'arab',
     theme: 'auto',
     textScale: 1,
-    fontText: 'amiri', // adhkar text: amiri | plex | tajawal
-    fontUi: 'plex', // interface: plex | tajawal | amiri
-    textBold: true,
-    uiBold: false,
+    fontText: 'tajawal', // adhkar text: a key of FONTS in js/ui.js
+    fontUi: 'tajawal', // interface
+    textWeight: 500, // 200…900
+    uiWeight: 400,
+    headScale: 1, // size of the headings, 0.8…1.3
+    flat: false, // flat design instead of liquid glass
     haptics: true,
     quranGoal: 5,
-    appIcon: 'emerald', // icons/alt/<name>.png for the home screen
+    appIcon: 'sky', // icons/alt/<name>.png for the home screen
+    // Minutes between the adhan and the iqama.
+    iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
+    notify: {
+      on: false,
+      prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
+      before: 0, // also remind this many minutes before the adhan (0 = no)
+      iqama: false,
+      duha: true,
+      duhaEnd: false,
+      lastThird: false,
+      morning: true, // morning adhkar, after Fajr
+      evening: true, // evening adhkar, after Asr
+      khatma: '', // "HH:MM" of the daily wird reminder, or '' for none
+      debts: true,
+      sound: true,
+    },
   },
   progress: { day: '', counts: {} },
   custom: [],
   notebook: [],
   saved: [],
-  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'emerald', ink: '', dim: 0 },
+  tasbeeh: { phrase: 'سبحان الله', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0 },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},
@@ -37,6 +55,11 @@ export const DEFAULTS = {
   diary: {},
   migrated: {}, // one-time data changes done
   tools: { ahzab: { start: '', done: {} }, nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
+  // The khatma: `pos` is the page to read next (1…605), `read` the furthest page reached.
+  khatma: { pos: 1, read: 0, startedAt: 0, history: [] },
+  // { id, dir: 'owe' | 'lent', person, amount, date, due, remind, note, paid, paidAt }
+  debts: [],
+  notifyLog: {}, // reminders already shown: { "<day>:<event>": time }
   sync: { hash: '', at: 0 },
 };
 
@@ -55,12 +78,14 @@ function merge(base, value) {
   return value === undefined || value === null ? base : value;
 }
 
-// Data of features the app no longer has (khatma, memorization, prayer times, notifications,
-// the qibla, al-Mulk) is dropped when loading, so old saves and backups stay light.
+// Data of features the app no longer has (memorization, the qibla, al-Mulk) is dropped when
+// loading, so old saves and backups stay light; a khatma kept by an old release is started afresh.
 function prune(data) {
-  for (const k of ['khatma', 'hifz', 'surahs']) delete data[k];
+  for (const k of ['hifz', 'surahs']) delete data[k];
   const s = data.settings;
-  if (s) for (const k of ['iqama', 'prayerLayout', 'notify', 'mushafMode', 'mushafInk', 'quranScale']) delete s[k];
+  if (s) for (const k of ['prayerLayout', 'mushafMode', 'mushafInk', 'quranScale', 'textBold', 'uiBold']) delete s[k];
+  const k = data.khatma;
+  if (!k || typeof k.pos !== 'number' || typeof k.read !== 'number' || !Array.isArray(k.history)) data.khatma = fresh().khatma;
   return data;
 }
 
@@ -90,6 +115,20 @@ const SEED = [
 if (!state.migrated.istighfar) {
   for (const day of Object.values(state.worship)) if (day && day.istighfar === 1) day.istighfar = 100;
   state.migrated.istighfar = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
+// Release 19: Tajawal is the font, the look is blue.
+if (!state.migrated.blue) {
+  const s = state.settings;
+  s.fontUi = s.fontText = 'tajawal';
+  if (s.appIcon === 'emerald') s.appIcon = 'sky';
+  if (state.tasbeeh.bg === 'emerald') state.tasbeeh.bg = 'blue';
+  state.migrated.blue = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {

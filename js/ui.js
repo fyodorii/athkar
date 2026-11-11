@@ -5,12 +5,36 @@ import { state } from './store.js';
 import { APP_NAME } from './config.js';
 
 // Font stacks the user can pick in the settings (each falls back for missing glyphs such as ﷺ).
+// The same stacks are in index.html, for the first paint.
+const SYS = "-apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif";
 export const FONTS = {
+  tajawal: `'Tajawal', ${SYS}`,
+  cairo: `'Cairo', ${SYS}`,
+  plex: `'Plex', ${SYS}`,
+  vazirmatn: `'Vazirmatn', ${SYS}`,
   amiri: "'Amiri', serif",
-  plex: "'Plex', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif",
-  tajawal: "'Tajawal', 'Plex', -apple-system, 'SF Arabic', system-ui, sans-serif",
+  lateef: "'Lateef', 'Amiri', serif",
+  ruqaa: "'Aref Ruqaa', 'Amiri', serif",
 };
-export const FONT_NAMES = { amiri: 'الأميري', plex: 'IBM Plex', tajawal: 'Tajawal' };
+export const FONT_NAMES = {
+  tajawal: 'تجوال',
+  cairo: 'القاهرة',
+  plex: 'IBM Plex عربي',
+  vazirmatn: 'وزير متن',
+  amiri: 'أميري',
+  lateef: 'لطيف',
+  ruqaa: 'رقعة',
+};
+// Weights offered in the settings; a font without one falls to its nearest.
+export const WEIGHTS = [
+  [200, 'رفيع جداً'],
+  [300, 'خفيف'],
+  [400, 'عادي'],
+  [500, 'متوسط'],
+  [700, 'عريض'],
+  [800, 'عريض جداً'],
+  [900, 'ثقيل'],
+];
 
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -24,7 +48,7 @@ export function toast(message, kind = '') {
   el.className = `toast show ${kind}`;
   el.innerHTML = message;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.className = 'toast'), 2600);
+  toastTimer = setTimeout(() => (el.className = 'toast'), /\blong\b/.test(kind) ? 7000 : 2600);
 }
 
 // A light tap feel where the device supports it (Android); iOS web has no vibration API.

@@ -104,3 +104,20 @@ export function minutesText(n) {
   if (n >= 3 && n <= 10) return `${num(n)} دقائق`;
   return `${num(n)} دقيقة`;
 }
+
+// The Gregorian day ({ y, m, d }) of a Hijri date under the same correction, or null when
+// that month has no such day (a 30th in a month of 29).
+export function fromHijri(hy, hm, hd, adjust = 0) {
+  const jd = Math.floor((11 * hy + 3) / 30) + 354 * hy + 30 * hm - Math.floor((hm - 1) / 2) + hd + 1948440 - 385;
+  const guess = Date.UTC(2000, 0, 1) + (jd - 2451545) * 86400000;
+  for (const off of [0, -1, 1, -2, 2, -3, 3, -4, 4]) {
+    const t = new Date(guess + off * 86400000);
+    const day = { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
+    const h = hijri(day, adjust);
+    if (h.year === hy && h.month === hm && h.day === hd) return day;
+  }
+  return null;
+}
+
+// 29 or 30: the length of a Hijri month.
+export const hijriMonthLength = (hy, hm, adjust = 0) => (fromHijri(hy, hm, 30, adjust) ? 30 : 29);

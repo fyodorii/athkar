@@ -60,6 +60,13 @@ const P = {
   pause: '<rect x="6" y="4.5" width="4" height="15" rx="1.2" fill="currentColor" stroke="none"/><rect x="14" y="4.5" width="4" height="15" rx="1.2" fill="currentColor" stroke="none"/>',
   radio: '<rect x="3" y="8" width="18" height="13" rx="2.5"/><path d="M7 8 17 3"/><circle cx="15.5" cy="14.5" r="3"/><path d="M6.5 12.5h3M6.5 16.5h3"/>',
   quran: '<path d="M12 6c-2-1.6-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6-.1-8 1.5z"/><path d="M12 6v14"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  wallet: '<path d="M20 7H6a2 2 0 0 1 0-4h12v4"/><path d="M4 5v13a2 2 0 0 0 2 2h14V7"/><path d="M16 12h4v4h-4a2 2 0 0 1 0-4z"/>',
+  layers: '<rect x="8" y="8" width="13" height="13" rx="3"/><path d="M16 8V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3h2"/>',
+  digits: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10l1-1v6M11 9.5h2v2.5h-2v3h2M16 9.5h2V15h-2M16 12h2"/>',
+  save: '<path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8M8 21v-7h8v7"/>',
+  arrowUp: '<path d="M7 17 17 7M9 7h8v8"/>',
+  arrowDown: '<path d="M17 7 7 17M15 17H7V9"/>',
   more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
 };
 

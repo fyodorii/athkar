@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>مواقيت</title>
-    <meta name="description" content="أذكار الصباح والمساء، مواقيت الصلاة، القبلة، أذكارك ودفتر أدعيتك، والتاريخ الهجري — مع تنبيهات وويدجت للآيفون." />
-    <meta name="theme-color" content="#0b3b34" />
+    <meta name="description" content="مواقيت الصلاة والأذكار، متابعة العبادات، الختمة، السنن الرواتب، الديون وحاسبة التاريخ الهجري — مع تنبيهات." />
+    <meta name="theme-color" content="#0f2350" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -13,9 +13,9 @@
     <meta name="format-detection" content="telephone=no" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=2" />
-    <link rel="preload" href="fonts/plex-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="fonts/plex-arabic-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/alt/sky.png?v=3" />
+    <link rel="preload" href="fonts/tajawal-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/tajawal-arabic-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="css/app.css" />
     <script>
       // Set the theme before the first paint so dark mode never flashes white.
@@ -24,16 +24,20 @@
         var t = st.theme || 'auto';
         if (t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
         // The chosen fonts, before the first paint (same stacks as FONTS in js/ui.js).
-        var f = { amiri: "'Amiri', serif", plex: "'Plex', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif", tajawal: "'Tajawal', 'Plex', -apple-system, 'SF Arabic', system-ui, sans-serif" };
+        var sys = "-apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif";
+        var f = { tajawal: "'Tajawal', " + sys, cairo: "'Cairo', " + sys, plex: "'Plex', " + sys, vazirmatn: "'Vazirmatn', " + sys, amiri: "'Amiri', serif", lateef: "'Lateef', 'Amiri', serif", ruqaa: "'Aref Ruqaa', 'Amiri', serif" };
         var r = document.documentElement.style;
         if (f[st.fontText]) r.setProperty('--font-text', f[st.fontText]);
         if (f[st.fontUi]) r.setProperty('--font-ui', f[st.fontUi]);
-        if (st.textBold === false) r.setProperty('--text-weight', '400');
-        if (st.uiBold) r.setProperty('--ui-weight', '700');
+        if (st.textWeight) r.setProperty('--text-weight', st.textWeight);
+        if (st.uiWeight) r.setProperty('--ui-weight', st.uiWeight);
+        if (st.headScale) r.setProperty('--head-scale', st.headScale);
+        if (st.flat) document.documentElement.setAttribute('data-flat', '');
         // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
         // when the app is added to the home screen.
         var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;
-        if (['night', 'violet', 'sky', 'parchment', 'black', 'burgundy', 'gold'].indexOf(ic) >= 0) document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png?v=2';
+        if (['emerald', 'night', 'violet', 'parchment', 'black', 'burgundy', 'gold'].indexOf(ic) < 0) ic = 'sky'; // the default is the blue one
+        document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png?v=3';
       } catch (e) {}
     </script>
   </head>
