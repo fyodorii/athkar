@@ -20,7 +20,7 @@ import * as datecalc from './views/datecalc.js';
 import * as rawatib from './views/rawatib.js';
 import * as reminders from './views/reminders.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
-import { APP_NAME } from './config.js';
+import { APP_NAME, DESIGNER } from './config.js';
 import { checkReminders } from './notify.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
@@ -108,7 +108,8 @@ function route() {
 function renderTabs() {
   $('#tabs').innerHTML =
     `<div class="nav-head"><b>${APP_NAME}</b><button class="icon-btn ghost" data-nav aria-label="إغلاق القائمة">${icon('close', 22)}</button></div>` +
-    TABS.map((t) => (t ? `<a href="${t[3]}" data-tab="${t[0]}">${icon(t[2], 22)}<span>${t[1]}</span></a>` : '<hr>')).join('');
+    TABS.map((t) => (t ? `<a href="${t[3]}" data-tab="${t[0]}">${icon(t[2], 22)}<span>${t[1]}</span></a>` : '<hr>')).join('') +
+    `<p class="nav-foot">تصميم ${DESIGNER}</p>`;
 }
 
 // ---- Side menu (phones): opened by the menu button of each screen ----

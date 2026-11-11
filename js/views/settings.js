@@ -1,6 +1,7 @@
 // Settings: location, calculation, display and backup.
 
 import { CITIES, nearestCity } from '../cities.js';
+import { APP_NAME, APP_VERSION, DESIGNER } from '../config.js';
 import { clockText, hijriText, minutesText, num } from '../dates.js';
 import { icon } from '../icons.js';
 import { METHODS, PRAYER_NAMES } from '../prayer.js';
@@ -8,7 +9,7 @@ import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
 import { PRAYERS } from '../today.js';
-import { $, copyText, esc, FONT_NAMES, FONTS, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
+import { $, copyText, esc, FONT_NAMES, FONTS, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -54,7 +55,12 @@ export function render(view) {
       <p class="hint">أذكارك ودفترك محفوظة على جهازك فقط. احفظ نسخة احتياطية في ملفاتك أو iCloud بين حين وآخر.</p>
     </div>
     <div class="group about">
+      <img src="icons/alt/${APP_ICONS.some((x) => x[0] === s.appIcon) ? s.appIcon : 'sky'}.png" alt="" width="72" height="72">
+      <b>${APP_NAME}</b>
       <p>«ألا بذكر الله تطمئن القلوب»</p>
+      <button class="btn primary" data-share-app>${icon('share', 20)} شارك التطبيق</button>
+      <p class="credit">تصميم التطبيق <b>${DESIGNER}</b></p>
+      <small>الإصدار ${num(APP_VERSION)}</small>
     </div>`;
 
   const onChange = (e) => {
@@ -101,6 +107,7 @@ export function render(view) {
             return render(view);
     }
     if (e.target.closest('[data-export]')) exportBackup();
+    if (e.target.closest('[data-share-app]')) shareApp();
   };
   view.onchange = onChange;
   view.oninput = onInput;
@@ -110,6 +117,41 @@ export function render(view) {
       view.onchange = view.oninput = view.onclick = null;
     },
   };
+}
+
+// The app as a card to pass on: what it holds, its link, and the share sheet of the phone.
+export function shareApp() {
+  const url = `${location.origin}${location.pathname}`;
+  const text = `تطبيق «${APP_NAME}» 🌙\nمواقيت الصلاة والأذكار، السبحة، متابعة العبادات، الختمة والسنن الرواتب — بلا إعلانات، ويعمل دون إنترنت.\n«من دلّ على خير فله مثل أجر فاعله»`;
+  openSheet(
+    `<div class="share-card">
+       <img src="icons/alt/sky.png" alt="" width="84" height="84">
+       <b>${APP_NAME}</b>
+       <p>مواقيت الصلاة والأذكار، السبحة، متابعة العبادات، الختمة والسنن الرواتب</p>
+       <ul><li>${icon('check', 16)} بلا إعلانات</li><li>${icon('check', 16)} يعمل دون إنترنت</li><li>${icon('check', 16)} بياناتك على جهازك</li></ul>
+       <span class="share-url">${esc(url.replace(/^https?:\/\//, ''))}</span>
+       <small>تصميم ${DESIGNER}</small>
+     </div>
+     <p class="hint center">«من دلّ على خير فله مثل أجر فاعله» — رواه مسلم</p>
+     <div class="sheet-actions">
+       <button class="btn primary" data-go>${icon('share', 20)} مشاركة</button>
+       <button class="btn ghost" data-copy>${icon('copy', 20)} نسخ الرابط</button>
+     </div>`,
+    (el, close) =>
+      el.addEventListener('click', async (e) => {
+        if (e.target.closest('[data-copy]')) return copyText(`${text}\n${url}`);
+        if (!e.target.closest('[data-go]')) return;
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: APP_NAME, text, url });
+            close();
+          } catch (err) {
+            if (err.name !== 'AbortError') copyText(`${text}\n${url}`);
+          }
+        } else copyText(`${text}\n${url}`);
+      }),
+    { title: 'شارك التطبيق' }
+  );
 }
 
 async function exportBackup() {
