@@ -1,4 +1,5 @@
-// Tools: the qailulah (midday nap) calculator, the Japanese interval walk and the
+// Tools: the hub (with the khatma, the rawatib, debts and the date calculator, each in its own
+// view), the qailulah (midday nap) calculator, the Japanese interval walk and the
 // ten-minute rule, each with a timer that keeps going across the app (timers.js).
 
 import { clockText, num } from '../dates.js';
@@ -39,6 +40,10 @@ function duration(min) {
 // ---- Hub ----
 
 const TOOLS = [
+  ['#/khatma', 'ختمتي', 'موضعك في المصحف وما قرأت من ٦٠٤ صفحات', 'quran', 'indigo'],
+  ['#/rawatib', 'السنن الرواتب', 'ثنتا عشرة ركعة قبل الفرائض وبعدها', 'mosque', 'teal'],
+  ['#/debts', 'الديون', 'ما عليّ وما لي، مع تذكير قبل الاستحقاق', 'wallet', 'amber'],
+  ['#/datecalc', 'حاسبة التاريخ', 'الفرق بين تاريخين، وتاريخ بعد أيام، هجري وميلادي', 'calendar', 'indigo'],
   ['#/qailulah', 'القيلولة', 'حاسبة وقتها من شمس موقعك، بنصوص الفقهاء، ومؤقّت', 'moon', 'teal'],
   ['#/walk', 'المشي الياباني', '٥ جولات: ٣ دقائق سريع و٣ بطيء = ٣٠ دقيقة', 'stars', 'amber'],
   ['#/focus', 'قاعدة العشر دقائق', 'اكتب ما تسوّفه، والتزم به عشر دقائق فقط', 'clock', 'rose'],

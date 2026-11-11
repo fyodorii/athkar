@@ -1,4 +1,4 @@
-// App shell: hash routes, bottom tabs, theme and the one-second clock.
+// App shell: hash routes, bottom tabs, theme and the one-second tick (countdowns, timers, reminders).
 
 import { setDigits } from './dates.js';
 import { FONTS } from './ui.js';
@@ -14,6 +14,11 @@ import * as worship from './views/worship.js';
 import * as radioView from './views/radio.js';
 import * as occasions from './views/occasions.js';
 import * as tools from './views/tools.js';
+import * as khatma from './views/khatma.js';
+import * as debts from './views/debts.js';
+import * as datecalc from './views/datecalc.js';
+import * as rawatib from './views/rawatib.js';
+import { checkReminders } from './notify.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
@@ -41,11 +46,17 @@ const ROUTES = [
   [/^#\/qailulah$/, 'tools', (v) => tools.renderQailulah(v)],
   [/^#\/walk$/, 'tools', (v) => tools.renderWalk(v)],
   [/^#\/focus$/, 'tools', (v) => tools.renderFocus(v)],
+  [/^#\/khatma$/, 'tools', (v) => khatma.render(v)],
+  [/^#\/debts$/, 'tools', (v) => debts.render(v)],
+  [/^#\/datecalc$/, 'tools', (v) => datecalc.render(v)],
+  [/^#\/rawatib$/, 'tools', (v) => rawatib.render(v)],
   [/^#\/notebook(?:\/(saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)],
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],
   [/^#\/settings\/icon$/, 'settings', (v) => settings.renderIcon(v)],
+  [/^#\/settings\/fonts$/, 'settings', (v) => settings.renderFonts(v)],
+  [/^#\/settings\/notify$/, 'settings', (v) => settings.renderNotify(v)],
 ];
 
 const view = $('#view');
@@ -54,8 +65,8 @@ let currentHash = '';
 
 function route() {
   const hash = location.hash || '#/home';
-  // Links to what the app no longer has (the khatma, memorization, ruqyah, widget) open the home screen.
-  if (/^#\/(quran|hifz|ruqyah|calendar(\/[\d-]+)?|surah\/\w+|qibla|settings\/(widget|notify))$/.test(hash)) {
+  // Links to what the app no longer has (memorization, ruqyah, widget) open the home screen.
+  if (/^#\/(quran|hifz|ruqyah|calendar(\/[\d-]+)?|surah\/\w+|qibla|settings\/widget)$/.test(hash)) {
     location.replace('#/home');
     return;
   }
@@ -91,14 +102,16 @@ const media = window.matchMedia('(prefers-color-scheme: dark)');
 function applyTheme() {
   const dark = state.settings.theme === 'dark' || (state.settings.theme === 'auto' && media.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#08201d' : '#0b3b34');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#070d1a' : '#0f2350');
   setDigits(state.settings.digits);
   const s = state.settings;
+  document.documentElement.toggleAttribute('data-flat', !!s.flat);
   const root = document.documentElement.style;
-  root.setProperty('--font-text', FONTS[s.fontText] || FONTS.amiri);
-  root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.plex);
-  root.setProperty('--text-weight', s.textBold ? '700' : '400');
-  root.setProperty('--ui-weight', s.uiBold ? '700' : '400');
+  root.setProperty('--font-text', FONTS[s.fontText] || FONTS.tajawal);
+  root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.tajawal);
+  root.setProperty('--text-weight', s.textWeight || 500);
+  root.setProperty('--ui-weight', s.uiWeight || 400);
+  root.setProperty('--head-scale', s.headScale || 1);
 }
 media.addEventListener?.('change', applyTheme);
 
@@ -157,6 +170,7 @@ onChange(() => {
 });
 
 setInterval(() => {
+  checkReminders(); // also while hidden, for as long as the system keeps the app alive
   if (document.visibilityState !== 'visible') return;
   checkTimers();
   if (current?.tick?.() === 'rerender') route();
@@ -167,6 +181,7 @@ document.addEventListener('visibilitychange', () => {
   if (current?.tick) route();
   checkForUpdate();
   checkTimers();
+  checkReminders();
   // The screen lock is dropped when the app is hidden; take it again for a running timer.
   if (anyTimerRunning()) keepAwake(true);
 });

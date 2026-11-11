@@ -34,7 +34,7 @@ export const PRAYER_NAMES = {
 
 // Duha: minutes after sunrise, and minutes before Dhuhr.
 export const DUHA_START = 20;
-export const DUHA_END = 17;
+export const DUHA_END = 15;
 
 // Times for one day as decimal hours in the location's time zone.
 // opts: { fajr, isha | ishaMinutes, asr (1 = majority, 2 = Hanafi) }
@@ -166,7 +166,7 @@ export function dayTimes(day, settings, isRamadan = false) {
     out[k] = { key: k, name: PRAYER_NAMES[k], hours: minutes / 60, at: base + (minutes - tz * 60) * 60000 };
   }
   // Duha begins once the sun has risen about a spear's length, 20 minutes after sunrise, and
-  // ends 17 minutes before Dhuhr, ahead of the sun's zenith (a time when prayer is forbidden).
+  // ends 15 minutes before Dhuhr, ahead of the sun's zenith (a time when prayer is forbidden).
   const shift = (t, min) => ({ hours: t.hours + min / 60, at: t.at + min * 60000 });
   out.duha = { key: 'duha', name: PRAYER_NAMES.duha, ...shift(out.sunrise, DUHA_START) };
   out.duhaEnd = { key: 'duhaEnd', name: PRAYER_NAMES.duhaEnd, ...shift(out.dhuhr, -DUHA_END) };

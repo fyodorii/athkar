@@ -6,7 +6,9 @@ import { icon } from '../icons.js';
 import { METHODS, PRAYER_NAMES } from '../prayer.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
-import { $, copyText, esc, FONT_NAMES, FONTS, pageHeader, toast, toggle } from '../ui.js';
+import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
+import { PRAYERS } from '../today.js';
+import { $, copyText, esc, FONT_NAMES, FONTS, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -21,6 +23,7 @@ export function render(view) {
       <h4>الموقع والأوقات</h4>
       ${row('#/settings/location', 'pin', 'الموقع', esc(s.location.name))}
       ${row('#/settings/method', 'sun', 'طريقة الحساب', esc(METHODS[s.method]?.name.split(' — ')[0]))}
+      ${row('#/settings/notify', s.notify.on ? 'bell' : 'bellOff', 'التنبيهات والإقامة', s.notify.on ? 'مفعّلة' : 'متوقفة')}
       ${row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
     </div>
     <div class="group">
@@ -29,26 +32,20 @@ export function render(view) {
         <div class="seg-mini" data-theme>
           ${[['auto', 'تلقائي'], ['light', 'فاتح'], ['dark', 'داكن']].map(([v, l]) => `<button class="${s.theme === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
         </div></div>
-      <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">خط الأذكار</span>
-        <div class="seg-mini" data-font-text>
-          ${Object.entries(FONT_NAMES).map(([v, l]) => `<button class="${s.fontText === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v].replaceAll('"', "'")}">${l}</button>`).join('')}
-        </div></div>
-      <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">خط عريض للأذكار</span>${toggle('textBold', s.textBold)}</div>
+      <div class="row"><span class="row-icon">${icon('layers', 20)}</span><span class="row-label">تصميم مسطّح<small>ضوء مسطّح وألوان أقل، بلا زجاج سائل</small></span>${toggle('flat', s.flat)}</div>
+      ${row('#/settings/fonts', 'type', 'الخطوط', `${FONT_NAMES[s.fontUi] || ''} · ${WEIGHTS.find((w) => w[0] === s.uiWeight)?.[1] || ''}`)}
       <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">حجم خط الأذكار</span>
         <input type="range" min="0.85" max="1.5" step="0.05" value="${s.textScale}" data-scale></div>
       <p class="sample amiri" data-sample style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
-      <div class="row"><span class="row-icon">${icon('palette', 20)}</span><span class="row-label">خط الواجهة</span>
-        <div class="seg-mini" data-font-ui>
-          ${Object.entries(FONT_NAMES).map(([v, l]) => `<button class="${s.fontUi === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v].replaceAll('"', "'")}">${l}</button>`).join('')}
-        </div></div>
-      <div class="row"><span class="row-icon">${icon('palette', 20)}</span><span class="row-label">خط عريض للواجهة</span>${toggle('uiBold', s.uiBold)}</div>
-      <p class="hint">آيات القرآن تبقى بخط مصحف المدينة.</p>
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
-      <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">الأرقام العربية (١٢٣)</span>${toggle('digits', s.digits === 'arab')}</div>
+      <div class="row"><span class="row-icon">${icon('digits', 20)}</span><span class="row-label">نوع الأرقام</span>
+        <div class="seg-mini" data-digits>
+          ${[['arab', '١٢٣'], ['latn', '123']].map(([v, l]) => `<button class="${s.digits === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
+        </div></div>
       <div class="row"><span class="row-icon">${icon('calendar', 20)}</span><span class="row-label">تعديل التاريخ الهجري</span>
         <div class="stepper" data-hijri><button data-d="-1">−</button><b>${num(s.hijriAdjust > 0 ? '+' + s.hijriAdjust : s.hijriAdjust)}</b><button data-d="1">+</button></div></div>
       <p class="hint">اليوم: ${hijriText(today().day, s.hijriAdjust)}. عدّله يوماً إن خالف رؤية الهلال في بلدك.</p>
-      <div class="row"><span class="row-icon">${icon('vibrate', 20)}</span><span class="row-label">الاهتزاز عند العدّ</span>${toggle('haptics', s.haptics)}</div>
+      <div class="row"><span class="row-icon">${icon('vibrate', 20)}</span><span class="row-label">الاهتزاز<small>عند العدّ والتسجيل، حيث يدعمه الجهاز</small></span>${toggle('haptics', s.haptics)}</div>
     </div>
     <div class="group">
       <h4>بياناتك</h4>
@@ -63,10 +60,8 @@ export function render(view) {
   const onChange = (e) => {
     const t = e.target;
     if (t.name === 'clock24') s.clock24 = t.checked;
-    if (t.name === 'digits') s.digits = t.checked ? 'arab' : 'latn';
     if (t.name === 'haptics') s.haptics = t.checked;
-    if (t.name === 'textBold') s.textBold = t.checked;
-    if (t.name === 'uiBold') s.uiBold = t.checked;
+    if (t.name === 'flat') s.flat = t.checked;
     if (t.matches('[data-scale]')) s.textScale = Number(t.value);
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {
@@ -81,18 +76,15 @@ export function render(view) {
       return;
     }
     save();
-    if (t.name === 'clock24' || t.name === 'digits') {
-            render(view);
-    }
+    if (t.name === 'clock24') render(view);
   };
   const onInput = (e) => {
     if (e.target.matches('[data-scale]')) $('[data-sample]', view).style.fontSize = `calc(1.3rem * ${e.target.value})`;
   };
   const onClick = (e) => {
-    const ft = e.target.closest('[data-font-text] [data-v], [data-font-ui] [data-v]');
-    if (ft) {
-      if (ft.closest('[data-font-text]')) s.fontText = ft.dataset.v;
-      else s.fontUi = ft.dataset.v;
+    const dg = e.target.closest('[data-digits] [data-v]');
+    if (dg) {
+      s.digits = dg.dataset.v;
       save();
       return render(view);
     }
@@ -291,10 +283,10 @@ export function renderMethod(view) {
 }
 
 export const APP_ICONS = [
-  ['emerald', 'زمردي'],
+  ['sky', 'أزرق'],
   ['night', 'ليلي'],
   ['violet', 'بنفسجي'],
-  ['sky', 'سماوي'],
+  ['emerald', 'زمردي'],
   ['parchment', 'ورق المصحف'],
   ['black', 'أسود'],
   ['burgundy', 'عنابي'],
@@ -330,11 +322,173 @@ export function renderIcon(view) {
       s.appIcon = b.dataset.icon;
       save();
       const l = document.querySelector('link[rel=apple-touch-icon]');
-      if (l) l.href = `${s.appIcon === 'emerald' ? 'icons/apple-touch-icon' : `icons/alt/${s.appIcon}`}.png?v=2`; // ?v= as in index.html: a new address so iOS fetches the icon afresh
+      if (l) l.href = `icons/alt/${s.appIcon}.png?v=3`; // ?v= as in index.html: a new address so iOS fetches the icon afresh
       return draw();
     }
     const c = e.target.closest('[data-icon-link]');
     if (c) copyText(c.dataset.iconLink);
   };
   return { destroy: () => (view.onclick = null) };
+}
+
+// ---- Fonts ----
+
+export function renderFonts(view) {
+  const s = state.settings;
+  const picker = (key, weightKey, title) => `
+    <div class="group fonts">
+      <div class="f-head"><h4>${title}</h4><span>${FONT_NAMES[s[key]]}</span></div>
+      <div class="f-grid" data-font="${key}">
+        ${Object.keys(FONTS)
+          .map(
+            (v) => `<button class="${s[key] === v ? 'on' : ''}" data-v="${v}">
+              <small>${FONT_NAMES[v]}</small>${s[key] === v ? `<i>${icon('check', 14)}</i>` : ''}
+              <b style="font-family:${FONTS[v]}">أبجد هوز · ${num(123)}</b></button>`
+          )
+          .join('')}
+      </div>
+      <div class="f-head"><h4>وزن الخط</h4><span>${WEIGHTS.find((w) => w[0] === s[weightKey])?.[1] || ''}</span></div>
+      <div class="chips scroll" data-weight="${weightKey}">
+        ${WEIGHTS.map(([w, l]) => `<button class="chip-opt ${s[weightKey] === w ? 'on' : ''}" data-v="${w}" style="font-family:${FONTS[s[key]]};font-weight:${w}">${l}</button>`).join('')}
+      </div>
+    </div>`;
+  const draw = () => {
+    view.innerHTML = `
+      ${pageHeader('الخطوط', { back: '#/settings' })}
+      ${picker('fontUi', 'uiWeight', 'خط الواجهة')}
+      <div class="group fonts">
+        <div class="f-head"><h4>حجم العناوين</h4><span data-head-pct>${num(Math.round(s.headScale * 100))}%</span></div>
+        <div class="f-size">
+          <button class="icon-btn ghost" data-head="-0.02" aria-label="أصغر">${icon('minus', 22)}</button>
+          <input type="range" min="0.8" max="1.3" step="0.01" value="${s.headScale}" data-head-range>
+          <button class="icon-btn ghost" data-head="0.02" aria-label="أكبر">${icon('plus', 22)}</button>
+        </div>
+        <button class="link" data-head-reset>الحجم الأصلي · ${num(100)}%</button>
+        <p class="hint">كل حجم نسبة إلى تصميم التطبيق. العناوين البارزة تحتفظ بوزن أثقل لتبقى واضحة.</p>
+      </div>
+      ${picker('fontText', 'textWeight', 'خط الأذكار')}
+      <p class="sample amiri" style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
+      <p class="hint center">آيات القرآن تبقى بخط مصحف المدينة.</p>`;
+  };
+  draw();
+  const setHead = (v) => {
+    s.headScale = Math.round(Math.max(0.8, Math.min(1.3, v)) * 100) / 100;
+    save();
+    $('[data-head-pct]', view).textContent = `${num(Math.round(s.headScale * 100))}%`;
+    $('[data-head-range]', view).value = s.headScale;
+  };
+  view.onclick = (e) => {
+    const f = e.target.closest('[data-font] [data-v]');
+    const w = e.target.closest('[data-weight] [data-v]');
+    if (f) s[f.closest('[data-font]').dataset.font] = f.dataset.v;
+    if (w) s[w.closest('[data-weight]').dataset.weight] = Number(w.dataset.v);
+    if (f || w) {
+      save();
+      const y = window.scrollY;
+      const x = w ? w.parentElement.scrollLeft : 0;
+      const which = w?.closest('[data-weight]').dataset.weight;
+      draw();
+      window.scrollTo(0, y);
+      if (which) $(`[data-weight="${which}"]`, view).scrollLeft = x;
+      return;
+    }
+    const h = e.target.closest('[data-head]');
+    if (h) return setHead(s.headScale + Number(h.dataset.head));
+    if (e.target.closest('[data-head-reset]')) setHead(1);
+  };
+  view.oninput = (e) => {
+    if (e.target.matches('[data-head-range]')) setHead(Number(e.target.value));
+  };
+  return { destroy: () => (view.onclick = view.oninput = null) };
+}
+
+// ---- Reminders and the iqama ----
+
+export function renderNotify(view) {
+  const s = state.settings;
+  const n = s.notify;
+  const sw = (name, label, on, sub = '', ic = 'bell') =>
+    `<div class="row"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}${sub ? `<small>${sub}</small>` : ''}</span>${toggle(name, on)}</div>`;
+  const draw = () => {
+    const t = today().times;
+    const perm = notifyPermission();
+    const status =
+      perm === 'granted'
+        ? 'إشعارات النظام مسموحة.'
+        : perm === 'denied'
+          ? 'إشعارات النظام مرفوضة لهذا التطبيق؛ اسمح بها من إعدادات الجهاز. التنبيه داخل التطبيق يعمل.'
+          : perm === 'unsupported'
+            ? 'هذا المتصفح لا يعرض إشعارات النظام (على الآيفون: أضف التطبيق إلى الشاشة الرئيسية أولاً). التنبيه داخل التطبيق يعمل.'
+            : 'لم يُطلب إذن الإشعارات بعد.';
+    view.innerHTML = `
+      ${pageHeader('التنبيهات والإقامة', { back: '#/settings' })}
+      <div class="group">
+        ${sw('on', 'تفعيل التنبيهات', n.on, 'إشعار وصوت عند دخول الوقت', n.on ? 'bell' : 'bellOff')}
+        <p class="hint">${status}</p>
+        <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً أو حيّاً في الخلفية، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه. تطبيقات الويب لا تستطيع جدولة إشعار وهي مغلقة تماماً، فلا تعتمد عليه وحده للاستيقاظ.</p>
+        ${n.on ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} جرّب التنبيه</button>` : ''}
+      </div>
+      <div class="group ${n.on ? '' : 'off'}">
+        <h4>الصلوات</h4>
+        ${PRAYERS.map((k) => sw(`p:${k}`, PRAYER_NAMES[k], n.prayers[k], clockText(t[k].hours, s.clock24), 'mosque')).join('')}
+        <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">تنبيه قبل الأذان<small>${n.before ? `قبله بـ${minutesText(n.before)}` : 'بلا تنبيه مسبق'}</small></span>
+          <div class="stepper" data-before><button data-d="-5">−</button><b>${num(n.before)}</b><button data-d="5">+</button></div></div>
+        ${sw('iqama', 'تنبيه الإقامة', n.iqama, 'عند انقضاء مدة الانتظار بعد الأذان', 'minaret')}
+      </div>
+      <div class="group">
+        <h4>الإقامة بعد الأذان بالدقائق</h4>
+        ${PRAYERS.map(
+          (k) => `<div class="row"><span class="row-label">${PRAYER_NAMES[k]}</span>
+            <div class="stepper" data-iqama="${k}"><button data-d="-1">−</button><b>${num(s.iqama[k])}</b><button data-d="1">+</button></div></div>`
+        ).join('')}
+        <p class="hint">تظهر في الرئيسية بعد الأذان: «مضى على الأذان… الإقامة بعد…». اجعلها صفراً لإخفائها.</p>
+      </div>
+      <div class="group ${n.on ? '' : 'off'}">
+        <h4>أوقات وأذكار</h4>
+        ${sw('duha', 'دخول وقت الضحى', n.duha, clockText(t.duha.hours, s.clock24), 'sun')}
+        ${sw('duhaEnd', 'قرب نهاية الضحى', n.duhaEnd, `قبل ${clockText(t.duhaEnd.hours, s.clock24)} بربع ساعة`, 'sun')}
+        ${sw('lastThird', 'الثلث الأخير من الليل', n.lastThird, clockText(t.lastThird.hours, s.clock24), 'stars')}
+        ${sw('morning', 'أذكار الصباح', n.morning, 'بعد الفجر بنصف ساعة', 'sunrise')}
+        ${sw('evening', 'أذكار المساء', n.evening, 'بعد العصر بنصف ساعة', 'sunset')}
+        <div class="row"><span class="row-icon">${icon('quran', 20)}</span><span class="row-label">ورد الختمة<small>${n.khatma ? 'تذكير يومي في هذا الوقت' : 'اختر وقتاً لتذكير يومي'}</small></span>
+          ${n.khatma ? `<button class="icon-btn ghost sm" data-khatma-off aria-label="إلغاء">${icon('close', 18)}</button>` : ''}
+          <input type="time" value="${n.khatma}" data-khatma></div>
+        ${sw('debts', 'الديون المستحقة', n.debts, 'قبل الاستحقاق بثلاثة أيام وفي يومه', 'wallet')}
+        ${sw('sound', 'صوت التنبيه', n.sound, '', 'radio')}
+      </div>`;
+  };
+  draw();
+  view.onchange = async (e) => {
+    const t = e.target;
+    if (t.matches('[data-khatma]')) n.khatma = t.value;
+    else if (t.name === 'on') {
+      n.on = t.checked;
+      if (n.on) {
+        const p = await askPermission();
+        primeReminders();
+        if (p !== 'granted') toast('التنبيه يعمل داخل التطبيق؛ إشعارات النظام غير مسموحة');
+      }
+    } else if (t.name?.startsWith('p:')) n.prayers[t.name.slice(2)] = t.checked;
+    else if (t.name in n) n[t.name] = t.checked;
+    else return;
+    save();
+    draw();
+  };
+  view.onclick = (e) => {
+    if (e.target.closest('[data-test]')) return testReminder();
+    if (e.target.closest('[data-khatma-off]')) n.khatma = '';
+    const b = e.target.closest('[data-before] [data-d]');
+    if (b) n.before = Math.max(0, Math.min(30, n.before + Number(b.dataset.d)));
+    const q = e.target.closest('[data-iqama] [data-d]');
+    if (q) {
+      const k = q.closest('[data-iqama]').dataset.iqama;
+      s.iqama[k] = Math.max(0, Math.min(60, s.iqama[k] + Number(q.dataset.d)));
+    }
+    if (!b && !q && !e.target.closest('[data-khatma-off]')) return;
+    save();
+    const y = window.scrollY;
+    draw();
+    window.scrollTo(0, y);
+  };
+  return { destroy: () => (view.onchange = view.onclick = null) };
 }

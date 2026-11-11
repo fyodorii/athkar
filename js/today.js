@@ -1,5 +1,5 @@
 // "Now" at the chosen location: today's date, the day's times and the next moment among the
-// ones the app shows (sunrise, Duha, the middle of the night and its last third).
+// ones the app shows (the five prayers, sunrise, Duha, the middle of the night and its last third).
 
 import { addDays, dateAt, dayKey, dayTimes, tzOffset } from './prayer.js';
 import { hijri } from './dates.js';
@@ -7,6 +7,7 @@ import { state } from './store.js';
 
 // The moments of a night and a morning that the app counts down to.
 export const MOMENTS = ['sunrise', 'duha', 'midnight', 'lastThird'];
+export const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 let cache = { key: '', value: null };
 
@@ -31,17 +32,42 @@ export function today(now = new Date()) {
   const timeline = [
     night.midnight,
     night.lastThird,
+    ...PRAYERS.map((k) => times[k]),
     times.sunrise,
     times.duha,
     times.midnight,
     times.lastThird,
+    tomorrow.fajr,
     tomorrow.sunrise,
     tomorrow.duha,
   ].sort((a, b) => a.at - b.at);
   const next = timeline.find((x) => x.at > t) || tomorrow.duha;
   const prev = [...timeline].reverse().find((x) => x.at <= t) || { ...yesterday.lastThird };
 
-  return { ...cache.value, next, prev, weekday, isFriday: weekday === 5, period: periodNow(times, night, t) };
+  // The prayer whose time it is now (Isha runs until Fajr), and the next one.
+  const prayers = [yesterday.isha, ...PRAYERS.map((k) => times[k]), tomorrow.fajr];
+  const nextPrayer = prayers.find((x) => x.at > t) || tomorrow.fajr;
+  const lastPrayer = [...prayers].reverse().find((x) => x.at <= t) || yesterday.isha;
+
+  return {
+    ...cache.value,
+    next,
+    prev,
+    nextPrayer,
+    lastPrayer,
+    adhan: adhanNow(lastPrayer, t),
+    weekday,
+    isFriday: weekday === 5,
+    period: periodNow(times, night, t),
+  };
+}
+
+// Around a prayer: the minutes since its adhan and until its iqama, for the first hour.
+function adhanNow(prayer, t) {
+  const since = Math.floor((t - prayer.at) / 60000);
+  if (since < 0 || since >= 60) return null;
+  const wait = state.settings.iqama?.[prayer.key] ?? 0;
+  return { key: prayer.key, name: prayer.name, since, iqamaIn: wait ? wait - since : null };
 }
 
 // What kind of time it is: sunrise, Duha, the afternoon or a part of the night.
