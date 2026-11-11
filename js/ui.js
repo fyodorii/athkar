@@ -51,9 +51,28 @@ export function toast(message, kind = '') {
   toastTimer = setTimeout(() => (el.className = 'toast'), /\blong\b/.test(kind) ? 7000 : 2600);
 }
 
-// A light tap feel where the device supports it (Android); iOS web has no vibration API.
-export function haptic(ms = 12) {
-  if (state.settings.haptics && navigator.vibrate) navigator.vibrate(ms);
+// A tap feel. Android has the vibration API. The iPhone has none for web apps, but it gives its
+// own tick when a switch control is flipped (iOS 17.4+), so a hidden switch is flipped instead;
+// that only works inside a touch, which is where every call comes from. `force` is for an
+// alert the user asked for (the tasbeeh's numbers) even with «الاهتزاز» off.
+let tick;
+export function haptic(ms = 12, force = false) {
+  if (!state.settings.haptics && !force) return;
+  if (navigator.vibrate) return void navigator.vibrate(ms);
+  try {
+    if (!tick) {
+      tick = document.createElement('label');
+      tick.setAttribute('aria-hidden', 'true');
+      tick.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none';
+      tick.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+      document.body.appendChild(tick);
+    }
+    // A longer buzz is a few ticks in a row.
+    const n = ms >= 100 ? 3 : ms >= 30 ? 2 : 1;
+    for (let i = 0; i < n; i++) setTimeout(() => tick.click(), i * 90);
+  } catch (e) {
+    // No haptics on this device.
+  }
 }
 
 export async function copyText(text) {
@@ -149,11 +168,14 @@ export function segmented(items, active) {
     .join('')}</div>`;
 }
 
+// Opens the side menu (app.js listens for it).
+export const NAV_BUTTON = `<button class="icon-btn ghost nav-btn" data-nav aria-label="القائمة">${icon('rows', 24)}</button>`;
+
 export function pageHeader(title, { back, actions = '', sub = '' } = {}) {
   return `<header class="page-head ${back ? 'with-back' : ''}">
-    ${back ? `<a class="icon-btn ghost back" href="${back}" aria-label="رجوع">${icon('back', 24)}</a>` : ''}
+    ${back ? `<a class="icon-btn ghost back" href="${back}" aria-label="رجوع">${icon('back', 24)}</a>` : NAV_BUTTON}
     <div class="page-title"><h1>${esc(title)}</h1>${sub ? `<p>${sub}</p>` : ''}</div>
-    <div class="page-actions">${actions}</div>
+    <div class="page-actions">${actions}${back ? NAV_BUTTON : ''}</div>
   </header>`;
 }
 

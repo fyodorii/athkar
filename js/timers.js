@@ -23,7 +23,7 @@ export function unlockAudio() {
   }
 }
 
-export function chime(pattern = [0, 0.3, 0.6]) {
+export function chime(pattern = [0, 0.3, 0.6], buzz = true) {
   try {
     if (!audio) return;
     const t0 = audio.currentTime;
@@ -42,7 +42,7 @@ export function chime(pattern = [0, 0.3, 0.6]) {
   } catch (e) {
     // No sound: the toast still shows.
   }
-  haptic(300);
+  if (buzz) haptic(300);
 }
 
 // Keeps the screen on while a timer runs (iOS 16.4+), so it can sound on time.

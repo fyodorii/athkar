@@ -1580,3 +1580,79 @@ input.kh-range { width: 100%; height: 34px; direction: rtl; }
 .f-size input { flex: 1; width: auto; height: 34px; direction: rtl; }
 .f-size .icon-btn { color: var(--primary); }
 .fonts .link { display: block; margin: 4px 0; }
+
+/* ---------- Version 20: the side menu, no zooming, the day's adhkar, reminders ---------- */
+
+/* No pinch or double-tap zoom, and no text inflation when the phone is turned. */
+html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* On phones the sections live in a menu that slides in from the side, leaving the whole
+   screen to the page; wide screens keep them as a rail (above). */
+#nav-backdrop { position: fixed; inset: 0; z-index: 69; background: rgba(6, 12, 28, 0.42); opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.nav-head { display: none; }
+#tabs hr { display: none; }
+@media (max-width: 899.98px) {
+  :root { --tabs-h: var(--safe-bottom); }
+  #tabs {
+    inset: 0 0 0 auto;
+    z-index: 70;
+    width: min(80vw, 310px);
+    height: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2px;
+    padding: calc(var(--safe-top) + 10px) 12px calc(var(--safe-bottom) + 16px);
+    border-radius: 34px 0 0 34px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translateX(105%);
+    visibility: hidden;
+    transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), visibility 0.32s;
+  }
+  body.nav-open #tabs { transform: none; visibility: visible; }
+  body.nav-open #nav-backdrop { opacity: 1; pointer-events: auto; }
+  body.nav-open { overflow: hidden; }
+  body[data-tab='tasbeeh'] #tabs { display: flex; }
+  .nav-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 10px 0; }
+  .nav-head b { font-size: calc(24px * var(--head-scale)); font-weight: 800; color: var(--primary); }
+  #tabs a { flex: none; flex-direction: row; justify-content: flex-start; gap: 14px; padding: 12px 14px; border-radius: 18px; font-size: 16.5px; font-weight: 600; color: var(--ink); }
+  #tabs a .ic { padding: 0; color: var(--ink-2); }
+  #tabs a.on { color: var(--primary); }
+  #tabs a.on .ic { color: var(--primary); }
+  #tabs hr { display: block; width: 100%; height: 1px; margin: 6px 0; border: 0; background: var(--line); flex-shrink: 0; }
+  .mini { bottom: calc(12px + var(--safe-bottom)); }
+  .fab { bottom: calc(22px + var(--safe-bottom)); }
+}
+@media (min-width: 900px) {
+  .nav-btn { display: none; }
+  #tabs { overflow-y: auto; }
+  #tabs a.on { background: var(--primary-soft); box-shadow: none; }
+}
+.page-head .nav-btn { margin-inline: -6px 0; }
+.page-actions .nav-btn { margin-inline: 0 -6px; }
+
+/* The day's adhkar by occasion, under the three wirds. */
+.occ-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+.occ-grid a { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); min-width: 0; transition: transform 0.15s; }
+.occ-grid a:active { transform: scale(0.97); }
+.occ-grid span { width: 38px; height: 38px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; background: var(--tone-soft); color: var(--tone); }
+.occ-grid b { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.4; }
+.occ-grid small { color: var(--ink-3); font-size: 12.5px; }
+
+/* Tasbeeh: the alerts sheet, and room for one more button in the top row. */
+.tsb-tools { gap: 5px; }
+.tsb-top .icon-btn { width: 36px; height: 36px; }
+.menu.alerts > div { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
+.menu.alerts > div + div { border-top: 1px solid var(--line); }
+.menu.alerts b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.alert-add { display: flex; gap: 8px; margin: 12px 0 6px; }
+.alert-add input { flex: 1; min-width: 0; border: 0; outline: 0; border-radius: 14px; background: var(--bg-2); padding: 0 14px; font-size: 16px; color: var(--ink); }
+.alert-add .btn { min-height: 46px; padding: 0 16px; }
+
+/* My reminders. */
+.rem { display: flex; align-items: center; gap: 10px; padding: 14px 16px; }
+.rem-text { flex: 1; display: grid; min-width: 0; }
+.rem-text b { font-size: 16.5px; overflow-wrap: anywhere; }
+.rem-text small { color: var(--ink-2); font-size: 13px; }
+.rem.off .rem-text { opacity: 0.5; }
+.field input[type='time'] { width: 100%; min-height: 48px; border-radius: 14px; text-align: center; font-size: 17px; color: var(--ink); }
