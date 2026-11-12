@@ -1840,3 +1840,108 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 .tj-key span { display: inline-flex; align-items: center; gap: 5px; }
 .tj-key i { width: 12px; height: 12px; border-radius: 50%; background: currentColor; }
 .tc-text .madina { font-size: 1.15em; line-height: 2.1; font-weight: 400; }
+
+/* ---------- Version 23: light blue, flatter and easier on the eye ---------- */
+
+:root {
+  --bg: #eef4fc;
+  --primary: #3d85e0;
+  --primary-2: #2f72c8;
+  --primary-soft: rgba(61, 133, 224, 0.12);
+  --hero-1: #d5e6fd;
+  --hero-2: #e2eefe;
+  --hero-3: #edf5ff;
+  --blob-1: rgba(90, 150, 245, 0.16);
+  --blob-2: rgba(120, 200, 250, 0.14);
+  --blob-3: rgba(150, 140, 250, 0.08);
+  --shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 1px 2px rgba(30, 70, 140, 0.05), 0 8px 20px -16px rgba(30, 70, 140, 0.25);
+  --shadow-lg: 0 0 0 1px rgba(60, 120, 210, 0.1), 0 12px 28px -20px rgba(30, 70, 140, 0.3);
+  --card: rgba(255, 255, 255, 0.78);
+  --glass-filter: blur(14px) saturate(1.3);
+}
+[data-theme='dark'] {
+  --bg: #0a1220;
+  --primary: #7fb0f5;
+  --primary-soft: rgba(127, 176, 245, 0.15);
+  --hero-1: #101b30;
+  --hero-2: #13213a;
+  --hero-3: #172844;
+  --blob-1: rgba(60, 110, 220, 0.14);
+  --blob-2: rgba(50, 140, 210, 0.08);
+  --blob-3: rgba(110, 90, 220, 0.08);
+  --shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 10px 24px -18px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --card: rgba(255, 255, 255, 0.06);
+}
+[data-flat] { --card: var(--card-solid); --shadow: 0 0 0 1px var(--line); --shadow-lg: 0 0 0 1px var(--line); --glass-filter: none; }
+
+/* The top of the screen under the phone's own clock and battery (drawn in white there): a
+   soft blue band, so they stay readable over the light pages. */
+body::after { content: ''; position: fixed; inset: 0 0 auto 0; height: var(--safe-top); z-index: 90; pointer-events: none; background: rgba(52, 100, 170, 0.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+[data-theme='dark'] body::after, body[data-tab='tasbeeh']::after { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* Home: a light header — the day, then the next time in a plain white panel. */
+.h-hero {
+  margin: 0 0 14px;
+  padding: calc(var(--safe-top) + 12px) 16px 16px;
+  margin-inline: -16px;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--hero-1), var(--hero-3));
+  border-radius: 0 0 30px 30px;
+  box-shadow: none;
+}
+.h-hero .icon-btn.glass, .h-hero .glass {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--primary-2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.h-dates { margin-top: 14px; }
+.h-dates b { color: var(--ink); }
+.h-dates span span { color: var(--primary-2); font-weight: 600; }
+.h-dates small { color: var(--ink-2); }
+.h-moon svg { filter: none; }
+.h-moon .moon-dark { fill: rgba(40, 80, 150, 0.12); }
+.h-moon .moon-lit { fill: #f3c64e; }
+.h-count { margin-top: 14px; background: rgba(255, 255, 255, 0.82); box-shadow: 0 0 0 1px rgba(60, 120, 210, 0.08); -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 24px; }
+.h-count > small { color: var(--ink-2); }
+.h-count > small b { color: var(--ink); }
+.h-count > small span { color: var(--primary-2); }
+.h-count .countdown { color: var(--primary-2); font-size: clamp(42px, 13vw, 56px); }
+.h-bar { background: var(--primary-soft); }
+.h-bar i { background: var(--primary); }
+.h-ends { color: var(--ink-2); }
+.h-ends .ic { color: var(--primary); }
+.h-now { background: rgba(255, 255, 255, 0.6); box-shadow: 0 0 0 1px rgba(60, 120, 210, 0.08); border-radius: 18px; }
+.h-now-ic { background: var(--primary-soft); color: var(--primary); }
+.h-now-text b small { color: var(--primary-2); }
+.h-now-text > small { color: var(--ink-2); }
+.h-now.tp-zawal .h-now-ic { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+[data-theme='dark'] .h-hero .icon-btn.glass, [data-theme='dark'] .h-hero .glass { background: rgba(255, 255, 255, 0.08); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+[data-theme='dark'] .h-count, [data-theme='dark'] .h-now { background: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06); }
+[data-theme='dark'] .h-count .countdown, [data-theme='dark'] .h-count > small span, [data-theme='dark'] .h-dates span span, [data-theme='dark'] .h-now-text b small { color: var(--primary); }
+[data-theme='dark'] .h-moon .moon-dark { fill: rgba(255, 255, 255, 0.12); }
+[data-flat] .h-hero { background: var(--hero-2); }
+@media (min-width: 900px) { .h-hero { margin-inline: 0; } }
+
+/* Flatter cards across the app: lighter edges, softer lift. */
+.h-pr.now { box-shadow: none; }
+.btn.primary, .icon-btn.primary, .fab { box-shadow: 0 6px 14px -10px var(--primary); }
+#tabs { box-shadow: var(--shadow), 0 12px 30px -18px rgba(30, 70, 140, 0.35); }
+.w-day { background: linear-gradient(160deg, #dcebff, #eef5ff); color: var(--ink); box-shadow: 0 0 0 1px rgba(60, 120, 210, 0.08); }
+.w-day-top small { color: var(--ink-2); }
+.w-day-ring, .w-week span { color: var(--primary); }
+.w-day .ring-bg { stroke: rgba(60, 120, 210, 0.16); }
+.w-week { border-top-color: rgba(60, 120, 210, 0.12); }
+.w-week button { color: var(--ink-2); }
+.w-week span { background: rgba(60, 120, 210, 0.1); }
+.w-week button.on, .w-week button.on b { color: var(--primary-2); }
+.w-streak { background: rgba(60, 120, 210, 0.1); color: var(--ink-2); }
+.w-streak.on { background: rgba(240, 130, 40, 0.16); color: #c96a1e; }
+[data-theme='dark'] .w-day { background: linear-gradient(160deg, #13213a, #0f1a2e); color: var(--ink); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06); }
+[data-theme='dark'] .w-day .ring-bg { stroke: rgba(255, 255, 255, 0.14); }
+[data-theme='dark'] .w-week span { background: rgba(255, 255, 255, 0.08); }
+[data-theme='dark'] .w-week button.on, [data-theme='dark'] .w-week button.on b { color: var(--primary); }
+[data-theme='dark'] .w-streak.on { color: #ffb86b; }
+.share-card, .finish, .radio-hero, .toast.reminder { background: linear-gradient(165deg, #3f7fd6, #2a5fb0); }

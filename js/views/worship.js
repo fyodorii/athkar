@@ -147,8 +147,8 @@ export function render(view) {
     const h = hijri(sel, state.settings.hijriAdjust);
     const week = Array.from({ length: 7 }, (_, i) => addDays(t.day, i - 6));
     const score = dayScore(selected);
-    // The big streak: days on which at least half of the list was kept.
-    const days = streak(t.day, (k) => dayScore(k).fraction >= 0.5);
+    // The big streak: days on which at least a quarter of the list was kept.
+    const days = streak(t.day, (k) => dayScore(k).fraction >= 0.25);
     return `<section class="w-day">
       <div class="w-day-top">
         <div>
@@ -234,7 +234,7 @@ export function render(view) {
     ${dayCard()}
     ${GROUPS.map((g) => section(g)).join('')}
     ${section({ id: 'custom', title: 'متابعاتي الخاصة' }, customItems(), `<button class="btn ghost wide" data-add-habit>${icon('plus', 18)} أضف عبادة تتابعها</button>`)}
-    <p class="hint center">اضغط على العبادة لتسجيلها. السلسلة أيام متتالية حافظت فيها على العبادة، وسلسلة اليوم بنصف القائمة فأكثر.</p>`;
+    <p class="hint center">اضغط على العبادة لتسجيلها. السلسلة أيام متتالية حافظت فيها على العبادة، وسلسلة اليوم بربع القائمة فأكثر.</p>`;
 
   const draw = () => {
     view.innerHTML = `

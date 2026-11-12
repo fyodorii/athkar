@@ -1,4 +1,4 @@
-// «أدعيتي» and «ملاحظاتي»: the user's own supplications, and their notes.
+// «أدعيتي»: the user's own supplications.
 
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
@@ -6,10 +6,9 @@ import { save, state, uid } from '../store.js';
 import { $, confirmSheet, copyText, esc, openSheet, pageHeader, segmented, shareText, toast } from '../ui.js';
 import { editCustom, MINE_TABS } from './adhkar.js';
 
-// The two lists and their words.
+// The list and its words.
 const KINDS = {
   dua: { key: 'notebook', href: '#/notebook', sub: 'دفتر أدعيتك الخاصة', one: 'الدعاء', add: 'دعاء جديد', search: 'أدعيتك', empty: ['hand', 'دفتر أدعيتك', 'اكتب أدعيتك التي تحب أن تدعو بها، لنفسك ولوالديك ولمن تحب.'], hint: 'اكتب دعاءك هنا…' },
-  note: { key: 'notes', href: '#/notebook/notes', sub: 'ملاحظاتك وخواطرك', one: 'الملاحظة', add: 'ملاحظة جديدة', search: 'ملاحظاتك', empty: ['edit', 'ملاحظاتي', 'دوّن فائدة سمعتها، أو خاطرة، أو ما تريد الرجوع إليه.'], hint: 'اكتب ملاحظتك هنا…' },
 };
 
 let query = '';
@@ -17,8 +16,8 @@ let query = '';
 const norm = (s) => s.replace(/[ً-ْٰـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
 const matches = (text) => !query || norm(text).includes(norm(query));
 
-export function render(view, tab) {
-  const kind = tab ? 'note' : 'dua';
+export function render(view) {
+  const kind = 'dua';
   const K = KINDS[kind];
   const list = () => state[K.key];
 
@@ -118,7 +117,7 @@ function openNote(kind, n, redraw) {
         }
       });
     },
-    { title: K.one }
+    { title: 'دعائي' }
   );
 }
 

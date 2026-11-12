@@ -13,7 +13,6 @@ import { $, $$, confirmSheet, esc, haptic, hapticSwitch, openSheet, pageHeader, 
 export const MINE_TABS = [
   ['#/mine', 'أذكاري'],
   ['#/notebook', 'أدعيتي'],
-  ['#/notebook/notes', 'ملاحظاتي'],
 ];
 const TABS = MINE_TABS;
 
@@ -76,12 +75,7 @@ export function renderWird(view, id) {
     const done = wirdDone(cat);
     $('[data-done]', view).textContent = num(done);
     $('[data-bar]', view).style.width = `${(done / cat.items.length) * 100}%`;
-    if (done === cat.items.length) return $('[data-finish]', view).classList.add('show');
-    // On to the next one still to read below this card, its start just under the header; never
-    // back up to one skipped above, and never past the start of a long one.
-    const cards = $$('.dhikr', view);
-    const nextCard = cards.slice(cards.indexOf(card) + 1).find((x) => !x.classList.contains('done'));
-    if (nextCard) setTimeout(() => nextCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+    if (done === cat.items.length) $('[data-finish]', view).classList.add('show'); // the page stays where it is
   };
 
   view.onclick = async (e) => {
