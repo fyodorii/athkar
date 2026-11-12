@@ -24,7 +24,6 @@ import { takeRedirect } from './google.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
 import { APP_NAME, DESIGNER } from './config.js';
 import { checkReminders } from './notify.js';
-import { paintTajweed } from './tajweed.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
@@ -227,14 +226,6 @@ document.addEventListener('visibilitychange', () => {
   // The screen lock is dropped when the app is hidden; take it again for a running timer.
   if (anyTimerRunning()) keepAwake(true);
 });
-
-// The tajweed colours are painted over the text of the page; paint them again when it changes.
-let painting = 0;
-new MutationObserver(() => {
-  cancelAnimationFrame(painting);
-  painting = requestAnimationFrame(paintTajweed);
-}).observe(view, { childList: true, subtree: true });
-paintTajweed(); // the first page was drawn before the observer
 
 registerServiceWorker();
 persistStorage();

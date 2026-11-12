@@ -2,7 +2,6 @@
 // filled from the authentic adhkar), and the full-screen tasbeeh.
 
 import { CATEGORIES, CATEGORY_BY_ID, MY_ADHKAR } from '../adhkar-data.js';
-import { tajweedHtml } from '../tajweed.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
@@ -97,14 +96,12 @@ export function renderWird(view, id) {
 }
 
 function wirdCard(x, n, no) {
-  const coloured = x.quran ? tajweedHtml(x.id) : null;
-  // The basmala above a surah takes the colours too; the isti'adha is not a verse.
-  const before = x.before ? (coloured && x.before.startsWith('بِسۡمِ') && tajweedHtml('basmala')) || esc(x.before) : '';
+  const before = x.before ? esc(x.before) : '';
   const done = n >= x.count;
   const left = x.count - n;
   return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
     <h3 class="dhikr-title"><span class="dhikr-no">${num(no)}</span>${x.title ? esc(x.title) : ''}</h3>
-    <div class="dhikr-text ${coloured ? 'tj-text' : x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${coloured || esc(x.text)}</div>
+    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${esc(x.text)}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
     ${
@@ -319,7 +316,7 @@ function pickAdhkar(redraw) {
           const x = items[id];
           if (!x || have.has(x.text)) continue;
           const text = (x.before ? x.before + '\n' : '') + x.text;
-          state.custom.push({ id: uid(), text, target: x.count, ref: x.ref || '', today: 0, total: 0, created: Date.now() });
+          state.custom.push({ id: uid(), text, target: x.count, ref: x.ref || '', quran: !!x.quran, today: 0, total: 0, created: Date.now() });
           have.add(x.text);
           n++;
         }
