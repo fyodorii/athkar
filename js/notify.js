@@ -15,6 +15,7 @@ import { hoursAt, PRAYERS, today } from './today.js';
 import { esc, toast } from './ui.js';
 import { icon } from './icons.js';
 
+const CLOCK = /^\d{1,2}:\d\d$/; // a stored time of day
 const LATE = 20 * 60000; // a reminder still shows this long after its moment
 
 export const notifySupported = () => 'Notification' in window;
@@ -43,7 +44,7 @@ export function reminders(now = new Date()) {
   const clockNow = hoursAt(now);
   const atTime = (h, m) => now.getTime() + ((h - clockNow.h) * 60 + (m - clockNow.m)) * 60000 - clockNow.s * 1000;
   for (const r of state.reminders) {
-    if (!r.on) continue;
+    if (!r.on || !CLOCK.test(r.time)) continue;
     const [h, m] = r.time.split(':').map(Number);
     add(`mine-${r.id}-${r.time}`, atTime(h, m), 'تذكير', r.text, '#/reminders');
   }
@@ -51,7 +52,7 @@ export function reminders(now = new Date()) {
   // Each khatma reminds of its wird on its own days, at its own time.
   for (const k of state.khatmas) {
     const i = khatmaInfo(k);
-    if (!k.remind || i.done || !i.week.includes(info.weekday)) continue;
+    if (!CLOCK.test(k.remind) || i.done || !i.week.includes(info.weekday)) continue;
     const [h, m] = k.remind.split(':').map(Number);
     add(`kh-${k.id}-${k.remind}`, atTime(h, m), k.name, `ورد اليوم: ${i.pos === i.wirdTo ? `صفحة ${num(i.pos)}` : `من صفحة ${num(i.pos)} إلى ${num(i.wirdTo)}`}`, '#/khatma');
   }

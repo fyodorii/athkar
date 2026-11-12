@@ -100,6 +100,8 @@ function route() {
   currentHash = hash;
   closeNav();
   current = fn(view, ...m.slice(1)) || null;
+  // What sticks under the header (the adhkar progress line) needs its height.
+  view.style.setProperty('--head-h', `${view.querySelector('.page-head')?.offsetHeight || 0}px`);
   for (const a of document.querySelectorAll('#tabs a')) a.classList.toggle('on', a.dataset.tab === tab);
   document.body.dataset.tab = tab;
   paintStatusBar();
@@ -137,7 +139,7 @@ document.addEventListener('touchmove', (e) => e.touches.length > 1 && e.preventD
 // The phone's status bar (the clock and battery) takes the colour of the top of the page under
 // it, so it reads as part of the page: the light header on the home screen, the page's own
 // background elsewhere, the tasbeeh's colour on the tasbeeh.
-const STATUS = { light: { home: '#d5e6fd', tasbeeh: '#2a5cc4', other: '#eef4fc' }, dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' } };
+const STATUS = { light: { home: '#2c6fcc', tasbeeh: '#2a5cc4', other: '#2c6fcc' }, dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' } };
 function paintStatusBar() {
   const shade = STATUS[document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'];
   const tab = document.body.dataset.tab;
@@ -223,7 +225,11 @@ onChange(() => {
 });
 
 setInterval(() => {
-  checkReminders(); // also while hidden, for as long as the system keeps the app alive
+  try {
+    checkReminders(); // also while hidden, for as long as the system keeps the app alive
+  } catch (e) {
+    console.warn(e); // a reminder that cannot be read must not stop the countdowns below
+  }
   if (document.visibilityState !== 'visible') return;
   checkTimers();
   if (current?.tick?.() === 'rerender') route();

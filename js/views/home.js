@@ -237,6 +237,12 @@ function momentsCard(info) {
 // Where the khatma has reached, and the way back into it.
 function khatmaCard() {
   const k = firstKhatma();
+  if (!k) {
+    return `<a class="card occ-mini kh-mini" href="#/khatma" style="--kc:#3f8ef0">
+      <span class="km-icon">${icon('quran', 24)}</span>
+      <span class="km-text"><small>الختمات</small><b>ابدأ ختمة جديدة</b><small>ورد يومي من القرآن الكريم بخطة تختارها</small></span>
+      <span class="pill">${icon('plus', 16)}</span></a>`;
+  }
   const i = khatmaInfo(k);
   return `<a class="card occ-mini kh-mini" href="#/khatma" style="--kc:${i.color}">
     <span class="km-icon">${icon('quran', 24)}</span>
