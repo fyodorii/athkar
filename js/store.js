@@ -25,7 +25,7 @@ export const DEFAULTS = {
     tsbWeight: 700,
     uiWeight: 400,
     headScale: 1, // size of the headings, 0.8…1.3
-    flat: false, // flat design instead of liquid glass
+    flat: true, // flat design (the default since release 31) instead of liquid glass
     haptics: true,
     quranGoal: 5,
     appIcon: 'sky', // icons/alt/<name>.png for the home screen
@@ -179,6 +179,17 @@ if (!state.migrated.r22) {
   if (ok && Array.isArray(k.history)) state.khatmaLog.push(...k.history.map((h) => ({ name: 'ختمتي', ...h })));
   delete state.khatma;
   state.migrated.r22 = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
+// Release 31: the flat design for everyone (it can be turned off again in the settings).
+if (!state.migrated.flat31) {
+  state.settings.flat = true;
+  state.migrated.flat31 = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {

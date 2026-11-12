@@ -37,7 +37,7 @@
         if (st.tsbWeight) r.setProperty('--tsb-weight', st.tsbWeight);
         if (st.uiWeight) r.setProperty('--ui-weight', st.uiWeight);
         if (st.headScale) r.setProperty('--head-scale', st.headScale);
-        if (st.flat) document.documentElement.setAttribute('data-flat', '');
+        if (st.flat !== false) document.documentElement.setAttribute('data-flat', ''); // flat unless turned off
         // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
         // when the app is added to the home screen.
         var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;

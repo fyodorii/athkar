@@ -141,7 +141,8 @@ const STATUS = { light: { home: '#d5e6fd', tasbeeh: '#2a5cc4', other: '#eef4fc' 
 function paintStatusBar() {
   const shade = STATUS[document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'];
   const tab = document.body.dataset.tab;
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', shade[tab] || shade.other);
+  const own = tab === 'tasbeeh' && document.querySelector('.tsb')?.dataset.top;
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', own || shade[tab] || shade.other);
 }
 
 const media = window.matchMedia('(prefers-color-scheme: dark)');
