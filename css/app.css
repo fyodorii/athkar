@@ -1940,3 +1940,15 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 .group > .btn + .btn { margin-top: 0; }
 .acct-out { margin-top: 4px; color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
 .empty code { font-size: 12.5px; direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- Version 29: compact adhkar cards ---------- */
+
+/* The counter sits in the top row with the number and «٣٣ مرة»; no empty row below the text. */
+.dhikr { padding: 12px 16px 14px; }
+.dhikr-head { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 2px; }
+.dhikr-head .dhikr-title { flex: 1; min-width: 0; margin: 0; }
+.dhikr-head .times { position: static; flex-shrink: 0; }
+.dhikr-head .counter { flex-shrink: 0; }
+.dhikr-head .counter.once { position: relative; top: auto; left: auto; margin-inline-start: auto; }
+.dhikr-text { line-height: 1.9; }
+.dhikr > .ref { display: block; margin-top: 6px; }
