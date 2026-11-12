@@ -47,7 +47,7 @@ export function renderWird(view, id) {
       ${segmented(WIRD_TABS, `#/adhkar/${id}`)}
       <div class="cat-bar"><i data-bar style="width:${(done / cat.items.length) * 100}%"></i></div>
       <section class="dhikr-list" style="--scale:${scale};--qscale:${state.settings.quranScale || 1}">
-        ${cat.items.map((x, i) => wirdCard(x, c[x.id] || 0, i + 1)).join('')}
+        ${cat.items.map((x, i) => wirdCard(x, c[x.id] || 0)).join('')}
       </section>
       <div class="finish ${done === cat.items.length ? 'show' : ''}" data-finish>
         ${icon('check', 28)}<b>أتممت ${esc(cat.title)}</b><span>تقبّل الله منك</span>
@@ -95,7 +95,11 @@ export function renderWird(view, id) {
   return { destroy: () => (view.onclick = null) };
 }
 
-function wirdCard(x, n, no) {
+// The adhkar show their verses without the verse numbers (the Complex's marks, one character
+// each after a no-break space); the reference under the card names the verses.
+const noVerseNumbers = (text) => text.replace(/[\u00A0 ][\uFC00-\uFD1D]/g, '');
+
+function wirdCard(x, n) {
   const before = x.before ? esc(x.before) : '';
   const done = n >= x.count;
   const left = x.count - n;
@@ -103,24 +107,22 @@ function wirdCard(x, n, no) {
   const times = x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`;
   // One row on top: the title, then how many times and the counter (a ring counting
   // down, or for a dhikr said once a small tick), so the card holds no empty row of its own.
+  // The text starts at the top of the card: the title (if any) is a small line above it, and the
+  // count with its counter float at the start of the first lines, which flow beside them.
   return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
     ${
-      x.count > 1 || x.title
-        ? `<header class="dhikr-head">
-      <h3 class="dhikr-title">${x.title ? esc(x.title) : ''}</h3>
-      ${
-        x.count > 1
-          ? `<span class="times">${times}</span>
+      x.count > 1
+        ? `<div class="dhikr-count">
       <button class="counter" aria-label="عدّ">
         <span class="counter-ring">${ring(n / x.count, 44, 3)}</span>
         <span class="counter-num" data-left>${done ? icon('check', 20) : num(left)}</span>
-      </button>`
-          : TICK
-      }
-    </header>`
-        : TICK // a dhikr said once, without a title: only the small tick in the corner
+      </button>
+      <span class="times">${times}</span>
+    </div>`
+        : TICK
     }
-    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${esc(x.text)}</div>
+    ${x.title ? `<h3 class="dhikr-title">${esc(x.title)}</h3>` : ''}
+    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${esc(x.quran ? noVerseNumbers(x.text) : x.text)}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
     ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
@@ -448,8 +450,11 @@ export function renderTasbeeh(view, mineId) {
   const draw = () => {
     const bg = tsbBg(t);
     const style = [bg.css && `background:${bg.css}`, t.ink && `--tsb-ink:${t.ink}`, `--tsb-scale:${t.counterSize}`].filter(Boolean).join(';');
+    // The whole screen is the tasbeeh: the phone's status bar takes the top of its colour, and
+    // the page behind it (seen when iOS bounces) the bottom.
+    const shades = (bg.css || '#2a5cc4 #070f2c').match(/#[0-9a-f]{3,6}/gi);
     view.innerHTML = `
-      <section class="tsb ${bg.light ? 'light' : ''}" data-area style="${style}">
+      <section class="tsb ${bg.light ? 'light' : ''}" data-area data-top="${shades[0]}" style="${style}">
         <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
           <div class="tsb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(src.phrase())}</span></div>
           <div class="tsb-counter">
@@ -470,6 +475,9 @@ export function renderTasbeeh(view, mineId) {
   };
   const paint = () => {
     draw();
+    const shades = $('[data-area]', view).dataset.top;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', shades);
+    document.documentElement.style.setProperty('--tsb-page', ((tsbBg(t).css || '#070f2c').match(/#[0-9a-f]{3,6}/gi) || ['#070f2c']).at(-1));
     if (mine && !mine.fontSize) fit();
     if (group) fit(t.fontSize || 40); // a long dhikr of the group is shown whole
   };
