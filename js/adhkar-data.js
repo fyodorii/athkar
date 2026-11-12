@@ -3,7 +3,7 @@
 // Item ids are stored with the user's progress and bookmarks, so keep them stable
 // when editing: add new ids, never reuse old ones.
 
-import { AL_IMRAN_END, EVENING, MORNING, SLEEP } from './wird-data.js';
+import { AL_IMRAN_END, EVENING, HASBIYA, MORNING, SLEEP } from './wird-data.js';
 
 const list = (cat, items) => items.map((x, i) => ({ ...x, id: `${cat}-${i + 1}`, count: x.count || 1 }));
 
@@ -33,7 +33,8 @@ function ordered(items, p) {
     if (n === 1) return { ...x, text: `${x.text}\n${get(2).text}`, count: 3, note: get(2).note };
     return { ...x, ...(WIRD_TITLES[n] ? { title: WIRD_TITLES[n] } : {}) };
   });
-  const rest = items.filter((x) => !used.includes(x.id));
+  // «حسبي الله…» is shown as the verse it is.
+  const rest = items.filter((x) => !used.includes(x.id)).map((x) => (x.id === `${p}-32` ? { ...x, quran: true, text: HASBIYA, ref: 'التوبة: ١٢٩' } : x));
   const last = rest.findIndex((x) => x.id === `${p}-47`);
   rest.splice(last, 0, { id: `${p}-48`, text: 'لا حول ولا قوة إلا بالله', count: 100 });
   return [...head, ...rest];

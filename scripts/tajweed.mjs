@@ -1,15 +1,17 @@
-// Writes js/tajweed-data.js: the Quran passages of the adhkar (wird-data.js) in the text of
+// Writes js/tajweed-data.js: the Quran passages of the adhkar and the verses of the day in the text of
 // DigitalKhatt's old-Madinah mushaf, coloured by its tajweed rules (scripts/tajweed-rules.mjs),
 // for display in its font (fonts/oldmadina.woff2).
 //
 // Usage: node scripts/tajweed.mjs <quran_text_old_madinah.ts> <hafsData_v18.json>
 //   the first from https://github.com/DigitalKhatt/digitalkhatt.org (ClientApp/src/app/services),
-//   the second the King Fahd Complex text the adhkar verses were generated from; it is used
-//   only to find which verses each passage of wird-data.js holds.
-// Run it again whenever a Quran passage is added to or changed in js/wird-data.js.
+//   the second the King Fahd Complex text the app's verses were generated from; it is used
+//   only to find which words of the mushaf each passage holds.
+// Run it again whenever a Quran passage is added to or changed in js/wird-data.js, js/adhkar-data.js
+// or the AYAT of js/daily-data.js.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { SURAHS } from '../js/quran-data.js';
-import { AL_IMRAN_END, EVENING, MORNING, SLEEP } from '../js/wird-data.js';
+import { CATEGORIES } from '../js/adhkar-data.js';
+import { AYAT } from '../js/daily-data.js';
 import { TajweedService } from './tajweed-rules.mjs';
 
 const [textPath, hafsPath] = process.argv.slice(2);
@@ -52,19 +54,29 @@ verses.forEach((v, i) => {
 });
 const arabic = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
 
-// ---- Which verses each passage of the adhkar holds ----
+// ---- Which words of the mushaf each passage holds ----
 
-const hafs = JSON.parse(readFileSync(hafsPath, 'utf8')).map((x) => ({ s: x.sora, a: x.aya_no, text: x.aya_text.trim().replace(/ /g, ' ') }));
-const bare = (t) => t.replace(/ [٠-٩]+$/, ''); // a verse without its number
+// A passage of the app is whole words of consecutive verses in the Complex's text (a verse, part
+// of one, or several, with or without the verse numbers). The two texts spell differently but
+// divide into the same words, so a passage is found by its words in the Complex's text and
+// then taken, word for word, from the mushaf text. (The hizb mark ۞ stands alone there and is
+// joined to its word here; it is left out of the count.)
+const words = (t) => t.trim().split(/\s+/).filter((w) => w !== '۞');
+const hafs = JSON.parse(readFileSync(hafsPath, 'utf8')).map((x) => {
+  const all = words(x.aya_text.replace(/ /g, ' '));
+  return { s: x.sora, a: x.aya_no, words: all }; // the last word is the verse number
+});
 function locate(text) {
+  const want = words(text);
   for (let i = 0; i < hafs.length; i++) {
-    if (!text.startsWith(bare(hafs[i].text))) continue;
-    if (text === bare(hafs[i].text)) return { s: hafs[i].s, from: hafs[i].a, to: hafs[i].a, numbered: false };
-    let joined = '';
-    for (let j = i; j < hafs.length && hafs[j].s === hafs[i].s; j++) {
-      joined += (joined ? ' ' : '') + hafs[j].text;
-      if (joined === text) return { s: hafs[i].s, from: hafs[i].a, to: hafs[j].a, numbered: true };
-      if (!text.startsWith(joined)) break;
+    for (let w = hafs[i].words.indexOf(want[0]); w >= 0; w = hafs[i].words.indexOf(want[0], w + 1)) {
+      // Follow the words on from here, through the following verses of the surah.
+      let [j, k, n] = [i, w, 0];
+      while (n < want.length && j < hafs.length && hafs[j].s === hafs[i].s && hafs[j].words[k] === want[n]) {
+        n++;
+        if (++k === hafs[j].words.length) [j, k] = [j + 1, 0];
+      }
+      if (n === want.length) return { s: hafs[i].s, from: hafs[i].a, word: w, count: n, to: k === 0 ? hafs[j - 1].a : hafs[j].a };
     }
   }
   return null;
@@ -74,51 +86,66 @@ function locate(text) {
 
 const CLASSES = ['', 'green', 'tafkim', 'lgray', 'lkalkala', 'red1', 'red2', 'red3', 'red4'];
 const service = new TajweedService();
-// A passage as [class index, text] runs, one class per character as the rules give them.
-function colour({ s, from, to, numbered }) {
+// A passage as [class index, text] runs, one class per character as the rules give them. The
+// rules run over its verses whole, so that a part of a verse is coloured as it is in its place.
+function colour({ s, from, to, word, count }) {
   let text = '';
-  for (let a = from; a <= to; a++) text += `${text ? ' ' : ''}${verses[s - 1][a - 1]} ۝${arabic(a)}`;
+  for (let a = from; a <= to; a++) {
+    const verse = verses[s - 1][a - 1];
+    const complex = hafs.find((x) => x.s === s && x.a === a).words.length - 1;
+    if (words(verse).length !== complex) throw new Error(`${s}:${a}: ${words(verse).length} words here, ${complex} in the Complex's text`);
+    text += `${text ? ' ' : ''}${verse} ۝${arabic(a)}`;
+  }
   const marks = new Map();
   service.applyTajweedForText(text, (pos, cls) => (cls ? marks.set(pos, cls) : marks.delete(pos)), () => {}, false);
-  if (!numbered) text = text.replace(/ ۝[٠-٩]+$/, '');
+  // The characters of the wanted words: from the start of word `word` for `count` words.
+  const chars = [...text];
+  const starts = [];
+  chars.forEach((ch, i) => {
+    if (ch !== ' ' && (i === 0 || chars[i - 1] === ' ')) starts.push(i);
+  });
+  const begin = starts[word];
+  const end = word + count < starts.length ? starts[word + count] - 1 : chars.length;
   const runs = [];
-  [...text].forEach((ch, i) => {
+  for (let i = begin; i < end; i++) {
     const c = CLASSES.indexOf(marks.get(i) || '');
     if (c < 0) throw new Error(`unknown class ${marks.get(i)}`);
-    if (runs.length && runs[runs.length - 1][0] === c) runs[runs.length - 1][1] += ch;
-    else runs.push([c, ch]);
-  });
+    if (runs.length && runs[runs.length - 1][0] === c) runs[runs.length - 1][1] += chars[i];
+    else runs.push([c, chars[i]]);
+  }
   return runs;
 }
 
-const passages = {}; // "surah:from-to" → runs
-const items = {}; // adhkar item id → passage key
+const passages = {}; // "surah:verse.word+count" → runs
+const items = {}; // item id → passage key
 const add = (id, text) => {
   const at = locate(text);
-  if (!at) throw new Error(`${id}: verses not found in the mushaf text`);
-  const key = `${at.s}:${at.from}-${at.to}${at.numbered ? '' : 'x'}`;
+  if (!at) throw new Error(`${id}: words not found in the mushaf text`);
+  const key = `${at.s}:${at.from}.${at.word}+${at.count}`;
   passages[key] ??= colour(at);
   items[id] = key;
 };
-for (const x of [...MORNING, ...EVENING, ...SLEEP]) if (x.quran) add(x.id, x.text);
-add('waking-4', AL_IMRAN_END);
-// The basmala shown above a surah: the one the morning adhkar already hold (1:1, unnumbered).
-items.basmala = items[MORNING.find((x) => x.quran && locate(x.text)?.s === 1).id];
+// The verses of the adhkar, by item id; the verse of the day, by its place in AYAT.
+for (const c of CATEGORIES) for (const x of c.items) if (x.quran) add(x.id, x.text);
+AYAT.forEach(([text], i) => add(`ayah-${i}`, text));
+// The basmala shown above a surah: the one the morning adhkar already hold (al-Fatihah 1, unnumbered).
+if (!passages['1:1.0+4']) throw new Error('the basmala is not among the adhkar');
+items.basmala = '1:1.0+4';
 
 writeFileSync(
   new URL('../js/tajweed-data.js', import.meta.url),
-  `// Generated by scripts/tajweed.mjs — do not edit. The Quran passages of the adhkar in the text of
+  `// Generated by scripts/tajweed.mjs — do not edit. The Quran passages of the adhkar and the verses of the day in the text of
 // DigitalKhatt's old-Madinah mushaf, as [colour, text] runs (colour is an index into TAJWEED_CLASSES),
 // coloured by DigitalKhatt's tajweed rules. Text and rules: MIT License, Copyright (c) 2024 DigitalKhatt.
 
 export const TAJWEED_CLASSES = ${JSON.stringify(CLASSES)};
 
-// "surah:first verse-last verse" (x: shown without its verse number) → runs.
+// "surah:verse.first word+number of words" → runs.
 export const TAJWEED_PASSAGES = {
 ${Object.entries(passages).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join('\n')}
 };
 
-// Adhkar item id → its passage.
+// Adhkar item id, or ayah-<place in AYAT of daily-data.js>, → its passage.
 export const TAJWEED_ITEMS = ${JSON.stringify(items, null, 2)};
 `
 );

@@ -24,6 +24,7 @@ const FILES = [
   'js/prayer.js',
   'js/push.js',
   'js/store.js',
+  'js/tajweed.js',
   'js/tajweed-data.js',
   'js/timers.js',
   'js/today.js',

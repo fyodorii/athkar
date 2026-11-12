@@ -110,7 +110,7 @@ export function dailyFor(day) {
   const [ayah, plain, surah] = AYAT[n % AYAT.length];
   const [hadith, source] = HADITH[(n + 7) % HADITH.length];
   return {
-    ayah: { text: ayah, plain, ref: surah },
+    ayah: { text: ayah, plain, ref: surah, id: `ayah-${n % AYAT.length}` }, // id: its tajweed passage
     hadith: { text: hadith, ref: source },
     advice: { text: ADVICE[(n + 13) % ADVICE.length] },
   };
