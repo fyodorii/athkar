@@ -35,6 +35,8 @@
 @font-face { font-family: 'Lateef'; src: url('../fonts/lateef-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+2212; }
 @font-face { font-family: 'Aref Ruqaa'; src: url('../fonts/ruqaa-arabic-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+200C-200E, U+FB50-FDFF, U+FE70-FEFC; }
 @font-face { font-family: 'Aref Ruqaa'; src: url('../fonts/ruqaa-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+2212; }
+/* DigitalKhatt's old-Madinah mushaf font (MIT, fonts/LICENSE-digitalkhatt.txt), for its text with tajweed colours. */
+@font-face { font-family: 'Madina Old'; src: url('../fonts/oldmadina.woff2') format('woff2'); font-display: swap; }
 /* King Fahd Complex Uthmanic Hafs font, made for its Uthmani text (verses are shown only in it). */
 @font-face { font-family: 'KFGQPC Hafs'; src: url('../fonts/kfgqpc-hafs.woff2') format('woff2'); font-display: swap; }
 
@@ -1812,3 +1814,28 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 .kh-ends span { display: grid; padding: 5px 12px; border-radius: 12px; background: var(--bg-2); font-size: 14px; font-weight: 600; color: var(--kc); line-height: 1.4; }
 .kh-ends span:last-child { text-align: left; }
 .kh-ends small { font-size: 11px; font-weight: 400; color: var(--ink-3); }
+
+/* ---------- Tajweed colours (the Tajweed Mushaf's, as DigitalKhatt draws them) ---------- */
+
+.madina, .dhikr-text.madina { font-family: 'Madina Old', 'KFGQPC Hafs', 'Amiri', serif; font-weight: 400; }
+.dhikr-text.madina { font-size: calc(1.6rem * var(--scale, 1)); line-height: 2.2; text-align: justify; text-align-last: center; }
+.dhikr-text.madina .before { font-size: 0.9em; }
+.tj-green { color: rgb(0 150 72); }
+.tj-tafkim { color: rgb(0 102 148); }
+.tj-lgray { color: rgb(165 165 165); }
+.tj-lkalkala { color: rgb(0 160 225); }
+.tj-red1 { color: rgb(195 138 8); }
+.tj-red2 { color: rgb(244 114 22); }
+.tj-red3 { color: rgb(236 0 140); }
+.tj-red4 { color: rgb(140 0 0); }
+[data-theme='dark'] .tj-green { color: rgb(60 205 120); }
+[data-theme='dark'] .tj-tafkim { color: rgb(90 170 225); }
+[data-theme='dark'] .tj-lgray { color: rgb(125 132 145); }
+[data-theme='dark'] .tj-lkalkala { color: rgb(70 200 255); }
+[data-theme='dark'] .tj-red1 { color: rgb(225 175 60); }
+[data-theme='dark'] .tj-red2 { color: rgb(255 140 60); }
+[data-theme='dark'] .tj-red3 { color: rgb(255 90 180); }
+[data-theme='dark'] .tj-red4 { color: rgb(235 85 85); }
+.tj-key { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 4px 0 12px; font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-2); }
+.tj-key span { display: inline-flex; align-items: center; gap: 5px; }
+.tj-key i { width: 12px; height: 12px; border-radius: 50%; background: currentColor; }

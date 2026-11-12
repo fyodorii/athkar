@@ -2,6 +2,7 @@
 // filled from the authentic adhkar), and the full-screen tasbeeh.
 
 import { CATEGORIES, CATEGORY_BY_ID, MY_ADHKAR } from '../adhkar-data.js';
+import { TAJWEED_CLASSES, TAJWEED_ITEMS, TAJWEED_PASSAGES } from '../tajweed-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
@@ -101,12 +102,22 @@ export function renderWird(view, id) {
   return { destroy: () => (view.onclick = null) };
 }
 
+// A Quran passage with its tajweed colours (js/tajweed-data.js), or null when it has none or
+// the colours are switched off; then the verses show plainly in the Complex's font.
+function tajweed(id) {
+  const runs = state.settings.tajweed && TAJWEED_PASSAGES[TAJWEED_ITEMS[id]];
+  return runs ? runs.map(([c, text]) => (c ? `<span class="tj-${TAJWEED_CLASSES[c]}">${esc(text)}</span>` : esc(text))).join('') : null;
+}
+
 function wirdCard(x, n, no) {
+  const coloured = x.quran ? tajweed(x.id) : null;
+  // The basmala above a surah takes the colours too; the isti'adha is not a verse.
+  const before = x.before ? (coloured && x.before.startsWith('بِسۡمِ') && tajweed('basmala')) || esc(x.before) : '';
   const done = n >= x.count;
   const left = x.count - n;
   return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
     <h3 class="dhikr-title"><span class="dhikr-no">${num(no)}</span>${x.title ? esc(x.title) : ''}</h3>
-    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${x.before ? `<span class="before">${esc(x.before)}</span>` : ''}${esc(x.text)}</div>
+    <div class="dhikr-text ${coloured ? 'madina' : x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${coloured || esc(x.text)}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
     ${
