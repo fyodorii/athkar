@@ -67,10 +67,10 @@ export function renderWird(view, id) {
     card.querySelector('[data-left]').textContent = left ? num(left) : '';
     card.querySelector('.counter').classList.add('bump');
     setTimeout(() => card.querySelector('.counter')?.classList.remove('bump'), 160);
-    if (item.count > 1) card.querySelector('.counter-ring').innerHTML = ring(c[item.id] / item.count, 58, 4);
+    if (item.count > 1) card.querySelector('.counter-ring').innerHTML = ring(c[item.id] / item.count, 44, 3);
     if (left) return;
     card.classList.add('done');
-    card.querySelector('[data-left]').innerHTML = icon('check', item.count > 1 ? 24 : 16);
+    card.querySelector('[data-left]').innerHTML = icon('check', item.count > 1 ? 20 : 16);
     haptic(30);
     const done = wirdDone(cat);
     $('[data-done]', view).textContent = num(done);
@@ -104,7 +104,7 @@ function wirdCard(x, n, no) {
   const left = x.count - n;
   return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
     <h3 class="dhikr-title"><span class="dhikr-no">${num(no)}</span>${x.title ? esc(x.title) : ''}</h3>
-    <div class="dhikr-text ${coloured ? 'madina' : x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${coloured || esc(x.text)}</div>
+    <div class="dhikr-text ${coloured ? 'tj-text' : x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${coloured || esc(x.text)}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
     ${
@@ -114,8 +114,8 @@ function wirdCard(x, n, no) {
         ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
       </div>
       <button class="counter" aria-label="عدّ">
-        <span class="counter-ring">${ring(n / x.count, 58, 4)}</span>
-        <span class="counter-num" data-left>${done ? icon('check', 24) : num(left)}</span>
+        <span class="counter-ring">${ring(n / x.count, 44, 3)}</span>
+        <span class="counter-num" data-left>${done ? icon('check', 20) : num(left)}</span>
       </button>
     </footer>
     <span class="times">${x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`}</span>`

@@ -258,7 +258,7 @@ function worshipCard(info) {
 // The verse of the day, with its tajweed colours when they are on.
 function ayahHtml(ayah) {
   const coloured = tajweedHtml(ayah.id);
-  return coloured ? `<span class="madina">${coloured}</span>` : `<span class="hafs">${esc(ayah.text)}</span>`;
+  return coloured || `<span class="hafs">${esc(ayah.text)}</span>`;
 }
 
 function todayCard(kind, label, ic, html, ref) {
