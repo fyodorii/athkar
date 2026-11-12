@@ -1,7 +1,7 @@
 // Everything the user keeps (settings, progress, custom adhkar, notebook) lives on
 // the device in localStorage, saved after every change.
 
-import { MY_ADHKAR } from './adhkar-data.js';
+import { CATEGORY_BY_ID, MY_ADHKAR } from './adhkar-data.js';
 import { CITIES } from './cities.js';
 
 const KEY = 'adhkar-app:v1';
@@ -225,12 +225,22 @@ export function persistStorage() {
 // Starts the daily counters afresh on a new day.
 export function newDay(dayKey) {
   if (state.progress.day === dayKey) return;
+  // A wird finished in its counter stays ticked in «متابعة العبادات» once its day has passed
+  // (the tracker reads the counters only for the day they belong to).
+  const was = state.progress.day;
+  const c = state.progress.counts || {};
+  if (was) {
+    for (const id of ['morning', 'evening', 'sleep']) {
+      const items = CATEGORY_BY_ID[id]?.items || [];
+      if (items.length && items.every((x) => (c[x.id] || 0) >= x.count)) (state.worship[was] ??= {})[id] ||= 1;
+    }
+  }
   state.progress = { day: dayKey, counts: {} };
   for (const c of state.custom) c.today = 0;
 }
 
 // The khatma shown on the home screen and named in the daily reminder: the first one.
-export const firstKhatma = () => state.khatmas[0] || { name: 'ختمتي', pos: 1, read: 0 };
+export const firstKhatma = () => state.khatmas[0] || null;
 
 // ---- Backup ----
 
@@ -245,8 +255,8 @@ export function importData(text) {
   const merged = prune(merge(fresh(), data));
   for (const k of Object.keys(DEFAULTS)) state[k] = merged[k];
   // A backup from before release 22 carries one khatma.
-  const old = merged.khatma;
-  if (!state.khatmas.length) state.khatmas.push({ id: 'k1', name: 'ختمتي', pos: old?.pos > 0 ? old.pos : 1, read: old?.read > 0 ? old.read : 0, startedAt: old?.startedAt || 0 });
+  const old = data.khatma;
+  if (!state.khatmas.length && old && !Array.isArray(data.khatmas)) state.khatmas.push({ id: 'k1', name: 'ختمتي', pos: old?.pos > 0 ? old.pos : 1, read: old?.read > 0 ? old.read : 0, startedAt: old?.startedAt || 0 });
   state.sync = { hash: '', at: 0 };
   save();
 }
