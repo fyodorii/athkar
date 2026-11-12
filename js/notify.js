@@ -8,7 +8,7 @@
 import { minutesText, num } from './dates.js';
 import { addDays, dayKey } from './prayer.js';
 import { registerServiceWorker } from './push.js';
-import { save, state } from './store.js';
+import { firstKhatma, save, state } from './store.js';
 import { chime, unlockAudio } from './timers.js';
 import { hoursAt, PRAYERS, today } from './today.js';
 import { esc, toast } from './ui.js';
@@ -70,7 +70,7 @@ export function reminders(now = new Date()) {
       const [h, m] = n.khatma.split(':').map(Number);
       const c = hoursAt(now);
       const at = now.getTime() + ((h - c.h) * 60 + (m - c.m)) * 60000 - c.s * 1000;
-      add('khatma', at, 'وردك من القرآن', `أكمل من صفحة ${num(Math.min(604, state.khatma.pos))}`, '#/khatma');
+      add('khatma', at, 'وردك من القرآن', `أكمل من صفحة ${num(Math.min(604, firstKhatma().pos))}`, '#/khatma');
     }
     if (n.debts) {
       const soon = dayKey(addDays(info.day, 3));

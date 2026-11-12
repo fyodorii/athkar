@@ -67,6 +67,7 @@ const P = {
   save: '<path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8M8 21v-7h8v7"/>',
   arrowUp: '<path d="M7 17 17 7M9 7h8v8"/>',
   arrowDown: '<path d="M17 7 7 17M15 17H7V9"/>',
+  flame: '<path d="M12 3c.5 3.5 4.5 5.5 4.5 10a4.5 4.5 0 0 1-9 0c0-1.8.8-3 1.8-4 .2 1.6 1 2.4 1.7 2.6C10.500 9 10.500 6 12 3z"/>',
   more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
 };
 

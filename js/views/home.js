@@ -7,7 +7,7 @@ import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, GREG_MONTHS, gregText, hijri, hijriText, minutesText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
 import { addDays, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
-import { state } from '../store.js';
+import { firstKhatma, state } from '../store.js';
 import { PRAYERS, today } from '../today.js';
 import { PAGES } from '../quran-data.js';
 import { juzOf } from './khatma.js';
@@ -237,12 +237,12 @@ function momentsCard(info) {
 
 // Where the khatma has reached, and the way back into it.
 function khatmaCard() {
-  const k = state.khatma;
+  const k = firstKhatma();
   const pos = Math.min(PAGES, Math.max(1, k.pos));
   const done = k.read >= PAGES;
   return `<a class="card occ-mini kh-mini" href="#/khatma">
     <span class="km-icon">${icon('quran', 24)}</span>
-    <span class="km-text"><small>ختمتي</small><b>${done ? 'أتممت الختمة' : k.read ? `أكمل من صفحة ${num(pos)}` : 'ابدأ ختمتك'}</b><small>${done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(pos))} • قرأت ${num(Math.min(PAGES, k.read))} من ${num(PAGES)}`}</small></span>
+    <span class="km-text"><small>${esc(k.name)}</small><b>${done ? 'أتممت الختمة' : k.read ? `أكمل من صفحة ${num(pos)}` : 'ابدأ ختمتك'}</b><small>${done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(pos))} • قرأت ${num(Math.min(PAGES, k.read))} من ${num(PAGES)}`}</small></span>
     <span class="pill">${num(Math.round((Math.min(PAGES, k.read) / PAGES) * 100))}%</span></a>`;
 }
 

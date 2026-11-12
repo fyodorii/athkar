@@ -34,7 +34,7 @@ const TABS = [
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['occasions', 'المناسبات', 'calendar', '#/occasions'],
   '',
-  ['khatma', 'ختمتي', 'quran', '#/khatma'],
+  ['khatma', 'ختماتي', 'quran', '#/khatma'],
   ['rawatib', 'السنن الرواتب', 'mosque', '#/rawatib'],
   ['reminders', 'تذكيراتي', 'bell', '#/reminders'],
   ['debts', 'الديون', 'wallet', '#/debts'],
@@ -64,7 +64,7 @@ const ROUTES = [
   [/^#\/datecalc$/, 'datecalc', (v) => datecalc.render(v)],
   [/^#\/rawatib$/, 'rawatib', (v) => rawatib.render(v)],
   [/^#\/reminders$/, 'reminders', (v) => reminders.render(v)],
-  [/^#\/notebook(?:\/(saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)],
+  [/^#\/notebook(?:\/(notes|saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)], // «saved» is an old link
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],

@@ -7,22 +7,23 @@ import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
 import { today } from '../today.js';
 import { chime, unlockAudio } from '../timers.js';
-import { $, $$, confirmSheet, esc, haptic, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
+import { $, $$, confirmSheet, esc, haptic, hapticSwitch, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
 
 export const MINE_TABS = [
   ['#/mine', 'أذكاري'],
   ['#/notebook', 'أدعيتي'],
-  ['#/notebook/saved', 'المحفوظات'],
+  ['#/notebook/notes', 'ملاحظاتي'],
 ];
 const TABS = MINE_TABS;
 
-// ---- Morning, evening and sleep: tap a card to count it down ----
+// ---- Morning, evening, sleep and waking: tap a card to count it down ----
 
-export const WIRDS = ['morning', 'evening', 'sleep'];
+export const WIRDS = ['morning', 'evening', 'sleep', 'waking'];
 const WIRD_TABS = [
   ['#/adhkar/morning', 'الصباح'],
   ['#/adhkar/evening', 'المساء'],
   ['#/adhkar/sleep', 'النوم'],
+  ['#/adhkar/waking', 'الاستيقاظ'],
 ];
 
 const counts = () => {
@@ -44,7 +45,7 @@ export function renderWird(view, id) {
         sub: `<span data-done>${num(done)}</span> من ${num(cat.items.length)} • ${esc(cat.subtitle)}`,
         actions: `<button class="icon-btn ghost" data-reset aria-label="البدء من جديد">${icon('reset', 22)}</button>`,
       })}
-      ${WIRDS.includes(id) ? segmented(WIRD_TABS, `#/adhkar/${id}`) : ''}
+      ${segmented(WIRD_TABS, `#/adhkar/${id}`)}
       <div class="cat-bar"><i data-bar style="width:${(done / cat.items.length) * 100}%"></i></div>
       <section class="dhikr-list" style="--scale:${scale};--qscale:${state.settings.quranScale || 1}">
         ${cat.items.map((x, i) => wirdCard(x, c[x.id] || 0, i + 1)).join('')}
@@ -66,10 +67,10 @@ export function renderWird(view, id) {
     card.querySelector('[data-left]').textContent = left ? num(left) : '';
     card.querySelector('.counter').classList.add('bump');
     setTimeout(() => card.querySelector('.counter')?.classList.remove('bump'), 160);
-    card.querySelector('.counter-ring').innerHTML = ring(c[item.id] / item.count, 58, 4);
+    if (item.count > 1) card.querySelector('.counter-ring').innerHTML = ring(c[item.id] / item.count, 58, 4);
     if (left) return;
     card.classList.add('done');
-    card.querySelector('[data-left]').innerHTML = icon('check', 24);
+    card.querySelector('[data-left]').innerHTML = icon('check', item.count > 1 ? 24 : 16);
     haptic(30);
     const done = wirdDone(cat);
     $('[data-done]', view).textContent = num(done);
@@ -108,7 +109,9 @@ function wirdCard(x, n, no) {
     <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${x.before ? `<span class="before">${esc(x.before)}</span>` : ''}${esc(x.text)}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
-    <footer>
+    ${
+      x.count > 1
+        ? `<footer>
       <div class="dhikr-meta">
         ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
       </div>
@@ -117,11 +120,14 @@ function wirdCard(x, n, no) {
         <span class="counter-num" data-left>${done ? icon('check', 24) : num(left)}</span>
       </button>
     </footer>
-    ${x.count > 1 ? `<span class="times">${x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`}</span>` : ''}
+    <span class="times">${x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`}</span>`
+        : `${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
+    <span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 16) : ''}</span></span>`
+    }
   </article>`;
 }
 
-// Cards for the three wirds at the top of "my adhkar".
+// Cards for the four wirds at the top of "my adhkar".
 function wirdCards() {
   return `<section class="wird-cards">${WIRDS.map((id) => {
     const c = CATEGORY_BY_ID[id];
@@ -148,12 +154,6 @@ export function renderMine(view, focusId) {
       })}
       ${segmented(TABS, '#/mine')}
       ${wirdCards()}
-      <h3 class="section-title small">${icon('book', 16)} أذكار اليوم والليلة</h3>
-      <section class="occ-grid">
-        ${CATEGORIES.filter((c) => !WIRDS.includes(c.id))
-          .map((c) => `<a class="tone-${c.tone}" href="#/adhkar/${c.id}"><span>${icon(c.icon, 20)}</span><b>${esc(c.title)}</b><small>${num(c.items.length)}</small></a>`)
-          .join('')}
-      </section>
       <h3 class="section-title small">${icon('heart', 16)} أذكاري الخاصة</h3>
       ${
         list.length
@@ -218,7 +218,7 @@ function customMenu(item, redraw) {
      <div class="menu">
        <button data-a="edit">${icon('edit', 20)} تعديل</button>
        <button data-a="reset">${icon('reset', 20)} تصفير عدّاد اليوم</button>
-       <button data-a="note">${icon('book', 20)} نسخه إلى دفتري</button>
+       <button data-a="note">${icon('book', 20)} نسخه إلى أدعيتي</button>
        <button data-a="share">${icon('share', 20)} مشاركة</button>
        <button data-a="delete" class="danger">${icon('trash', 20)} حذف</button>
      </div>`,
@@ -234,9 +234,9 @@ function customMenu(item, redraw) {
           redraw();
         }
         if (a === 'note') {
-          state.notebook.unshift({ id: uid(), title: '', text: item.text, tag: 'ذكر', pinned: false, created: Date.now(), updated: Date.now() });
+          state.notebook.unshift({ id: uid(), title: '', text: item.text, pinned: false, created: Date.now(), updated: Date.now() });
           save();
-          toast(`${icon('check', 18)} أُضيف إلى دفتري`);
+          toast(`${icon('check', 18)} أُضيف إلى أدعيتي`);
         }
         if (a === 'share') shareText(item.text);
         if (a === 'delete' && (await confirmSheet('حذف هذا الذكر من أذكاري؟'))) {
@@ -342,7 +342,7 @@ function pickAdhkar(redraw) {
 
 // ---- Tasbeeh (السبحة): a full-screen counter; tap anywhere to count ----
 
-const PHRASES = MY_ADHKAR.map((x) => x.replace(/\.$/, ''));
+const PHRASES = MY_ADHKAR;
 const T_TARGETS = [33, 99, 100, 1000, 0];
 const FONT_MIN = 22;
 const FONT_MAX = 110;
@@ -442,44 +442,22 @@ export function renderTasbeeh(view, mineId) {
     return `الدورة ${num(Math.ceil(c / n) || 1)} • الهدف ${num(n)}`;
   };
 
+  // Only the dhikr and its count are on the screen. The whole of it is a label of the hidden
+  // switch that gives the iPhone its tick (ui.js), so every count is felt; the way out is at
+  // the top, and the settings float on the left.
   const draw = () => {
     const bg = tsbBg(t);
     const style = [bg.css && `background:${bg.css}`, t.ink && `--tsb-ink:${t.ink}`, `--tsb-scale:${t.counterSize}`].filter(Boolean).join(';');
     view.innerHTML = `
       <section class="tsb ${bg.light ? 'light' : ''}" data-area style="${style}">
-        <header class="tsb-top" data-ui>
-          <a class="icon-btn glass" href="${group ? '#/tasbeeh' : mine ? `#/mine/${mine.id}` : '#/home'}" aria-label="خروج">${icon('back', 22)}</a>
-          <div class="tsb-tools">
-            <button class="icon-btn glass" data-font="-6" aria-label="تصغير الذكر">${icon('minus', 20)}</button>
-            <button class="icon-btn glass" data-font="6" aria-label="تكبير الذكر">${icon('plus', 20)}</button>
-            <button class="icon-btn glass" data-look aria-label="الألوان والحجم">${icon('palette', 20)}</button>
-            <button class="icon-btn glass" data-alerts aria-label="تنبيه الأعداد">${icon(t.alerts.length && (t.alertSound || t.alertVibrate) ? 'bell' : 'bellOff', 20)}</button>
-            <button class="icon-btn glass ${t.dim ? 'on' : ''}" data-dim aria-label="تعتيم الصفحة">${icon('moon', 20)}</button>
-            ${mine || group ? '' : `<button class="icon-btn glass" data-phrases aria-label="اختيار الذكر">${icon('beads', 20)}</button>`}
-            <button class="icon-btn glass" data-reset aria-label="تصفير">${icon('reset', 20)}</button>
+        <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
+          <div class="tsb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(src.phrase())}</span></div>
+          <div class="tsb-counter">
+            <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
           </div>
-        </header>
-        ${mine ? `<p class="tsb-from">من أذكاري${mine.ref ? ` • ${esc(mine.ref)}` : ''}</p>` : ''}
-        ${group ? `<p class="tsb-from">${esc(group.name)} • ${num(group.i + 1)} من ${num(group.items.length)}</p>` : ''}
-        <div class="tsb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(src.phrase())}</span></div>
-        <div class="tsb-counter">
-          <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
-        </div>
-        <p class="tsb-hint">اضغط في أي مكان للتسبيح • باعد بإصبعين لتكبير الذكر</p>
-        <footer class="tsb-bottom" data-ui>
-          ${
-            group
-              ? `<div class="tsb-targets tsb-steps">
-                  <button data-step="-1" ${group.i ? '' : 'disabled'}>السابق</button>
-                  <button data-groups>${icon('layers', 16)} المجموعات</button>
-                  <button data-step="1" ${group.i + 1 < group.items.length ? '' : 'disabled'}>التالي</button>
-                </div>`
-              : mine
-                ? ''
-                : `<div class="tsb-targets">${T_TARGETS.map((n) => `<button class="${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : '∞'}</button>`).join('')}<button data-groups aria-label="المجموعات">${icon('layers', 16)}</button></div>`
-          }
-          <div class="tsb-stats"><span>اليوم <b data-today>${num(src.today())}</b></span><span>المجموع <b data-total>${num(src.total())}</b></span></div>
-        </footer>
+        </label>
+        <a class="icon-btn glass tsb-back" data-ui href="${group ? '#/tasbeeh' : mine ? `#/mine/${mine.id}` : '#/home'}" aria-label="خروج">${icon('back', 22)}</a>
+        <button class="icon-btn glass tsb-gear" data-ui data-settings aria-label="إعدادات السبحة">${icon('gear', 22)}</button>
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
   };
@@ -513,7 +491,7 @@ export function renderTasbeeh(view, mineId) {
       if (t.alertSound) chime([0, 0.25], false);
       if (t.alertVibrate) haptic(200, true);
       if (!reached) toast(`${icon('bell', 18)} بلغت ${num(c)}`);
-    } else haptic(reached ? 40 : 10);
+    } else if (navigator.vibrate) haptic(reached ? 40 : 10); // on the iPhone the tap on the label has already ticked
     if (reached && group) {
       // This dhikr is done: on to the next one, or the group is complete and starts over.
       const last = group.i + 1 >= group.items.length;
@@ -527,8 +505,6 @@ export function renderTasbeeh(view, mineId) {
     if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
     $('[data-count]', view).textContent = num(c);
     $('[data-round]', view).textContent = roundText();
-    $('[data-total]', view).textContent = num(src.total());
-    $('[data-today]', view).textContent = num(src.today());
     const counter = $('.tsb-num', view);
     counter.classList.remove('pop');
     void counter.offsetWidth;
@@ -549,45 +525,83 @@ export function renderTasbeeh(view, mineId) {
     $('[data-phrase]', view).style.fontSize = `${box.fontSize}px`;
   };
 
-  const onClick = async (e) => {
-    const f = e.target.closest('[data-font]');
-    if (f) {
-      setFont(shownSize() + Number(f.dataset.font));
-      return save();
-    }
-    if (e.target.closest('[data-phrases]')) return choosePhrase(draw);
-    if (e.target.closest('[data-look]')) return tasbeehLook(paint, box);
-    if (e.target.closest('[data-alerts]')) return tasbeehAlerts(paint);
-    if (e.target.closest('[data-groups]')) return tasbeehGroups();
-    const st = e.target.closest('[data-step]');
-    if (st) {
-      Object.assign(group, { i: Math.max(0, Math.min(group.items.length - 1, group.i + Number(st.dataset.step))), count: 0 });
-      save();
-      return paint();
-    }
-    if (e.target.closest('[data-dim]')) {
-      // Steps through the dimming levels; from a level set on the slider, to the next one up.
-      const next = DIM_STEPS.find((d) => d > t.dim);
-      t.dim = next ?? 0;
-      save();
-      paint();
-      return toast(t.dim ? `تعتيم ${num(t.dim)}٪` : 'بلا تعتيم');
-    }
-    const n = e.target.closest('[data-t]');
-    if (n) {
-      t.target = Number(n.dataset.t);
-      save();
-      return draw();
-    }
-    if (e.target.closest('[data-reset]')) {
-      if (await confirmSheet(group ? 'البدء من أول المجموعة؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false })) {
-        if (group) group.i = 0;
-        src.reset();
-        save();
-        paint();
-      }
-      return;
-    }
+  const reset = async () => {
+    if (!(await confirmSheet(group ? 'البدء من أول المجموعة؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false }))) return;
+    if (group) group.i = 0;
+    src.reset();
+    save();
+    paint();
+  };
+
+  // Everything that is not counting: the dhikr, its target, groups, alerts, the look.
+  const settings = () => {
+    openSheet(
+      `<div data-body></div>`,
+      (el, close) => {
+        const body = el.querySelector('[data-body]');
+        const drawSheet = () => {
+          body.innerHTML = `
+            <div class="tsb-stats"><span>اليوم <b>${num(src.today())}</b></span><span>المجموع <b>${num(src.total())}</b></span></div>
+            ${
+              group
+                ? `<p class="sheet-sub">${esc(group.name)} • الذكر ${num(group.i + 1)} من ${num(group.items.length)}</p>
+                   <div class="seg-mini wide">
+                     <button data-step="-1" ${group.i ? '' : 'disabled'}>السابق</button>
+                     <button data-step="1" ${group.i + 1 < group.items.length ? '' : 'disabled'}>التالي</button>
+                   </div>`
+                : mine
+                  ? ''
+                  : `<p class="sheet-sub">الهدف</p>
+                     <div class="chips">${T_TARGETS.map((n) => `<button class="chip-opt ${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : 'مفتوح'}</button>`).join('')}</div>`
+            }
+            <div class="menu">
+              ${mine || group ? '' : `<button data-a="phrases">${icon('beads', 20)} اختيار الذكر</button>`}
+              <button data-a="groups">${icon('layers', 20)} المجموعات</button>
+              <button data-a="alerts">${icon('bell', 20)} تنبيه الأعداد</button>
+              <button data-a="look">${icon('palette', 20)} الألوان وحجم الخط</button>
+              <button data-a="dim">${icon('moon', 20)} تعتيم الصفحة${t.dim ? ` (${num(t.dim)}٪)` : ''}</button>
+              <button data-a="reset">${icon('reset', 20)} ${group ? 'البدء من أول المجموعة' : 'تصفير العدّاد'}</button>
+            </div>`;
+        };
+        drawSheet();
+        body.addEventListener('click', (e) => {
+          const n = e.target.closest('[data-t]');
+          if (n) {
+            t.target = Number(n.dataset.t);
+            save();
+            paint();
+            return drawSheet();
+          }
+          const st = e.target.closest('[data-step]');
+          if (st) {
+            Object.assign(group, { i: Math.max(0, Math.min(group.items.length - 1, group.i + Number(st.dataset.step))), count: 0 });
+            save();
+            paint();
+            return drawSheet();
+          }
+          const a = e.target.closest('[data-a]')?.dataset.a;
+          if (!a) return;
+          if (a === 'dim') {
+            // Steps through the dimming levels; from a level set on the slider, to the next one up.
+            t.dim = DIM_STEPS.find((d) => d > t.dim) ?? 0;
+            save();
+            paint();
+            return drawSheet();
+          }
+          close();
+          if (a === 'phrases') choosePhrase(paint);
+          if (a === 'groups') tasbeehGroups();
+          if (a === 'alerts') tasbeehAlerts(paint);
+          if (a === 'look') tasbeehLook(paint, box);
+          if (a === 'reset') reset();
+        });
+      },
+      { title: 'إعدادات السبحة' }
+    );
+  };
+
+  const onClick = (e) => {
+    if (e.target.closest('[data-settings]')) return settings();
     if (e.target.closest('[data-ui], a, button')) return;
     tap(e.clientX, e.clientY);
   };

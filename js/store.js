@@ -47,7 +47,6 @@ export const DEFAULTS = {
   progress: { day: '', counts: {} },
   custom: [],
   notebook: [],
-  saved: [],
   tasbeeh: { phrase: 'سبحان الله وبحمده', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0, alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
@@ -56,13 +55,16 @@ export const DEFAULTS = {
   diary: {},
   migrated: {}, // one-time data changes done
   tools: { ahzab: { start: '', done: {} }, nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
-  // The khatma: `pos` is the page to read next (1…605), `read` the furthest page reached.
-  khatma: { pos: 1, read: 0, startedAt: 0, history: [] },
+  // Khatmas, each { id, name, pos, read, startedAt }: `pos` is the page to read next (1…605),
+  // `read` the furthest page reached. `khatmaLog` keeps the finished and restarted ones.
+  khatmas: [],
+  khatmaLog: [],
+  notes: [], // «ملاحظاتي»: { id, title, text, pinned, created, updated }
   // { id, dir: 'owe' | 'lent', person, amount, date, due, remind, note, paid, paidAt }
   debts: [],
   // Groups of the tasbeeh: adhkar counted one after another, each to its number; `i` and
   // `count` are where the group has reached.
-  groups: [{ id: 'daily', name: 'برنامج يومي', i: 0, count: 0, items: [0, 6, 3, 7].map((n) => ({ text: MY_ADHKAR[n].replace(/\.$/, ''), target: 1000 })) }],
+  groups: [{ id: 'daily', name: 'برنامج يومي', i: 0, count: 0, items: [0, 6, 3, 7].map((n) => ({ text: MY_ADHKAR[n], target: 1000 })) }],
   reminders: [], // «تذكيراتي»: { id, text, time: "HH:MM", on }, every day
   notifyLog: {}, // reminders already shown: { "<day>:<event>": time }
   sync: { hash: '', at: 0 },
@@ -84,13 +86,11 @@ function merge(base, value) {
 }
 
 // Data of features the app no longer has (memorization, the qibla, al-Mulk) is dropped when
-// loading, so old saves and backups stay light; a khatma kept by an old release is started afresh.
+// loading, so old saves and backups stay light.
 function prune(data) {
-  for (const k of ['hifz', 'surahs']) delete data[k];
+  for (const k of ['hifz', 'surahs', 'saved']) delete data[k];
   const s = data.settings;
   if (s) for (const k of ['prayerLayout', 'mushafMode', 'mushafInk', 'quranScale', 'textBold', 'uiBold']) delete s[k];
-  const k = data.khatma;
-  if (!k || typeof k.pos !== 'number' || typeof k.read !== 'number' || !Array.isArray(k.history)) data.khatma = fresh().khatma;
   return data;
 }
 
@@ -108,8 +108,6 @@ export const state = load();
 // Adhkar every new user starts with in "my adhkar"; existing users get them once.
 const SEED_VERSION = 1;
 const SEED = MY_ADHKAR.map((text) => ({ text, target: 100 }));
-// The tasbeeh shows them without the closing full stop.
-const PHRASES = MY_ADHKAR.map((x) => x.replace(/\.$/, ''));
 // Istighfar was a «مائة مرة» checkbox (1) and is now a count: a ticked past day counts as 100.
 if (!state.migrated.istighfar) {
   for (const day of Object.values(state.worship)) if (day && day.istighfar === 1) day.istighfar = 100;
@@ -152,11 +150,33 @@ if (state.seeded < SEED_VERSION) {
 // ones already there stay).
 if (!state.migrated.mine3) {
   const now = Date.now();
-  state.custom = SEED.map((x, i) => state.custom.find((c) => c.text === x.text) || { id: `my${i + 1}`, today: 0, total: 0, created: now, ...x });
+  state.custom = SEED.map((x, i) => state.custom.find((c) => c.text.replace(/\s*\.$/, '') === x.text) || { id: `my${i + 1}`, today: 0, total: 0, created: now, ...x });
   const t = state.tasbeeh;
-  t.list = [...PHRASES];
+  t.list = [...MY_ADHKAR];
   if (!t.list.includes(t.phrase)) Object.assign(t, { phrase: t.list[0], count: 0 });
   state.migrated.mine3 = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
+// Release 22: the adhkar of «أذكاري» and the tasbeeh lose their closing full stop; the one
+// khatma becomes the first of a list.
+if (!state.migrated.r22) {
+  const strip = (x) => (typeof x === 'string' ? x.replace(/\s*\.$/, '') : x);
+  for (const c of state.custom) c.text = strip(c.text);
+  const t = state.tasbeeh;
+  t.phrase = strip(t.phrase);
+  if (Array.isArray(t.list)) t.list = [...new Set(t.list.map(strip))];
+  for (const g of state.groups) for (const x of g.items) x.text = strip(x.text);
+  const k = state.khatma;
+  const ok = k && typeof k.pos === 'number' && typeof k.read === 'number';
+  if (!state.khatmas.length) state.khatmas.push({ id: 'k1', name: 'ختمتي', pos: ok ? k.pos : 1, read: ok ? k.read : 0, startedAt: (ok && k.startedAt) || 0 });
+  if (ok && Array.isArray(k.history)) state.khatmaLog.push(...k.history.map((h) => ({ name: 'ختمتي', ...h })));
+  delete state.khatma;
+  state.migrated.r22 = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {
@@ -196,19 +216,8 @@ export function newDay(dayKey) {
   for (const c of state.custom) c.today = 0;
 }
 
-// ---- Notebook bookmarks ----
-// Each bookmark keeps its own text, so it survives changes to where it came from:
-// { id, text, title, ref, quran (Uthmani script), at }.
-
-export const isSaved = (id) => state.saved.some((s) => s.id === id);
-
-export function toggleSaved(item) {
-  const i = state.saved.findIndex((s) => s.id === item.id);
-  if (i >= 0) state.saved.splice(i, 1);
-  else state.saved.unshift({ id: item.id, text: item.text, title: item.title || '', ref: item.ref || '', quran: !!item.quran, at: Date.now() });
-  save();
-  return i < 0;
-}
+// The khatma shown on the home screen and named in the daily reminder: the first one.
+export const firstKhatma = () => state.khatmas[0] || { name: 'ختمتي', pos: 1, read: 0 };
 
 // ---- Backup ----
 
@@ -222,6 +231,9 @@ export function importData(text) {
   if (!data || data.app !== 'adhkar') throw new Error('ليس ملف نسخة احتياطية من التطبيق');
   const merged = prune(merge(fresh(), data));
   for (const k of Object.keys(DEFAULTS)) state[k] = merged[k];
+  // A backup from before release 22 carries one khatma.
+  const old = merged.khatma;
+  if (!state.khatmas.length) state.khatmas.push({ id: 'k1', name: 'ختمتي', pos: old?.pos > 0 ? old.pos : 1, read: old?.read > 0 ? old.read : 0, startedAt: old?.startedAt || 0 });
   state.sync = { hash: '', at: 0 };
   save();
 }
