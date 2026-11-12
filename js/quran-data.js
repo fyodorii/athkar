@@ -1,5 +1,5 @@
 // Mushaf al-Madinah (King Fahd Complex, Hafs, 604 pages): where each surah and juz
-// begins, for the surah pages. Generated from the Complex's hafsData_v18.
+// begins, for the surah pages. Generated from the Complex's hafsData_v18 (the pages are the same in version 2.0).
 
 export const PAGES = 604;
 

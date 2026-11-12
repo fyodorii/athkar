@@ -1,6 +1,7 @@
 // Settings: location, calculation, display and backup.
 
 import { CITIES, nearestCity } from '../cities.js';
+import { googleAccount } from '../google.js';
 import { APP_NAME, APP_VERSION, DESIGNER } from '../config.js';
 import { clockText, hijriText, minutesText, num } from '../dates.js';
 import { icon } from '../icons.js';
@@ -35,14 +36,6 @@ export function render(view) {
         </div></div>
       <div class="row"><span class="row-icon">${icon('layers', 20)}</span><span class="row-label">تصميم مسطّح<small>ضوء مسطّح وألوان أقل، بلا زجاج سائل</small></span>${toggle('flat', s.flat)}</div>
       ${row('#/settings/fonts', 'type', 'الخطوط وأحجامها', `${FONT_NAMES[s.fontUi] || ''} · ${WEIGHTS.find((w) => w[0] === s.uiWeight)?.[1] || ''}`)}
-      <div class="row"><span class="row-icon">${icon('quran', 20)}</span><span class="row-label">التجويد الملوّن<small>آيات الأذكار بألوان أحكام التجويد</small></span>${toggle('tajweed', s.tajweed)}</div>
-      ${
-        s.tajweed
-          ? `<div class="tj-key madina">
-              ${[['red4', 'مدّ ٦ حركات لزوماً'], ['red3', 'مدّ واجب ٤ أو ٥'], ['red2', 'مدّ جائز ٢ أو ٤ أو ٦'], ['red1', 'مدّ حركتان'], ['green', 'إخفاء ومواضع الغنّة'], ['lgray', 'إدغام وما لا يُلفظ'], ['tafkim', 'تفخيم'], ['lkalkala', 'قلقلة']].map(([c, l]) => `<span><i class="tj-${c}"></i>${l}</span>`).join('')}
-            </div>`
-          : ''
-      }
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
       <div class="row"><span class="row-icon">${icon('digits', 20)}</span><span class="row-label">نوع الأرقام</span>
         <div class="seg-mini" data-digits>
@@ -55,9 +48,10 @@ export function render(view) {
     </div>
     <div class="group">
       <h4>بياناتك</h4>
+      ${row('#/settings/account', 'upload', 'حساب Google', googleAccount().email ? esc(googleAccount().email) : 'الدخول والحفظ في Drive')}
       <button class="row" data-export><span class="row-icon">${icon('download', 20)}</span><span class="row-label">نسخة احتياطية</span><span class="row-value">تصدير</span></button>
       <label class="row"><span class="row-icon">${icon('upload', 20)}</span><span class="row-label">استعادة نسخة</span><span class="row-value">استيراد</span><input type="file" accept="application/json,.json" hidden data-import></label>
-      <p class="hint">أذكارك ودفترك محفوظة على جهازك فقط. احفظ نسخة احتياطية في ملفاتك أو iCloud بين حين وآخر.</p>
+      <p class="hint">بياناتك محفوظة على جهازك. ادخل بحساب Google لتُحفظ في حسابك، أو صدّر نسخة إلى ملفاتك أو iCloud بين حين وآخر.</p>
     </div>
     <div class="group about">
       <img src="icons/alt/${APP_ICONS.some((x) => x[0] === s.appIcon) ? s.appIcon : 'sky'}.png" alt="" width="72" height="72">
@@ -73,7 +67,6 @@ export function render(view) {
     if (t.name === 'clock24') s.clock24 = t.checked;
     if (t.name === 'haptics') s.haptics = t.checked;
     if (t.name === 'flat') s.flat = t.checked;
-    if (t.name === 'tajweed') s.tajweed = t.checked;
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {
         try {
@@ -87,7 +80,7 @@ export function render(view) {
       return;
     }
     save();
-    if (t.name === 'clock24' || t.name === 'tajweed') render(view);
+    if (t.name === 'clock24') render(view);
   };
   const onClick = (e) => {
     const dg = e.target.closest('[data-digits] [data-v]');

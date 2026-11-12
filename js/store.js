@@ -26,7 +26,6 @@ export const DEFAULTS = {
     uiWeight: 400,
     headScale: 1, // size of the headings, 0.8…1.3
     flat: false, // flat design instead of liquid glass
-    tajweed: true, // tajweed colours on the verses of the adhkar
     haptics: true,
     quranGoal: 5,
     appIcon: 'sky', // icons/alt/<name>.png for the home screen
@@ -90,7 +89,7 @@ function merge(base, value) {
 function prune(data) {
   for (const k of ['hifz', 'surahs', 'saved', 'notes']) delete data[k];
   const s = data.settings;
-  if (s) for (const k of ['prayerLayout', 'mushafMode', 'mushafInk', 'quranScale', 'textBold', 'uiBold']) delete s[k];
+  if (s) for (const k of ['tajweed', 'prayerLayout', 'mushafMode', 'mushafInk', 'quranScale', 'textBold', 'uiBold']) delete s[k];
   return data;
 }
 

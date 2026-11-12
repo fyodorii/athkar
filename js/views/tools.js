@@ -167,7 +167,7 @@ export function renderQailulah(view) {
         ${QAILULAH_SCIENCE.map((x) => `<article class="card"><small>${esc(x.k)}</small><b>${esc(x.h)}</b><p>${esc(x.p)}</p><small class="muted">${esc(x.src)}</small></article>`).join('')}
       </section>
       <p class="hint center">جعلُ «الساعة السادسة» نافذةً لما قبل الزوال تقريبٌ من الحاسبة؛ النصوص تقول «قبل الزوال» و«نصف النهار» ولا تحدد مدة. والزوال هنا لحظة توسّط الشمس لموقعك، والساعة الزمانية جزء من اثني عشر من النهار.</p>
-      <p class="hint center hafs-line">﴿أَصۡحَٰبُ ٱلۡجَنَّةِ يَوۡمَئِذٍ خَيۡرٞ مُّسۡتَقَرّٗا وَأَحۡسَنُ مَقِيلٗا﴾ الفرقان: ٢٤</p>`;
+      <p class="hint center hafs-line">﴿أَصۡحَٰبُ ٱلۡجَنَّةِ يَوۡمَئِذٍ خَيۡرٞ مُّسۡتَقَرّٗا وَأَحۡسَنُ مَقِيلٗا﴾ الفرقان: ٢٤</p>`;
   };
   draw();
 

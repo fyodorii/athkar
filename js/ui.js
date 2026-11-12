@@ -81,7 +81,12 @@ export function haptic(ms = 12, force = false) {
   }
 }
 
+// The Complex's verse marks are characters only its font draws (in other fonts they are Arabic
+// ligatures), so text that leaves the app has them as numbers in brackets: ﴿…﴾ (٢٥٥).
+const plain = (text) => String(text).replace(/[\u00A0 ]([\uFC00-\uFD1D])/g, (m, c) => ` (${String(c.charCodeAt(0) - 0xfc00 + 1).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d])})`);
+
 export async function copyText(text) {
+  text = plain(text);
   try {
     await navigator.clipboard.writeText(text);
   } catch (e) {
@@ -99,7 +104,7 @@ export async function copyText(text) {
 }
 
 export async function shareText(text) {
-  const body = `${text}\n\n— ${APP_NAME}`;
+  const body = `${plain(text)}\n\n— ${APP_NAME}`;
   if (navigator.share) {
     try {
       await navigator.share({ text: body });

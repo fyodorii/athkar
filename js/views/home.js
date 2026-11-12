@@ -8,7 +8,6 @@ import { clock, clockText, countdown, GREG_MONTHS, gregText, hijri, hijriText, m
 import { icon, PRAYER_ICONS } from '../icons.js';
 import { addDays, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
 import { firstKhatma, state } from '../store.js';
-import { tajweedHtml } from '../tajweed.js';
 import { PRAYERS, today } from '../today.js';
 import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, ring, shareText } from '../ui.js';
@@ -99,7 +98,7 @@ export function render(view) {
 
   <h3 class="section-title small h-title">${icon('stars', 16)} زاد اليوم</h3>
   <section class="today-cards" data-cards>
-    ${todayCard('ayah', 'آية اليوم', 'quran', ayahHtml(d.ayah), d.ayah.ref)}
+    ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs">${esc(d.ayah.text)}</span>`, d.ayah.ref)}
     ${todayCard('hadith', 'حديث اليوم', 'quote', esc(d.hadith.text), d.hadith.ref)}
     ${todayCard('advice', 'نصيحة اليوم', 'heart', esc(d.advice.text), '')}
     ${todayCard('dhikr', 'ذكر اليوم', 'beads', esc(daily.text), daily.note)}
@@ -253,12 +252,6 @@ function worshipCard(info) {
     <b>متابعتي اليوم</b>
     <small>${num(sc.done)} من ${num(sc.total)}</small>
   </a>`;
-}
-
-// The verse of the day, with its tajweed colours when they are on.
-function ayahHtml(ayah) {
-  const coloured = tajweedHtml(ayah.id);
-  return coloured || `<span class="hafs">${esc(ayah.text)}</span>`;
 }
 
 function todayCard(kind, label, ic, html, ref) {

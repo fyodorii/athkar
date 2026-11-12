@@ -19,10 +19,11 @@ import * as debts from './views/debts.js';
 import * as datecalc from './views/datecalc.js';
 import * as rawatib from './views/rawatib.js';
 import * as reminders from './views/reminders.js';
+import * as account from './views/account.js';
+import { takeRedirect } from './google.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
 import { APP_NAME, DESIGNER } from './config.js';
 import { checkReminders } from './notify.js';
-import { paintTajweed } from './tajweed.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
@@ -72,6 +73,7 @@ const ROUTES = [
   [/^#\/settings\/icon$/, 'settings', (v) => settings.renderIcon(v)],
   [/^#\/settings\/fonts$/, 'settings', (v) => settings.renderFonts(v)],
   [/^#\/settings\/notify$/, 'settings', (v) => settings.renderNotify(v)],
+  [/^#\/settings\/account$/, 'settings', (v) => account.render(v)],
 ];
 
 const view = $('#view');
@@ -198,7 +200,11 @@ function installHint() {
 
 applyTheme();
 renderTabs();
+// Back from Google's sign-in: the token in the address is taken, and the app opens where it was.
+const signedIn = takeRedirect();
+if (signedIn) history.replaceState(null, '', location.pathname + location.search + signedIn.back);
 route();
+if (signedIn?.error) toast(signedIn.error);
 window.addEventListener('hashchange', route);
 onChange(() => {
   applyTheme();
@@ -220,14 +226,6 @@ document.addEventListener('visibilitychange', () => {
   // The screen lock is dropped when the app is hidden; take it again for a running timer.
   if (anyTimerRunning()) keepAwake(true);
 });
-
-// The tajweed colours are painted over the text of the page; paint them again when it changes.
-let painting = 0;
-new MutationObserver(() => {
-  cancelAnimationFrame(painting);
-  painting = requestAnimationFrame(paintTajweed);
-}).observe(view, { childList: true, subtree: true });
-paintTajweed(); // the first page was drawn before the observer
 
 registerServiceWorker();
 persistStorage();
