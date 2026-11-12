@@ -1,5 +1,5 @@
 // A khatma: a range of the mushaf read over a number of days, with a daily wird.
-// { id, name, color, from, to, pos, read, span, week, remind, startedAt }: `from`…`to` are its
+// { id, name, color, from, to, pos, read, span, week, remind, startedAt, createdAt }: `from`…`to` are its
 // pages, `pos` the page to read next, `read` the furthest page reached, `span` the days it is
 // planned over, `week` the weekdays of reading (0 = Sunday), `remind` "HH:MM" or ''.
 
@@ -32,7 +32,25 @@ export function khatmaInfo(k) {
   const [ja, jb] = [juzOf(from), juzOf(to)];
   const whole = JUZ[ja - 1] === from && juzEnd(jb) === to && (jb - ja + 1) % span === 0;
   const juzPer = whole ? (jb - ja + 1) / span : 0;
-  const wirdTo = juzPer ? juzEnd(Math.min(jb, juzOf(pos) + juzPer - 1)) : Math.min(to, pos + per - 1);
-  const left = juzPer ? Math.ceil((jb - juzOf(pos) + 1) / juzPer) : Math.ceil((total - read) / per);
-  return { from, to, total, read, done, pos, span, per, juzPer, week, wirdTo, left: done ? 0 : left, color: KHATMA_COLORS[k.color] || KHATMA_COLORS.blue };
+  // The current wird: its number (from 1) and its pages, fixed by the plan so that a place
+  // marked inside it shows as progress through it.
+  const no = done ? Math.ceil(juzPer ? (jb - ja + 1) / juzPer : total / per) : juzPer ? Math.floor((juzOf(pos) - ja) / juzPer) + 1 : Math.floor((pos - from) / per) + 1;
+  const wirdFrom = juzPer ? JUZ[ja + (no - 1) * juzPer - 1] : from + (no - 1) * per;
+  const wirdTo = juzPer ? juzEnd(Math.min(jb, ja + no * juzPer - 1)) : Math.min(to, wirdFrom + per - 1);
+  const wirds = Math.ceil(juzPer ? (jb - ja + 1) / juzPer : total / per);
+  return { from, to, total, read, done, pos, span, per, juzPer, week, no, wirds, wirdFrom, wirdTo, color: KHATMA_COLORS[k.color] || KHATMA_COLORS.blue };
+}
+
+// How the reading stands against the plan: wirds done beyond (+) or short of (−) the reading
+// days that have passed since the khatma was made (today's is not yet owed).
+export function commitment(k, dayNow = Date.now()) {
+  const i = khatmaInfo(k);
+  const doneWirds = i.done ? i.wirds : i.no - 1;
+  let due = 0;
+  const start = new Date(k.createdAt || dayNow);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(dayNow);
+  end.setHours(0, 0, 0, 0);
+  for (const d = new Date(start); d < end && due < i.wirds; d.setDate(d.getDate() + 1)) if (i.week.includes(d.getDay())) due++;
+  return doneWirds - due;
 }

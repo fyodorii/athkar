@@ -1789,3 +1789,26 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 .kh-week .chip-opt { padding: 6px 10px; font-size: 13px; }
 .kh-per { color: var(--primary); font-weight: 700; font-size: 15px; }
 .kh-form input[type='time']:disabled { opacity: 0.4; }
+
+/* The khatma card: name, range by verses, commitment, the current wird. */
+.kh-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kh-head b { font-size: calc(20px * var(--head-scale)); color: var(--kc); min-width: 0; overflow-wrap: anywhere; }
+.kh-head .icon-btn { color: var(--kc); flex-shrink: 0; }
+.kh-row { flex: 1; display: flex; align-items: stretch; min-width: 0; border-radius: 14px; overflow: hidden; background: var(--bg-2); }
+.kh-row span { flex-shrink: 0; display: grid; place-items: center; padding: 8px 12px; font-size: 14px; background: color-mix(in srgb, var(--kc) 14%, transparent); }
+.kh-row b { flex: 1; display: grid; place-items: center; padding: 8px 10px; text-align: center; font-size: 15px; font-weight: 600; min-width: 0; }
+.kh-row b.ok { color: var(--ok); }
+.kh-row b.late { color: var(--danger); }
+.kh-commit { display: flex; align-items: center; gap: 12px; }
+.kh .kh-ring { width: 52px; height: 52px; }
+.kh-now { margin: 4px 0 0; font-size: 17px; font-weight: 700; }
+.kh-now small { display: block; font-size: 12.5px; font-weight: 400; color: var(--ink-2); }
+.kh-now .ic { display: inline; vertical-align: -2px; }
+.kh-wird { display: grid; gap: 6px; }
+.kh-mark { display: flex; align-items: center; gap: 8px; color: var(--kc); }
+.kh-mark b { padding: 5px 14px; border-radius: 10px; background: var(--kc); color: #fff; font-size: 14.5px; }
+.kh-wird .kh-bar { height: 14px; border-radius: 14px; }
+.kh-ends { display: flex; justify-content: space-between; gap: 8px; }
+.kh-ends span { display: grid; padding: 5px 12px; border-radius: 12px; background: var(--bg-2); font-size: 14px; font-weight: 600; color: var(--kc); line-height: 1.4; }
+.kh-ends span:last-child { text-align: left; }
+.kh-ends small { font-size: 11px; font-weight: 400; color: var(--ink-3); }

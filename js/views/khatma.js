@@ -4,10 +4,10 @@
 
 import { gregText, hijri, HIJRI_MONTHS, num, WEEKDAYS } from '../dates.js';
 import { icon } from '../icons.js';
-import { ALL_WEEK, juzOf, KHATMA_COLORS, khatmaInfo } from '../khatma.js';
+import { ALL_WEEK, commitment, juzOf, KHATMA_COLORS, khatmaInfo } from '../khatma.js';
 import { askPermission } from '../notify.js';
 import { dayKey } from '../prayer.js';
-import { JUZ, PAGES, SURAH_END, SURAHS } from '../quran-data.js';
+import { JUZ, pageEnd, PAGES, pageStart, SURAH_END, SURAHS } from '../quran-data.js';
 import { save, state, uid } from '../store.js';
 import { hoursAt, today } from '../today.js';
 import { confirmSheet, esc, haptic, openSheet, pageHeader, ring, toast, toggle } from '../ui.js';
@@ -26,33 +26,51 @@ const weekWord = (week) => (week.length === 7 ? 'كل يوم' : week.map((d) => 
 export function render(view) {
   const find = (id) => state.khatmas.find((k) => k.id === id);
 
+  const verse = (x) => `${x.name}: ${num(x.ayah)}`;
+
+  // A khatma made before plans were kept is taken to be on schedule from here on.
+  const madeAt = (k) => {
+    if (!k.createdAt) {
+      const i = khatmaInfo(k);
+      k.createdAt = Date.now() - (i.done ? i.wirds : i.no - 1) * 86400000 * (7 / i.week.length);
+    }
+    return k.createdAt;
+  };
+
+  // The card: name and edit, the range by its verses, how the reading stands against the
+  // plan, then the current wird from its first verse to its last.
   const card = (k) => {
     const i = khatmaInfo(k);
-    const whole = i.from === 1 && i.to === PAGES;
-    const range = whole ? 'المصحف كاملاً' : `من صفحة ${num(i.from)} إلى ${num(i.to)}`;
+    madeAt(k);
+    const c = commitment(k);
+    const sessions = (n) => (n === 1 ? 'جلسة واحدة' : n === 2 ? 'جلستان' : n <= 10 ? `${num(n)} جلسات` : `${num(n)} جلسة`);
+    const status = i.done ? ['ok', 'أتممت الختمة'] : c > 0 ? ['ok', `متقدم (${sessions(c)})`] : c < 0 ? ['late', `متأخر (${sessions(-c)})`] : ['ok', 'منتظم'];
+    const inWird = Math.max(0, Math.min(1, (i.pos - i.wirdFrom) / (i.wirdTo - i.wirdFrom + 1)));
     return `<section class="card kh" data-k="${k.id}" style="--kc:${i.color}">
-      <div class="kh-top">
-        <span class="kh-ring">${ring(i.read / i.total, 58, 5)}<b>${num(Math.round((i.read / i.total) * 100))}%</b></span>
-        <span class="kh-text">
-          <small>${icon('bookmarkOn', 14)} ${esc(k.name)}</small>
-          <b>${i.done ? 'أتممت الختمة، تقبّل الله منك' : `ورد اليوم: ${i.pos === i.wirdTo ? `صفحة ${num(i.pos)}` : `من ${num(i.pos)} إلى ${num(i.wirdTo)}`}`}</b>
-          <small>${i.done ? range : `الجزء ${num(juzOf(i.pos))} • قرأت ${num(i.read)} من ${num(i.total)} • بقي ${num(i.left)} ${i.left <= 10 && i.left > 2 ? 'أوراد' : 'ورداً'}`}</small>
-        </span>
-        <button class="icon-btn ghost sm" data-more aria-label="خيارات">${icon('more', 20)}</button>
+      <div class="kh-head"><b>${esc(k.name)}</b><button class="icon-btn" data-more aria-label="تعديل الختمة">${icon('edit', 20)}</button></div>
+      <div class="kh-row"><span>نطاق الختمة</span><b>(${verse(pageStart(i.from))}) إلى (${verse(pageEnd(i.to))})</b></div>
+      <div class="kh-commit">
+        <div class="kh-row"><span>الالتزام</span><b class="${status[0]}">${status[1]}</b></div>
+        <span class="kh-ring">${ring(i.read / i.total, 52, 5)}<b>${num(Math.round((i.read / i.total) * 100))}%</b></span>
       </div>
-      <div class="kh-bar"><i style="width:${(i.read / i.total) * 100}%"></i></div>
-      <p class="kh-plan">${range} • ${wirdWord(i)} ${weekWord(i.week)}${k.remind ? ` • ${icon('bell', 13)} ${num(k.remind)}` : ''}</p>
       ${
         i.done
-          ? `<button class="btn primary wide" data-again>${icon('reset', 20)} ابدأها من جديد</button>`
-          : `<div class="kh-btns"><button class="btn primary" data-wird>${icon('check', 20)} أتممت ورد اليوم</button><button class="btn ghost" data-mark>${icon('bookmark', 20)} وين وصلت</button></div>`
+          ? `<p class="kh-plan">تقبّل الله منك. ${num(i.total)} صفحة في ${num(i.wirds)} ورداً.</p>
+             <button class="btn primary wide" data-again>${icon('reset', 20)} ابدأها من جديد</button>`
+          : `<p class="kh-now">الوِرد الحالي (${num(i.no)}) <small>من ${num(i.wirds)} • ${wirdWord(i)} • ${weekWord(i.week)}${k.remind ? ` • ${icon('bell', 13)} ${num(k.remind)}` : ''}</small></p>
+             <div class="kh-wird">
+               <span class="kh-mark">${icon('bookmarkOn', 26)}<b>${verse(pageStart(i.pos))}</b></span>
+               <div class="kh-bar"><i style="width:${inWird * 100}%"></i></div>
+               <div class="kh-ends"><span>${verse(pageStart(i.wirdFrom))}<small>ص ${num(i.wirdFrom)}</small></span><span>${verse(pageEnd(i.wirdTo))}<small>ص ${num(i.wirdTo)}</small></span></div>
+             </div>
+             <div class="kh-btns"><button class="btn primary" data-wird>${icon('check', 20)} أتممت الورد</button><button class="btn ghost" data-mark>${icon('bookmark', 20)} وين وصلت</button></div>`
       }
     </section>`;
   };
 
   const draw = () => {
     view.innerHTML = `
-      ${pageHeader('ختماتي', { back: '#/home' })}
+      ${pageHeader('الختمات', { back: '#/home', actions: `<button class="icon-btn primary" data-new aria-label="إنشاء ختمة">${icon('plus', 22)}</button>` })}
       ${state.khatmas.map(card).join('') || `<div class="empty"><div class="empty-art">${icon('quran', 44)}</div><b>لا ختمات</b><p>أنشئ ختمة بنطاقها ومدتها، وسجّل كل يوم وردك.</p></div>`}
       <button class="btn ghost wide" data-new>${icon('plus', 20)} إنشاء ختمة</button>
       ${
@@ -100,7 +118,7 @@ export function render(view) {
        <div class="sheet-actions"><button class="btn primary" data-ok>سجّل</button></div>`,
       (el, close) => {
         const show = () => {
-          el.querySelector('[data-page]').textContent = `صفحة ${num(page)} • الجزء ${num(juzOf(page))}`;
+          el.querySelector('[data-page]').textContent = `صفحة ${num(page)} • ${verse(pageEnd(page))}`;
           el.querySelector('[data-range]').value = page;
         };
         show();
@@ -129,7 +147,7 @@ export function render(view) {
   const restart = (k) => {
     const i = khatmaInfo(k);
     if (i.read > 0) state.khatmaLog.push({ name: k.name, start: k.startedAt, end: Date.now(), pages: i.read, done: i.done });
-    Object.assign(k, { pos: i.from, read: i.from - 1, startedAt: 0 });
+    Object.assign(k, { pos: i.from, read: i.from - 1, startedAt: 0, createdAt: Date.now() });
     save();
     draw();
   };
@@ -251,7 +269,7 @@ export function render(view) {
             // A changed range keeps the place where it still falls inside it.
             k.pos = Math.max(f.from, Math.min(f.to + 1, k.pos || f.from));
             k.read = Math.max(f.from - 1, Math.min(f.to, k.read || 0));
-          } else state.khatmas.push((k = { id: uid(), ...data, pos: f.from, read: f.from - 1, startedAt: 0 }));
+          } else state.khatmas.push((k = { id: uid(), ...data, pos: f.from, read: f.from - 1, startedAt: 0, createdAt: Date.now() }));
           // A reminder whose time has passed today starts tomorrow, not at once.
           const c = hoursAt();
           if (data.remind && data.remind <= `${String(c.h).padStart(2, '0')}:${String(c.m).padStart(2, '0')}`) state.notifyLog[`${today().key}:kh-${k.id}-${data.remind}`] = Date.now();

@@ -34,7 +34,7 @@ const TABS = [
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['occasions', 'المناسبات', 'calendar', '#/occasions'],
   '',
-  ['khatma', 'ختماتي', 'quran', '#/khatma'],
+  ['khatma', 'الختمات', 'quran', '#/khatma'],
   ['rawatib', 'السنن الرواتب', 'mosque', '#/rawatib'],
   ['reminders', 'تذكيراتي', 'bell', '#/reminders'],
   ['debts', 'الديون', 'wallet', '#/debts'],
