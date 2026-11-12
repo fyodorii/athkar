@@ -1,6 +1,7 @@
 // Settings: location, calculation, display and backup.
 
 import { CITIES, nearestCity } from '../cities.js';
+import { googleAccount } from '../google.js';
 import { APP_NAME, APP_VERSION, DESIGNER } from '../config.js';
 import { clockText, hijriText, minutesText, num } from '../dates.js';
 import { icon } from '../icons.js';
@@ -55,9 +56,10 @@ export function render(view) {
     </div>
     <div class="group">
       <h4>بياناتك</h4>
+      ${row('#/settings/account', 'upload', 'حساب Google', googleAccount().email ? esc(googleAccount().email) : 'الدخول والحفظ في Drive')}
       <button class="row" data-export><span class="row-icon">${icon('download', 20)}</span><span class="row-label">نسخة احتياطية</span><span class="row-value">تصدير</span></button>
       <label class="row"><span class="row-icon">${icon('upload', 20)}</span><span class="row-label">استعادة نسخة</span><span class="row-value">استيراد</span><input type="file" accept="application/json,.json" hidden data-import></label>
-      <p class="hint">أذكارك ودفترك محفوظة على جهازك فقط. احفظ نسخة احتياطية في ملفاتك أو iCloud بين حين وآخر.</p>
+      <p class="hint">بياناتك محفوظة على جهازك. ادخل بحساب Google لتُحفظ في حسابك، أو صدّر نسخة إلى ملفاتك أو iCloud بين حين وآخر.</p>
     </div>
     <div class="group about">
       <img src="icons/alt/${APP_ICONS.some((x) => x[0] === s.appIcon) ? s.appIcon : 'sky'}.png" alt="" width="72" height="72">
