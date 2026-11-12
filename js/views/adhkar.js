@@ -99,12 +99,15 @@ function wirdCard(x, n, no) {
   const before = x.before ? esc(x.before) : '';
   const done = n >= x.count;
   const left = x.count - n;
+  const TICK = `<span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 16) : ''}</span></span>`;
   const times = x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`;
-  // One row on top: the number and title, then how many times and the counter (a ring counting
+  // One row on top: the title, then how many times and the counter (a ring counting
   // down, or for a dhikr said once a small tick), so the card holds no empty row of its own.
   return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
-    <header class="dhikr-head">
-      <h3 class="dhikr-title"><span class="dhikr-no">${num(no)}</span>${x.title ? esc(x.title) : ''}</h3>
+    ${
+      x.count > 1 || x.title
+        ? `<header class="dhikr-head">
+      <h3 class="dhikr-title">${x.title ? esc(x.title) : ''}</h3>
       ${
         x.count > 1
           ? `<span class="times">${times}</span>
@@ -112,9 +115,11 @@ function wirdCard(x, n, no) {
         <span class="counter-ring">${ring(n / x.count, 44, 3)}</span>
         <span class="counter-num" data-left>${done ? icon('check', 20) : num(left)}</span>
       </button>`
-          : `<span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 16) : ''}</span></span>`
+          : TICK
       }
-    </header>
+    </header>`
+        : TICK // a dhikr said once, without a title: only the small tick in the corner
+    }
     <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${esc(x.text)}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
