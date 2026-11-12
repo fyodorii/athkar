@@ -1952,3 +1952,8 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 .dhikr-head .counter.once { position: relative; top: auto; left: auto; margin-inline-start: auto; }
 .dhikr-text { line-height: 1.9; }
 .dhikr > .ref { display: block; margin-top: 6px; }
+
+/* No numbers on the adhkar: a card with neither title nor count has only the tick in its corner. */
+.dhikr > .counter.once { position: absolute; top: 14px; left: 14px; }
+.dhikr:has(> .counter.once) > .dhikr-text { padding-left: 26px; }
+.dhikr-head:not(:has(.counter:not(.once))) { min-height: 0; }
