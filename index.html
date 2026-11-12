@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>مواقيت</title>
     <meta name="description" content="مواقيت الصلاة والأذكار، متابعة العبادات، الختمة، السنن الرواتب، الديون وحاسبة التاريخ الهجري — مع تنبيهات." />
-    <meta name="theme-color" content="#3f6fb5" />
+    <meta name="theme-color" content="#d5e6fd" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -22,7 +22,10 @@
       try {
         var st = JSON.parse(localStorage.getItem('adhkar-app:v1') || '{}').settings || {};
         var t = st.theme || 'auto';
-        if (t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+        if (t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.dataset.theme = 'dark';
+          document.querySelector('meta[name=theme-color]').content = '#101b30';
+        }
         // The chosen fonts, before the first paint (same stacks as FONTS in js/ui.js).
         var sys = "-apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif";
         var f = { tajawal: "'Tajawal', " + sys, cairo: "'Cairo', " + sys, plex: "'Plex', " + sys, vazirmatn: "'Vazirmatn', " + sys, amiri: "'Amiri', serif", lateef: "'Lateef', 'Amiri', serif", ruqaa: "'Aref Ruqaa', 'Amiri', serif" };
