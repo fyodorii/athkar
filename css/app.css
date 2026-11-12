@@ -1959,7 +1959,8 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 
 /* ---------- Version 31: flat, a little deeper blue, the dhikr at the top of its card ---------- */
 
-:root {
+/* Light theme only: a plain :root here would come after the dark colours and override them. */
+:root:not([data-theme='dark']) {
   --primary: #2c6fcc;
   --primary-2: #2359a8;
   --primary-soft: rgba(44, 111, 204, 0.12);
