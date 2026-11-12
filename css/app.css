@@ -1761,3 +1761,31 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 .w-flame { display: inline-flex; align-items: center; gap: 2px; margin-inline-start: 8px; padding: 0 7px; border-radius: 99px; font-style: normal; font-size: 12px; font-weight: 700; vertical-align: 2px; background: rgba(240, 130, 40, 0.14); color: #d9772a; font-variant-numeric: tabular-nums; }
 [data-theme='dark'] .w-flame { color: #ffb86b; }
 .w-flame .ic { display: inline; }
+
+/* Khatmas with a plan: each in its own colour. */
+.kh .kh-ring { color: var(--kc); }
+.kh-text small:first-child { color: var(--kc); display: flex; align-items: center; gap: 4px; }
+.kh-bar { height: 8px; border-radius: 8px; background: var(--bg-2); overflow: hidden; }
+.kh-bar i { display: block; height: 100%; border-radius: 8px; background: var(--kc); transition: width 0.4s ease; }
+.kh-plan { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+.kh-plan .ic { display: inline; vertical-align: -2px; }
+.kh-btns { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
+.kh-btns .btn { padding: 0 10px; font-size: 15px; }
+.kh-mini .km-icon { background: color-mix(in srgb, var(--kc) 16%, transparent); color: var(--kc); }
+.kh-mini .km-text small:first-child { color: var(--kc); }
+.kh-form { gap: 12px; }
+.kh-colors { display: flex; justify-content: center; gap: 16px; padding: 12px; border-radius: 18px; background: var(--bg-2); }
+.kh-colors button { padding: 4px 2px 8px; color: var(--kc); border-bottom: 4px solid transparent; border-radius: 4px; opacity: 0.75; transition: transform 0.15s; }
+.kh-colors button.on { border-bottom-color: var(--kc); opacity: 1; transform: scale(1.2); }
+.kh-slide { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 10px; margin-top: 6px; }
+.kh-slide b { font-size: 14px; padding: 6px 10px; border-radius: 12px; background: var(--bg-2); text-align: center; white-space: nowrap; }
+.kh-slide input { width: 100%; direction: rtl; padding: 0; background: none; }
+.kh-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.kh-two label { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); min-width: 0; }
+.kh-two input, .kh-two select { width: 100%; min-width: 0; border: 0; outline: 0; border-radius: 12px; background: var(--bg-2); padding: 10px 12px; font-size: 16px; font-weight: 600; color: var(--ink); min-height: 44px; }
+.kh-sum { color: var(--ink-2); font-size: 12.5px; }
+.kh-form .row { min-height: 48px; padding: 2px 0; }
+.kh-week { margin: -4px 0 0; gap: 6px; }
+.kh-week .chip-opt { padding: 6px 10px; font-size: 13px; }
+.kh-per { color: var(--primary); font-weight: 700; font-size: 15px; }
+.kh-form input[type='time']:disabled { opacity: 0.4; }

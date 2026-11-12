@@ -8,7 +8,8 @@
 import { minutesText, num } from './dates.js';
 import { addDays, dayKey } from './prayer.js';
 import { registerServiceWorker } from './push.js';
-import { firstKhatma, save, state } from './store.js';
+import { khatmaInfo } from './khatma.js';
+import { save, state } from './store.js';
 import { chime, unlockAudio } from './timers.js';
 import { hoursAt, PRAYERS, today } from './today.js';
 import { esc, toast } from './ui.js';
@@ -47,6 +48,14 @@ export function reminders(now = new Date()) {
     add(`mine-${r.id}-${r.time}`, atTime(h, m), 'تذكير', r.text, '#/reminders');
   }
 
+  // Each khatma reminds of its wird on its own days, at its own time.
+  for (const k of state.khatmas) {
+    const i = khatmaInfo(k);
+    if (!k.remind || i.done || !i.week.includes(info.weekday)) continue;
+    const [h, m] = k.remind.split(':').map(Number);
+    add(`kh-${k.id}-${k.remind}`, atTime(h, m), k.name, `ورد اليوم: ${i.pos === i.wirdTo ? `صفحة ${num(i.pos)}` : `من صفحة ${num(i.pos)} إلى ${num(i.wirdTo)}`}`, '#/khatma');
+  }
+
   if (n.on) {
     for (const k of PRAYERS) {
       if (!n.prayers[k]) continue;
@@ -66,12 +75,6 @@ export function reminders(now = new Date()) {
     if (n.morning) add('morning', t.fajr.at + 30 * 60000, 'أذكار الصباح', 'ابدأ يومك بذكر الله', '#/adhkar/morning');
     if (n.evening) add('evening', t.asr.at + 30 * 60000, 'أذكار المساء', 'اختم نهارك بذكر الله', '#/adhkar/evening');
 
-    if (/^\d\d:\d\d$/.test(n.khatma)) {
-      const [h, m] = n.khatma.split(':').map(Number);
-      const c = hoursAt(now);
-      const at = now.getTime() + ((h - c.h) * 60 + (m - c.m)) * 60000 - c.s * 1000;
-      add('khatma', at, 'وردك من القرآن', `أكمل من صفحة ${num(Math.min(604, firstKhatma().pos))}`, '#/khatma');
-    }
     if (n.debts) {
       const soon = dayKey(addDays(info.day, 3));
       const c = hoursAt(now);
@@ -103,7 +106,7 @@ async function show(r) {
 
 // Called every second, and when the app comes back: shows what is due and not yet shown.
 export function checkReminders() {
-  if (!state.settings.notify.on && !state.reminders.some((r) => r.on)) return;
+  if (!state.settings.notify.on && !state.reminders.some((r) => r.on) && !state.khatmas.some((k) => k.remind)) return;
   const now = Date.now();
   const log = state.notifyLog;
   const due = reminders().filter((r) => r.at <= now && now - r.at < LATE && !log[r.id]);

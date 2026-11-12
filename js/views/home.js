@@ -9,8 +9,7 @@ import { icon, PRAYER_ICONS } from '../icons.js';
 import { addDays, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
 import { firstKhatma, state } from '../store.js';
 import { PRAYERS, today } from '../today.js';
-import { PAGES } from '../quran-data.js';
-import { juzOf } from './khatma.js';
+import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, ring, shareText } from '../ui.js';
 import { dayScore } from './worship.js';
 import { daysText, nextOccasion, rangeText } from './occasions.js';
@@ -238,12 +237,11 @@ function momentsCard(info) {
 // Where the khatma has reached, and the way back into it.
 function khatmaCard() {
   const k = firstKhatma();
-  const pos = Math.min(PAGES, Math.max(1, k.pos));
-  const done = k.read >= PAGES;
-  return `<a class="card occ-mini kh-mini" href="#/khatma">
+  const i = khatmaInfo(k);
+  return `<a class="card occ-mini kh-mini" href="#/khatma" style="--kc:${i.color}">
     <span class="km-icon">${icon('quran', 24)}</span>
-    <span class="km-text"><small>${esc(k.name)}</small><b>${done ? 'أتممت الختمة' : k.read ? `أكمل من صفحة ${num(pos)}` : 'ابدأ ختمتك'}</b><small>${done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(pos))} • قرأت ${num(Math.min(PAGES, k.read))} من ${num(PAGES)}`}</small></span>
-    <span class="pill">${num(Math.round((Math.min(PAGES, k.read) / PAGES) * 100))}%</span></a>`;
+    <span class="km-text"><small>${esc(k.name)}</small><b>${i.done ? 'أتممت الختمة' : `ورد اليوم: ${i.pos === i.wirdTo ? `صفحة ${num(i.pos)}` : `من ${num(i.pos)} إلى ${num(i.wirdTo)}`}`}</b><small>${i.done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(i.pos))} • قرأت ${num(i.read)} من ${num(i.total)}`}</small></span>
+    <span class="pill">${num(Math.round((i.read / i.total) * 100))}%</span></a>`;
 }
 
 // Today's follow-up at a glance: the share done and the link to the full list.

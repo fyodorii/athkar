@@ -19,6 +19,7 @@ const FILES = [
   'js/radio.js',
   'js/dates.js',
   'js/icons.js',
+  'js/khatma.js',
   'js/notify.js',
   'js/prayer.js',
   'js/push.js',

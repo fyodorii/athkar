@@ -39,7 +39,6 @@ export const DEFAULTS = {
       lastThird: false,
       morning: true, // morning adhkar, after Fajr
       evening: true, // evening adhkar, after Asr
-      khatma: '', // "HH:MM" of the daily wird reminder, or '' for none
       debts: true,
       sound: true,
     },
@@ -55,8 +54,7 @@ export const DEFAULTS = {
   diary: {},
   migrated: {}, // one-time data changes done
   tools: { ahzab: { start: '', done: {} }, nap: 20, napEnd: 0, walk: null, focus: { minutes: 10, task: '', count: 0, total: 0, end: 0 } },
-  // Khatmas, each { id, name, pos, read, startedAt }: `pos` is the page to read next (1…605),
-  // `read` the furthest page reached. `khatmaLog` keeps the finished and restarted ones.
+  // Khatmas (see js/khatma.js); `khatmaLog` keeps the finished and restarted ones.
   khatmas: [],
   khatmaLog: [],
   notes: [], // «ملاحظاتي»: { id, title, text, pinned, created, updated }
@@ -173,7 +171,10 @@ if (!state.migrated.r22) {
   for (const g of state.groups) for (const x of g.items) x.text = strip(x.text);
   const k = state.khatma;
   const ok = k && typeof k.pos === 'number' && typeof k.read === 'number';
-  if (!state.khatmas.length) state.khatmas.push({ id: 'k1', name: 'ختمتي', pos: ok ? k.pos : 1, read: ok ? k.read : 0, startedAt: (ok && k.startedAt) || 0 });
+  // The single reminder time of the old khatma goes with it.
+  const remind = /^\d\d:\d\d$/.test(state.settings.notify.khatma || '') ? state.settings.notify.khatma : '';
+  delete state.settings.notify.khatma;
+  if (!state.khatmas.length) state.khatmas.push({ id: 'k1', name: 'ختمتي', color: 'blue', from: 1, to: 604, span: 30, week: [0, 1, 2, 3, 4, 5, 6], remind, pos: ok ? k.pos : 1, read: ok ? k.read : 0, startedAt: (ok && k.startedAt) || 0 });
   if (ok && Array.isArray(k.history)) state.khatmaLog.push(...k.history.map((h) => ({ name: 'ختمتي', ...h })));
   delete state.khatma;
   state.migrated.r22 = true;

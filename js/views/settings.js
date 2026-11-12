@@ -492,9 +492,7 @@ export function renderNotify(view) {
         ${sw('lastThird', 'الثلث الأخير من الليل', n.lastThird, clockText(t.lastThird.hours, s.clock24), 'stars')}
         ${sw('morning', 'أذكار الصباح', n.morning, 'بعد الفجر بنصف ساعة', 'sunrise')}
         ${sw('evening', 'أذكار المساء', n.evening, 'بعد العصر بنصف ساعة', 'sunset')}
-        <div class="row"><span class="row-icon">${icon('quran', 20)}</span><span class="row-label">ورد الختمة<small>${n.khatma ? 'تذكير يومي في هذا الوقت' : 'اختر وقتاً لتذكير يومي'}</small></span>
-          ${n.khatma ? `<button class="icon-btn ghost sm" data-khatma-off aria-label="إلغاء">${icon('close', 18)}</button>` : ''}
-          <input type="time" value="${n.khatma}" data-khatma></div>
+        <p class="hint">تذكير ورد القرآن يُضبط لكل ختمة من «ختماتي».</p>
         ${sw('debts', 'الديون المستحقة', n.debts, 'قبل الاستحقاق بثلاثة أيام وفي يومه', 'wallet')}
         ${sw('sound', 'صوت التنبيه', n.sound, '', 'radio')}
       </div>`;
@@ -502,8 +500,7 @@ export function renderNotify(view) {
   draw();
   view.onchange = async (e) => {
     const t = e.target;
-    if (t.matches('[data-khatma]')) n.khatma = t.value;
-    else if (t.name === 'on') {
+    if (t.name === 'on') {
       n.on = t.checked;
       if (n.on) {
         const p = await askPermission();
@@ -518,7 +515,6 @@ export function renderNotify(view) {
   };
   view.onclick = (e) => {
     if (e.target.closest('[data-test]')) return testReminder();
-    if (e.target.closest('[data-khatma-off]')) n.khatma = '';
     const b = e.target.closest('[data-before] [data-d]');
     if (b) n.before = Math.max(0, Math.min(30, n.before + Number(b.dataset.d)));
     const q = e.target.closest('[data-iqama] [data-d]');
@@ -526,7 +522,7 @@ export function renderNotify(view) {
       const k = q.closest('[data-iqama]').dataset.iqama;
       s.iqama[k] = Math.max(0, Math.min(60, s.iqama[k] + Number(q.dataset.d)));
     }
-    if (!b && !q && !e.target.closest('[data-khatma-off]')) return;
+    if (!b && !q) return;
     save();
     const y = window.scrollY;
     draw();
