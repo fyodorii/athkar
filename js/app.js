@@ -102,6 +102,7 @@ function route() {
   current = fn(view, ...m.slice(1)) || null;
   for (const a of document.querySelectorAll('#tabs a')) a.classList.toggle('on', a.dataset.tab === tab);
   document.body.dataset.tab = tab;
+  paintStatusBar();
   renderMini();
   view.classList.remove('enter');
   void view.offsetWidth;
@@ -133,11 +134,21 @@ document.addEventListener('touchmove', (e) => e.touches.length > 1 && e.preventD
 
 // ---- Theme ----
 
+// The phone's status bar (the clock and battery) takes the colour of the top of the page under
+// it, so it reads as part of the page: the light header on the home screen, the page's own
+// background elsewhere, the tasbeeh's colour on the tasbeeh.
+const STATUS = { light: { home: '#d5e6fd', tasbeeh: '#2a5cc4', other: '#eef4fc' }, dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' } };
+function paintStatusBar() {
+  const shade = STATUS[document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'];
+  const tab = document.body.dataset.tab;
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', shade[tab] || shade.other);
+}
+
 const media = window.matchMedia('(prefers-color-scheme: dark)');
 function applyTheme() {
   const dark = state.settings.theme === 'dark' || (state.settings.theme === 'auto' && media.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0a1220' : '#3f6fb5');
+  paintStatusBar();
   setDigits(state.settings.digits);
   const s = state.settings;
   document.documentElement.toggleAttribute('data-flat', !!s.flat);
