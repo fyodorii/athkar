@@ -34,10 +34,7 @@ export function render(view) {
           ${[['auto', 'تلقائي'], ['light', 'فاتح'], ['dark', 'داكن']].map(([v, l]) => `<button class="${s.theme === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
         </div></div>
       <div class="row"><span class="row-icon">${icon('layers', 20)}</span><span class="row-label">تصميم مسطّح<small>ضوء مسطّح وألوان أقل، بلا زجاج سائل</small></span>${toggle('flat', s.flat)}</div>
-      ${row('#/settings/fonts', 'type', 'الخطوط', `${FONT_NAMES[s.fontUi] || ''} · ${WEIGHTS.find((w) => w[0] === s.uiWeight)?.[1] || ''}`)}
-      <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">حجم خط الأذكار</span>
-        <input type="range" min="0.85" max="1.5" step="0.05" value="${s.textScale}" data-scale></div>
-      <p class="sample amiri" data-sample style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
+      ${row('#/settings/fonts', 'type', 'الخطوط وأحجامها', `${FONT_NAMES[s.fontUi] || ''} · ${WEIGHTS.find((w) => w[0] === s.uiWeight)?.[1] || ''}`)}
       <div class="row"><span class="row-icon">${icon('quran', 20)}</span><span class="row-label">التجويد الملوّن<small>آيات الأذكار بألوان أحكام التجويد</small></span>${toggle('tajweed', s.tajweed)}</div>
       ${
         s.tajweed
@@ -77,7 +74,6 @@ export function render(view) {
     if (t.name === 'haptics') s.haptics = t.checked;
     if (t.name === 'flat') s.flat = t.checked;
     if (t.name === 'tajweed') s.tajweed = t.checked;
-    if (t.matches('[data-scale]')) s.textScale = Number(t.value);
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {
         try {
@@ -92,9 +88,6 @@ export function render(view) {
     }
     save();
     if (t.name === 'clock24' || t.name === 'tajweed') render(view);
-  };
-  const onInput = (e) => {
-    if (e.target.matches('[data-scale]')) $('[data-sample]', view).style.fontSize = `calc(1.3rem * ${e.target.value})`;
   };
   const onClick = (e) => {
     const dg = e.target.closest('[data-digits] [data-v]');
@@ -119,11 +112,10 @@ export function render(view) {
     if (e.target.closest('[data-share-app]')) shareApp();
   };
   view.onchange = onChange;
-  view.oninput = onInput;
   view.onclick = onClick;
   return {
     destroy() {
-      view.onchange = view.oninput = view.onclick = null;
+      view.onchange = view.onclick = null;
     },
   };
 }
@@ -403,6 +395,29 @@ export function renderFonts(view) {
         ${WEIGHTS.map(([w, l]) => `<button class="chip-opt ${s[weightKey] === w ? 'on' : ''}" data-v="${w}" style="font-family:${FONTS[s[key]]};font-weight:${w}">${l}</button>`).join('')}
       </div>
     </div>`;
+  // A size with − and + and a slider: the adhkar's text scale, or the tasbeeh dhikr's pixels.
+  const SIZES = {
+    text: { get: () => s.textScale, set: (v) => (s.textScale = Math.round(Math.max(0.85, Math.min(1.5, v)) * 100) / 100), min: 0.85, max: 1.5, step: 0.05, show: (v) => `${num(Math.round(v * 100))}%` },
+    tsb: { get: () => state.tasbeeh.fontSize || 40, set: (v) => (state.tasbeeh.fontSize = Math.round(Math.max(22, Math.min(110, v)))), min: 22, max: 110, step: 2, show: (v) => num(v) },
+  };
+  const sizer = (k, title, shown) => `
+    <div class="group fonts">
+      <div class="f-head"><h4>${title}</h4><span data-size-out="${k}">${shown}</span></div>
+      <div class="f-size">
+        <button class="icon-btn ghost" data-size="${k}" data-d="-1" aria-label="أصغر">${icon('minus', 22)}</button>
+        <input type="range" min="${SIZES[k].min}" max="${SIZES[k].max}" step="${SIZES[k].step}" value="${SIZES[k].get()}" data-size-range="${k}">
+        <button class="icon-btn ghost" data-size="${k}" data-d="1" aria-label="أكبر">${icon('plus', 22)}</button>
+      </div>
+    </div>`;
+  const setSize = (k, v) => {
+    const z = SIZES[k];
+    z.set(v);
+    save();
+    $(`[data-size-out="${k}"]`, view).textContent = z.show(z.get());
+    $(`[data-size-range="${k}"]`, view).value = z.get();
+    if (k === 'text') $('[data-text-sample]', view).style.fontSize = `calc(1.3rem * ${s.textScale})`;
+    else $('[data-tsb-sample]', view).style.fontSize = `${Math.min(48, z.get())}px`;
+  };
   const draw = () => {
     view.innerHTML = `
       ${pageHeader('الخطوط', { back: '#/settings' })}
@@ -418,8 +433,12 @@ export function renderFonts(view) {
         <p class="hint">كل حجم نسبة إلى تصميم التطبيق. العناوين البارزة تحتفظ بوزن أثقل لتبقى واضحة.</p>
       </div>
       ${picker('fontText', 'textWeight', 'خط الأذكار')}
-      <p class="sample amiri" style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
-      <p class="hint center">آيات القرآن تبقى بخط المصحف.</p>`;
+      ${sizer('text', 'حجم خط الأذكار', `${num(Math.round(s.textScale * 100))}%`)}
+      <p class="sample amiri" data-text-sample style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
+      <p class="hint center">آيات القرآن تبقى بخط المصحف.</p>
+      ${picker('fontTsb', 'tsbWeight', 'خط السبحة')}
+      ${sizer('tsb', 'حجم خط السبحة', num(state.tasbeeh.fontSize || 40))}
+      <p class="sample tsb-sample" data-tsb-sample style="font-size:${Math.min(48, state.tasbeeh.fontSize || 40)}px">سبحان الله وبحمده</p>`;
   };
   draw();
   const setHead = (v) => {
@@ -443,12 +462,15 @@ export function renderFonts(view) {
       if (which) $(`[data-weight="${which}"]`, view).scrollLeft = x;
       return;
     }
+    const z = e.target.closest('[data-size]');
+    if (z) return setSize(z.dataset.size, SIZES[z.dataset.size].get() + Number(z.dataset.d) * SIZES[z.dataset.size].step);
     const h = e.target.closest('[data-head]');
     if (h) return setHead(s.headScale + Number(h.dataset.head));
     if (e.target.closest('[data-head-reset]')) setHead(1);
   };
   view.oninput = (e) => {
     if (e.target.matches('[data-head-range]')) setHead(Number(e.target.value));
+    if (e.target.matches('[data-size-range]')) setSize(e.target.dataset.sizeRange, Number(e.target.value));
   };
   return { destroy: () => (view.onclick = view.oninput = null) };
 }

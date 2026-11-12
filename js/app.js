@@ -22,6 +22,7 @@ import * as reminders from './views/reminders.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
 import { APP_NAME, DESIGNER } from './config.js';
 import { checkReminders } from './notify.js';
+import { paintTajweed } from './tajweed.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
@@ -142,6 +143,8 @@ function applyTheme() {
   root.setProperty('--font-text', FONTS[s.fontText] || FONTS.tajawal);
   root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.tajawal);
   root.setProperty('--text-weight', s.textWeight || 500);
+  root.setProperty('--font-tsb', FONTS[s.fontTsb] || FONTS.tajawal);
+  root.setProperty('--tsb-weight', s.tsbWeight || 700);
   root.setProperty('--ui-weight', s.uiWeight || 400);
   root.setProperty('--head-scale', s.headScale || 1);
 }
@@ -217,6 +220,14 @@ document.addEventListener('visibilitychange', () => {
   // The screen lock is dropped when the app is hidden; take it again for a running timer.
   if (anyTimerRunning()) keepAwake(true);
 });
+
+// The tajweed colours are painted over the text of the page; paint them again when it changes.
+let painting = 0;
+new MutationObserver(() => {
+  cancelAnimationFrame(painting);
+  painting = requestAnimationFrame(paintTajweed);
+}).observe(view, { childList: true, subtree: true });
+paintTajweed(); // the first page was drawn before the observer
 
 registerServiceWorker();
 persistStorage();

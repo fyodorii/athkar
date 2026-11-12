@@ -21,6 +21,8 @@ export const DEFAULTS = {
     fontText: 'tajawal', // adhkar text: a key of FONTS in js/ui.js
     fontUi: 'tajawal', // interface
     textWeight: 500, // 200…900
+    fontTsb: 'tajawal', // the dhikr on the tasbeeh
+    tsbWeight: 700,
     uiWeight: 400,
     headScale: 1, // size of the headings, 0.8…1.3
     flat: false, // flat design instead of liquid glass

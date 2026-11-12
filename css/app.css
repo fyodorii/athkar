@@ -476,11 +476,11 @@ select, input[type='time'] {
 .dhikr footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 10px; }
 .dhikr-meta { display: grid; gap: 4px; min-width: 0; }
 .ref { font-size: 12.5px; color: var(--ink-3); }
-.counter { position: relative; width: 58px; height: 58px; flex-shrink: 0; display: grid; place-items: center; color: var(--primary); transition: transform 0.15s; }
+.counter { position: relative; width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; color: var(--primary); transition: transform 0.15s; }
 .counter .counter-ring { position: absolute; inset: 0; }
-.counter-num { position: relative; font-size: 20px; font-weight: 700; color: var(--ink); }
+.counter-num { position: relative; font-size: 16px; font-weight: 700; color: var(--ink); }
 .counter.bump { transform: scale(1.12); }
-.dhikr.done { opacity: 0.5; }
+.dhikr.done .dhikr-text { opacity: 1; } /* a dhikr read stays as clear as the rest */
 .dhikr.done .counter-num { color: var(--primary); }
 .finish {
   display: none;
@@ -1817,25 +1817,26 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
 
 /* ---------- Tajweed colours (the Tajweed Mushaf's, as DigitalKhatt draws them) ---------- */
 
-.madina, .dhikr-text.madina { font-family: 'Madina Old', 'KFGQPC Hafs', 'Amiri', serif; font-weight: 400; }
-.dhikr-text.madina { font-size: calc(1.6rem * var(--scale, 1)); line-height: 2.2; text-align: justify; text-align-last: center; }
-.dhikr-text.madina .before { font-size: 0.9em; }
-.tj-green { color: rgb(0 150 72); }
-.tj-tafkim { color: rgb(0 102 148); }
-.tj-lgray { color: rgb(165 165 165); }
-.tj-lkalkala { color: rgb(0 160 225); }
-.tj-red1 { color: rgb(195 138 8); }
-.tj-red2 { color: rgb(244 114 22); }
-.tj-red3 { color: rgb(236 0 140); }
-.tj-red4 { color: rgb(140 0 0); }
-[data-theme='dark'] .tj-green { color: rgb(60 205 120); }
-[data-theme='dark'] .tj-tafkim { color: rgb(90 170 225); }
-[data-theme='dark'] .tj-lgray { color: rgb(125 132 145); }
-[data-theme='dark'] .tj-lkalkala { color: rgb(70 200 255); }
-[data-theme='dark'] .tj-red1 { color: rgb(225 175 60); }
-[data-theme='dark'] .tj-red2 { color: rgb(255 140 60); }
-[data-theme='dark'] .tj-red3 { color: rgb(255 90 180); }
-[data-theme='dark'] .tj-red4 { color: rgb(235 85 85); }
+.madina { font-family: 'Madina Old', 'KFGQPC Hafs', 'Amiri', serif; font-weight: 400; }
+.dhikr-text.tj-text { font-family: 'Madina Old', 'KFGQPC Hafs', 'Amiri', serif; font-weight: 400; font-size: calc(1.6rem * var(--scale, 1)); line-height: 2.2; text-align: justify; text-align-last: center; }
+.dhikr-text.tj-text .before { font-size: 0.9em; }
+/* Painted over the unbroken text by js/tajweed.js; the dots of the settings' key use the classes. */
+::highlight(tj-green), .tj-green { color: rgb(0 150 72); }
+::highlight(tj-tafkim), .tj-tafkim { color: rgb(0 102 148); }
+::highlight(tj-lgray), .tj-lgray { color: rgb(165 165 165); }
+::highlight(tj-lkalkala), .tj-lkalkala { color: rgb(0 160 225); }
+::highlight(tj-red1), .tj-red1 { color: rgb(195 138 8); }
+::highlight(tj-red2), .tj-red2 { color: rgb(244 114 22); }
+::highlight(tj-red3), .tj-red3 { color: rgb(236 0 140); }
+::highlight(tj-red4), .tj-red4 { color: rgb(140 0 0); }
+[data-theme='dark'] ::highlight(tj-green), [data-theme='dark'] .tj-green { color: rgb(60 205 120); }
+[data-theme='dark'] ::highlight(tj-tafkim), [data-theme='dark'] .tj-tafkim { color: rgb(90 170 225); }
+[data-theme='dark'] ::highlight(tj-lgray), [data-theme='dark'] .tj-lgray { color: rgb(125 132 145); }
+[data-theme='dark'] ::highlight(tj-lkalkala), [data-theme='dark'] .tj-lkalkala { color: rgb(70 200 255); }
+[data-theme='dark'] ::highlight(tj-red1), [data-theme='dark'] .tj-red1 { color: rgb(225 175 60); }
+[data-theme='dark'] ::highlight(tj-red2), [data-theme='dark'] .tj-red2 { color: rgb(255 140 60); }
+[data-theme='dark'] ::highlight(tj-red3), [data-theme='dark'] .tj-red3 { color: rgb(255 90 180); }
+[data-theme='dark'] ::highlight(tj-red4), [data-theme='dark'] .tj-red4 { color: rgb(235 85 85); }
 .tj-key { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 4px 0 12px; font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-2); }
 .tj-key span { display: inline-flex; align-items: center; gap: 5px; }
 .tj-key i { width: 12px; height: 12px; border-radius: 50%; background: currentColor; }
@@ -1874,11 +1875,6 @@ html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adju
   --card: rgba(255, 255, 255, 0.06);
 }
 [data-flat] { --card: var(--card-solid); --shadow: 0 0 0 1px var(--line); --shadow-lg: 0 0 0 1px var(--line); --glass-filter: none; }
-
-/* The top of the screen under the phone's own clock and battery (drawn in white there): a
-   soft blue band, so they stay readable over the light pages. */
-body::after { content: ''; position: fixed; inset: 0 0 auto 0; height: var(--safe-top); z-index: 90; pointer-events: none; background: rgba(52, 100, 170, 0.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
-[data-theme='dark'] body::after, body[data-tab='tasbeeh']::after { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
 
 /* Home: a light header — the day, then the next time in a plain white panel. */
 .h-hero {
@@ -1945,3 +1941,10 @@ body::after { content: ''; position: fixed; inset: 0 0 auto 0; height: var(--saf
 [data-theme='dark'] .w-week button.on, [data-theme='dark'] .w-week button.on b { color: var(--primary); }
 [data-theme='dark'] .w-streak.on { color: #ffb86b; }
 .share-card, .finish, .radio-hero, .toast.reminder { background: linear-gradient(165deg, #3f7fd6, #2a5fb0); }
+
+/* ---------- Version 24 ---------- */
+
+/* The tasbeeh's dhikr has a font and weight of its own (the fonts page). */
+:root { --font-tsb: 'Tajawal', -apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif; --tsb-weight: 700; }
+.tsb-phrase, .tsb-phrase:not(.hafs) { font-family: var(--font-tsb); font-weight: var(--tsb-weight); }
+.tsb-sample { font-family: var(--font-tsb); font-weight: var(--tsb-weight); }

@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#3f6fb5" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="مواقيت" />
     <meta name="format-detection" content="telephone=no" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -30,6 +30,8 @@
         if (f[st.fontText]) r.setProperty('--font-text', f[st.fontText]);
         if (f[st.fontUi]) r.setProperty('--font-ui', f[st.fontUi]);
         if (st.textWeight) r.setProperty('--text-weight', st.textWeight);
+        if (f[st.fontTsb]) r.setProperty('--font-tsb', f[st.fontTsb]);
+        if (st.tsbWeight) r.setProperty('--tsb-weight', st.tsbWeight);
         if (st.uiWeight) r.setProperty('--ui-weight', st.uiWeight);
         if (st.headScale) r.setProperty('--head-scale', st.headScale);
         if (st.flat) document.documentElement.setAttribute('data-flat', '');
