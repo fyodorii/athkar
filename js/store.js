@@ -58,7 +58,6 @@ export const DEFAULTS = {
   // Khatmas (see js/khatma.js); `khatmaLog` keeps the finished and restarted ones.
   khatmas: [],
   khatmaLog: [],
-  notes: [], // «ملاحظاتي»: { id, title, text, pinned, created, updated }
   // { id, dir: 'owe' | 'lent', person, amount, date, due, remind, note, paid, paidAt }
   debts: [],
   // Groups of the tasbeeh: adhkar counted one after another, each to its number; `i` and
@@ -87,7 +86,7 @@ function merge(base, value) {
 // Data of features the app no longer has (memorization, the qibla, al-Mulk) is dropped when
 // loading, so old saves and backups stay light.
 function prune(data) {
-  for (const k of ['hifz', 'surahs', 'saved']) delete data[k];
+  for (const k of ['hifz', 'surahs', 'saved', 'notes']) delete data[k];
   const s = data.settings;
   if (s) for (const k of ['prayerLayout', 'mushafMode', 'mushafInk', 'quranScale', 'textBold', 'uiBold']) delete s[k];
   return data;

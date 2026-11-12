@@ -64,7 +64,7 @@ const ROUTES = [
   [/^#\/datecalc$/, 'datecalc', (v) => datecalc.render(v)],
   [/^#\/rawatib$/, 'rawatib', (v) => rawatib.render(v)],
   [/^#\/reminders$/, 'reminders', (v) => reminders.render(v)],
-  [/^#\/notebook(?:\/(notes|saved))?$/, 'mine', (v, tab) => notebook.render(v, tab)], // «saved» is an old link
+  [/^#\/notebook(?:\/\w+)?$/, 'mine', (v) => notebook.render(v)], // «saved» and «notes» are old links
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],
@@ -134,7 +134,7 @@ const media = window.matchMedia('(prefers-color-scheme: dark)');
 function applyTheme() {
   const dark = state.settings.theme === 'dark' || (state.settings.theme === 'auto' && media.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#070d1a' : '#0f2350');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0a1220' : '#3f6fb5');
   setDigits(state.settings.digits);
   const s = state.settings;
   document.documentElement.toggleAttribute('data-flat', !!s.flat);
