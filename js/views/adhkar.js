@@ -99,26 +99,26 @@ function wirdCard(x, n, no) {
   const before = x.before ? esc(x.before) : '';
   const done = n >= x.count;
   const left = x.count - n;
+  const times = x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`;
+  // One row on top: the number and title, then how many times and the counter (a ring counting
+  // down, or for a dhikr said once a small tick), so the card holds no empty row of its own.
   return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
-    <h3 class="dhikr-title"><span class="dhikr-no">${num(no)}</span>${x.title ? esc(x.title) : ''}</h3>
-    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${esc(x.text)}</div>
-    ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
-    ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
-    ${
-      x.count > 1
-        ? `<footer>
-      <div class="dhikr-meta">
-        ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
-      </div>
+    <header class="dhikr-head">
+      <h3 class="dhikr-title"><span class="dhikr-no">${num(no)}</span>${x.title ? esc(x.title) : ''}</h3>
+      ${
+        x.count > 1
+          ? `<span class="times">${times}</span>
       <button class="counter" aria-label="عدّ">
         <span class="counter-ring">${ring(n / x.count, 44, 3)}</span>
         <span class="counter-num" data-left>${done ? icon('check', 20) : num(left)}</span>
-      </button>
-    </footer>
-    <span class="times">${x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`}</span>`
-        : `${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
-    <span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 16) : ''}</span></span>`
-    }
+      </button>`
+          : `<span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 16) : ''}</span></span>`
+      }
+    </header>
+    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${esc(x.text)}</div>
+    ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
+    ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
+    ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
   </article>`;
 }
 
