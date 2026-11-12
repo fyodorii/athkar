@@ -7,10 +7,10 @@ import { dailyFor } from '../daily-data.js';
 import { clock, clockText, countdown, GREG_MONTHS, gregText, hijri, hijriText, minutesText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
 import { addDays, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
-import { state } from '../store.js';
+import { firstKhatma, state } from '../store.js';
+import { tajweedHtml } from '../tajweed.js';
 import { PRAYERS, today } from '../today.js';
-import { PAGES } from '../quran-data.js';
-import { juzOf } from './khatma.js';
+import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, ring, shareText } from '../ui.js';
 import { dayScore } from './worship.js';
 import { daysText, nextOccasion, rangeText } from './occasions.js';
@@ -99,7 +99,7 @@ export function render(view) {
 
   <h3 class="section-title small h-title">${icon('stars', 16)} زاد اليوم</h3>
   <section class="today-cards" data-cards>
-    ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs">${esc(d.ayah.text)}</span>`, d.ayah.ref)}
+    ${todayCard('ayah', 'آية اليوم', 'quran', ayahHtml(d.ayah), d.ayah.ref)}
     ${todayCard('hadith', 'حديث اليوم', 'quote', esc(d.hadith.text), d.hadith.ref)}
     ${todayCard('advice', 'نصيحة اليوم', 'heart', esc(d.advice.text), '')}
     ${todayCard('dhikr', 'ذكر اليوم', 'beads', esc(daily.text), daily.note)}
@@ -237,13 +237,12 @@ function momentsCard(info) {
 
 // Where the khatma has reached, and the way back into it.
 function khatmaCard() {
-  const k = state.khatma;
-  const pos = Math.min(PAGES, Math.max(1, k.pos));
-  const done = k.read >= PAGES;
-  return `<a class="card occ-mini kh-mini" href="#/khatma">
+  const k = firstKhatma();
+  const i = khatmaInfo(k);
+  return `<a class="card occ-mini kh-mini" href="#/khatma" style="--kc:${i.color}">
     <span class="km-icon">${icon('quran', 24)}</span>
-    <span class="km-text"><small>ختمتي</small><b>${done ? 'أتممت الختمة' : k.read ? `أكمل من صفحة ${num(pos)}` : 'ابدأ ختمتك'}</b><small>${done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(pos))} • قرأت ${num(Math.min(PAGES, k.read))} من ${num(PAGES)}`}</small></span>
-    <span class="pill">${num(Math.round((Math.min(PAGES, k.read) / PAGES) * 100))}%</span></a>`;
+    <span class="km-text"><small>${esc(k.name)}</small><b>${i.done ? 'أتممت الختمة' : `ورد اليوم: ${i.pos === i.wirdTo ? `صفحة ${num(i.pos)}` : `من ${num(i.pos)} إلى ${num(i.wirdTo)}`}`}</b><small>${i.done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(i.pos))} • قرأت ${num(i.read)} من ${num(i.total)}`}</small></span>
+    <span class="pill">${num(Math.round((i.read / i.total) * 100))}%</span></a>`;
 }
 
 // Today's follow-up at a glance: the share done and the link to the full list.
@@ -254,6 +253,12 @@ function worshipCard(info) {
     <b>متابعتي اليوم</b>
     <small>${num(sc.done)} من ${num(sc.total)}</small>
   </a>`;
+}
+
+// The verse of the day, with its tajweed colours when they are on.
+function ayahHtml(ayah) {
+  const coloured = tajweedHtml(ayah.id);
+  return coloured ? `<span class="madina">${coloured}</span>` : `<span class="hafs">${esc(ayah.text)}</span>`;
 }
 
 function todayCard(kind, label, ic, html, ref) {

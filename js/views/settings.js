@@ -38,6 +38,14 @@ export function render(view) {
       <div class="row"><span class="row-icon">${icon('type', 20)}</span><span class="row-label">حجم خط الأذكار</span>
         <input type="range" min="0.85" max="1.5" step="0.05" value="${s.textScale}" data-scale></div>
       <p class="sample amiri" data-sample style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
+      <div class="row"><span class="row-icon">${icon('quran', 20)}</span><span class="row-label">التجويد الملوّن<small>آيات الأذكار بألوان أحكام التجويد</small></span>${toggle('tajweed', s.tajweed)}</div>
+      ${
+        s.tajweed
+          ? `<div class="tj-key madina">
+              ${[['red4', 'مدّ ٦ حركات لزوماً'], ['red3', 'مدّ واجب ٤ أو ٥'], ['red2', 'مدّ جائز ٢ أو ٤ أو ٦'], ['red1', 'مدّ حركتان'], ['green', 'إخفاء ومواضع الغنّة'], ['lgray', 'إدغام وما لا يُلفظ'], ['tafkim', 'تفخيم'], ['lkalkala', 'قلقلة']].map(([c, l]) => `<span><i class="tj-${c}"></i>${l}</span>`).join('')}
+            </div>`
+          : ''
+      }
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
       <div class="row"><span class="row-icon">${icon('digits', 20)}</span><span class="row-label">نوع الأرقام</span>
         <div class="seg-mini" data-digits>
@@ -68,6 +76,7 @@ export function render(view) {
     if (t.name === 'clock24') s.clock24 = t.checked;
     if (t.name === 'haptics') s.haptics = t.checked;
     if (t.name === 'flat') s.flat = t.checked;
+    if (t.name === 'tajweed') s.tajweed = t.checked;
     if (t.matches('[data-scale]')) s.textScale = Number(t.value);
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {
@@ -82,7 +91,7 @@ export function render(view) {
       return;
     }
     save();
-    if (t.name === 'clock24') render(view);
+    if (t.name === 'clock24' || t.name === 'tajweed') render(view);
   };
   const onInput = (e) => {
     if (e.target.matches('[data-scale]')) $('[data-sample]', view).style.fontSize = `calc(1.3rem * ${e.target.value})`;
@@ -410,7 +419,7 @@ export function renderFonts(view) {
       </div>
       ${picker('fontText', 'textWeight', 'خط الأذكار')}
       <p class="sample amiri" style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
-      <p class="hint center">آيات القرآن تبقى بخط مصحف المدينة.</p>`;
+      <p class="hint center">آيات القرآن تبقى بخط المصحف.</p>`;
   };
   draw();
   const setHead = (v) => {
@@ -492,9 +501,7 @@ export function renderNotify(view) {
         ${sw('lastThird', 'الثلث الأخير من الليل', n.lastThird, clockText(t.lastThird.hours, s.clock24), 'stars')}
         ${sw('morning', 'أذكار الصباح', n.morning, 'بعد الفجر بنصف ساعة', 'sunrise')}
         ${sw('evening', 'أذكار المساء', n.evening, 'بعد العصر بنصف ساعة', 'sunset')}
-        <div class="row"><span class="row-icon">${icon('quran', 20)}</span><span class="row-label">ورد الختمة<small>${n.khatma ? 'تذكير يومي في هذا الوقت' : 'اختر وقتاً لتذكير يومي'}</small></span>
-          ${n.khatma ? `<button class="icon-btn ghost sm" data-khatma-off aria-label="إلغاء">${icon('close', 18)}</button>` : ''}
-          <input type="time" value="${n.khatma}" data-khatma></div>
+        <p class="hint">تذكير ورد القرآن يُضبط لكل ختمة من «ختماتي».</p>
         ${sw('debts', 'الديون المستحقة', n.debts, 'قبل الاستحقاق بثلاثة أيام وفي يومه', 'wallet')}
         ${sw('sound', 'صوت التنبيه', n.sound, '', 'radio')}
       </div>`;
@@ -502,8 +509,7 @@ export function renderNotify(view) {
   draw();
   view.onchange = async (e) => {
     const t = e.target;
-    if (t.matches('[data-khatma]')) n.khatma = t.value;
-    else if (t.name === 'on') {
+    if (t.name === 'on') {
       n.on = t.checked;
       if (n.on) {
         const p = await askPermission();
@@ -518,7 +524,6 @@ export function renderNotify(view) {
   };
   view.onclick = (e) => {
     if (e.target.closest('[data-test]')) return testReminder();
-    if (e.target.closest('[data-khatma-off]')) n.khatma = '';
     const b = e.target.closest('[data-before] [data-d]');
     if (b) n.before = Math.max(0, Math.min(30, n.before + Number(b.dataset.d)));
     const q = e.target.closest('[data-iqama] [data-d]');
@@ -526,7 +531,7 @@ export function renderNotify(view) {
       const k = q.closest('[data-iqama]').dataset.iqama;
       s.iqama[k] = Math.max(0, Math.min(60, s.iqama[k] + Number(q.dataset.d)));
     }
-    if (!b && !q && !e.target.closest('[data-khatma-off]')) return;
+    if (!b && !q) return;
     save();
     const y = window.scrollY;
     draw();

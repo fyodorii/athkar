@@ -56,17 +56,23 @@ export function toast(message, kind = '') {
 // that only works inside a touch, which is where every call comes from. `force` is for an
 // alert the user asked for (the tasbeeh's numbers) even with «الاهتزاز» off.
 let tick;
+// The hidden switch, made on first use; returns its id, for a <label for> that a real tap
+// reaches (the surest way to the iPhone's tick, as on the tasbeeh).
+export function hapticSwitch() {
+  if (!tick) {
+    tick = document.createElement('label');
+    tick.setAttribute('aria-hidden', 'true');
+    tick.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none';
+    tick.innerHTML = '<input type="checkbox" switch tabindex="-1" id="haptic-switch">';
+    document.body.appendChild(tick);
+  }
+  return 'haptic-switch';
+}
 export function haptic(ms = 12, force = false) {
   if (!state.settings.haptics && !force) return;
   if (navigator.vibrate) return void navigator.vibrate(ms);
   try {
-    if (!tick) {
-      tick = document.createElement('label');
-      tick.setAttribute('aria-hidden', 'true');
-      tick.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none';
-      tick.innerHTML = '<input type="checkbox" switch tabindex="-1">';
-      document.body.appendChild(tick);
-    }
+    hapticSwitch();
     // A longer buzz is a few ticks in a row.
     const n = ms >= 100 ? 3 : ms >= 30 ? 2 : 1;
     for (let i = 0; i < n; i++) setTimeout(() => tick.click(), i * 90);
