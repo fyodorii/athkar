@@ -2066,7 +2066,7 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .dhikr.done .counter .ring-fg { stroke: var(--ok); }
 
 /* The verses: dark blue, between the mushaf's ornate brackets (the Hafs font has none, so
-   they come from Amiri), with no verse numbers. */
+   they come from Amiri), each ending with its numbered mark from the Complex's font. */
 :root { --ayah: #1b3f8f; }
 [data-theme='dark'] { --ayah: #a9c4f5; }
 .dhikr-text.hafs, .tc-text .ayah { color: var(--ayah); }
