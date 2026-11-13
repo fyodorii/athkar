@@ -20,6 +20,6 @@
     { "name": "أذكار الصباح", "url": "./#/adhkar/morning" },
     { "name": "أذكار المساء", "url": "./#/adhkar/evening" },
     { "name": "السبحة", "url": "./#/tasbeeh" },
-    { "name": "متابعة العبادات", "url": "./#/worship" }
+    { "name": "متابعة", "url": "./#/worship" }
   ]
 }

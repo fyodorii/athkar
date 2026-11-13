@@ -238,7 +238,7 @@ export function render(view) {
 
   const draw = () => {
     view.innerHTML = `
-      ${pageHeader('متابعة العبادات', { actions: `<a class="icon-btn" href="#/settings/notify" aria-label="التنبيهات">${icon('bell', 20)}</a>` })}
+      ${pageHeader('متابعة', { actions: `<a class="icon-btn" href="#/settings/notify" aria-label="التنبيهات">${icon('bell', 20)}</a>` })}
       ${track()}`;
   };
 
