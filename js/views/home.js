@@ -98,7 +98,7 @@ export function render(view) {
 
   <h3 class="section-title small h-title">${icon('stars', 16)} زاد اليوم</h3>
   <section class="today-cards" data-cards>
-    ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs">${esc(d.ayah.text)}</span>`, d.ayah.ref)}
+    ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs ayah"><span class="ayah-br">﴿</span>${esc(d.ayah.text)}<span class="ayah-br">﴾</span></span>`, d.ayah.ref)}
     ${todayCard('hadith', 'حديث اليوم', 'quote', esc(d.hadith.text), d.hadith.ref)}
     ${todayCard('advice', 'نصيحة اليوم', 'heart', esc(d.advice.text), '')}
     ${todayCard('dhikr', 'ذكر اليوم', 'beads', esc(daily.text), daily.note)}

@@ -69,7 +69,7 @@ export function renderWird(view, id) {
     if (item.count > 1) card.querySelector('.counter-ring').innerHTML = ring(c[item.id] / item.count, 44, 3);
     if (left) return;
     card.classList.add('done');
-    card.querySelector('[data-left]').innerHTML = icon('check', item.count > 1 ? 20 : 16);
+    card.querySelector('[data-left]').innerHTML = icon('check', item.count > 1 ? 20 : 12);
     haptic(30);
     const done = wirdDone(cat);
     $('[data-done]', view).textContent = num(done);
@@ -103,13 +103,17 @@ function wirdCard(x, n) {
   const before = x.before ? esc(x.before) : '';
   const done = n >= x.count;
   const left = x.count - n;
-  const TICK = `<span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 16) : ''}</span></span>`;
+  const TICK = `<span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 12) : ''}</span></span>`;
+  // A dhikr said once has its tick in the bottom left corner; when its text is the last line of
+  // the card, a little room is kept at the end of that line so the tick never covers a word.
+  const room = x.count === 1 && !x.ref && !x.note && !x.virtue ? '<span class="tick-room"></span>' : '';
+  const body = x.quran ? `<span class="ayah-br">﴿</span>${esc(noVerseNumbers(x.text))}<span class="ayah-br">﴾</span>` : esc(x.text);
   const times = x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`;
   // One row on top: the title, then how many times and the counter (a ring counting
   // down, or for a dhikr said once a small tick), so the card holds no empty row of its own.
   // The text starts at the top of the card: the title (if any) is a small line above it, and the
   // count with its counter float at the start of the first lines, which flow beside them.
-  return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''}" data-id="${x.id}">
+  return `<article class="dhikr ${done ? 'done' : ''} ${x.quran ? 'quran' : ''} ${x.count === 1 ? 'once' : ''}" data-id="${x.id}">
     ${
       x.count > 1
         ? `<div class="dhikr-count">
@@ -122,7 +126,7 @@ function wirdCard(x, n) {
         : TICK
     }
     ${x.title ? `<h3 class="dhikr-title">${esc(x.title)}</h3>` : ''}
-    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${esc(x.quran ? noVerseNumbers(x.text) : x.text)}</div>
+    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${body}${room}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
     ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}

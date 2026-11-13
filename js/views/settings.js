@@ -10,7 +10,7 @@ import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
 import { PRAYERS } from '../today.js';
-import { $, copyText, esc, FONT_NAMES, FONTS, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
+import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -34,6 +34,10 @@ export function render(view) {
         <div class="seg-mini" data-theme>
           ${[['auto', 'تلقائي'], ['light', 'فاتح'], ['dark', 'داكن']].map(([v, l]) => `<button class="${s.theme === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
         </div></div>
+      <div class="row accent-row"><span class="row-icon">${icon('drop', 20)}</span><span class="row-label">لون التطبيق<small>${esc(ACCENTS.find((a) => a[0] === (s.accent || 'blue'))?.[1] || '')}</small></span></div>
+      <div class="accent-pick" data-accent-pick>
+        ${ACCENTS.map(([id, name, c]) => `<button class="${(s.accent || 'blue') === id ? 'on' : ''}" data-v="${id}" style="--c:${c}" aria-label="${name}">${(s.accent || 'blue') === id ? icon('check', 18) : ''}</button>`).join('')}
+      </div>
       <div class="row"><span class="row-icon">${icon('layers', 20)}</span><span class="row-label">تصميم مسطّح<small>ضوء مسطّح وألوان أقل، بلا زجاج سائل</small></span>${toggle('flat', s.flat)}</div>
       ${row('#/settings/fonts', 'type', 'الخطوط وأحجامها', `${FONT_NAMES[s.fontUi] || ''} · ${WEIGHTS.find((w) => w[0] === s.uiWeight)?.[1] || ''}`)}
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
@@ -86,6 +90,12 @@ export function render(view) {
     const dg = e.target.closest('[data-digits] [data-v]');
     if (dg) {
       s.digits = dg.dataset.v;
+      save();
+      return render(view);
+    }
+    const ac = e.target.closest('[data-accent-pick] [data-v]');
+    if (ac) {
+      s.accent = ac.dataset.v;
       save();
       return render(view);
     }

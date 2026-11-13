@@ -38,6 +38,11 @@
         if (st.uiWeight) r.setProperty('--ui-weight', st.uiWeight);
         if (st.headScale) r.setProperty('--head-scale', st.headScale);
         if (st.flat !== false) document.documentElement.setAttribute('data-flat', ''); // flat unless turned off
+        // The app colour (see ACCENTS in js/ui.js); the light status bar takes its main colour.
+        var acc = { blue: '#2c6fcc', green: '#1f8a6e', teal: '#12819a', violet: '#6b4fc8', rose: '#b8455e', gold: '#a87420', graphite: '#3d4a5c' };
+        var a = acc[st.accent] ? st.accent : 'blue';
+        document.documentElement.dataset.accent = a;
+        if (document.documentElement.dataset.theme !== 'dark') document.querySelector('meta[name=theme-color]').content = acc[a];
         // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
         // when the app is added to the home screen.
         var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;
