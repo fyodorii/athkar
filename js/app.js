@@ -139,9 +139,11 @@ document.addEventListener('touchmove', (e) => e.touches.length > 1 && e.preventD
 // The phone's status bar (the clock and battery) takes the colour of the top of the page under
 // it, so it reads as part of the page: the light header on the home screen, the page's own
 // background elsewhere, the tasbeeh's colour on the tasbeeh.
-const STATUS = { light: { home: '#2c6fcc', tasbeeh: '#2a5cc4', other: '#2c6fcc' }, dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' } };
+const STATUS = { dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' } };
 function paintStatusBar() {
-  const shade = STATUS[document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'];
+  // In the light theme the top of every screen is the app colour.
+  const main = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#2c6fcc';
+  const shade = document.documentElement.dataset.theme === 'dark' ? STATUS.dark : { home: main, other: main };
   const tab = document.body.dataset.tab;
   const own = tab === 'tasbeeh' && document.querySelector('.tsb')?.dataset.top;
   document.querySelector('meta[name="theme-color"]').setAttribute('content', own || shade[tab] || shade.other);
@@ -151,6 +153,7 @@ const media = window.matchMedia('(prefers-color-scheme: dark)');
 function applyTheme() {
   const dark = state.settings.theme === 'dark' || (state.settings.theme === 'auto' && media.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.documentElement.dataset.accent = state.settings.accent || 'blue';
   paintStatusBar();
   setDigits(state.settings.digits);
   const s = state.settings;

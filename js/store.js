@@ -9,6 +9,7 @@ const MAKKAH = CITIES[0];
 
 export const DEFAULTS = {
   settings: {
+    accent: 'blue', // the app colour (ACCENTS in js/ui.js)
     location: { name: MAKKAH.name, lat: MAKKAH.lat, lng: MAKKAH.lng, tz: MAKKAH.tz, source: 'default' },
     method: 'umm_al_qura',
     asr: 1,

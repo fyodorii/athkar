@@ -7,6 +7,18 @@ import { APP_NAME } from './config.js';
 // Font stacks the user can pick in the settings (each falls back for missing glyphs such as ﷺ).
 // The same stacks are in index.html, for the first paint.
 const SYS = "-apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif";
+// The app colours, chosen in the settings: [id, name, the light theme's main colour].
+// Their full palettes (light and dark) are in css/app.css under [data-accent].
+export const ACCENTS = [
+  ['blue', 'أزرق', '#2c6fcc'],
+  ['green', 'أخضر', '#1f8a6e'],
+  ['teal', 'فيروزي', '#12819a'],
+  ['violet', 'بنفسجي', '#6b4fc8'],
+  ['rose', 'عنابي', '#b8455e'],
+  ['gold', 'ذهبي', '#a87420'],
+  ['graphite', 'رمادي', '#3d4a5c'],
+];
+
 export const FONTS = {
   tajawal: `'Tajawal', ${SYS}`,
   cairo: `'Cairo', ${SYS}`,
