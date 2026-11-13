@@ -2059,7 +2059,8 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .dhikr.once > .counter.once { top: auto; bottom: 14px; left: 12px; width: 18px; height: 18px; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink-3) 45%, transparent); }
 .dhikr.once.done > .counter.once { background: var(--ok); box-shadow: none; color: #fff; }
 .dhikr:has(> .counter.once) > .dhikr-text { padding-left: 0; }
-.dhikr.once > .ref, .dhikr.once > .dhikr-note, .dhikr.once > .virtue { padding-left: 26px; }
+.dhikr.once > .ref, .dhikr.once > .virtue { padding-left: 26px; }
+.dhikr.once > .dhikr-note:last-of-type { margin-left: 28px; } /* its tinted box stops before the tick */
 .tick-room { display: inline-block; width: 24px; height: 1px; }
 /* A dhikr counted to its end: its tick is green too. */
 .dhikr.done .counter-num { color: var(--ok); }
