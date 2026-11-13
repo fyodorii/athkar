@@ -95,10 +95,6 @@ export function renderWird(view, id) {
   return { destroy: () => (view.onclick = null) };
 }
 
-// The adhkar show their verses without the verse numbers (the Complex's marks, one character
-// each after a no-break space); the reference under the card names the verses.
-const noVerseNumbers = (text) => text.replace(/[\u00A0 ][\uFC00-\uFD1D]/g, '');
-
 function wirdCard(x, n) {
   const before = x.before ? esc(x.before) : '';
   const done = n >= x.count;
@@ -107,7 +103,7 @@ function wirdCard(x, n) {
   // A dhikr said once has its tick in the bottom left corner; when its text is the last line of
   // the card, a little room is kept at the end of that line so the tick never covers a word.
   const room = x.count === 1 && !x.ref && !x.note && !x.virtue ? '<span class="tick-room"></span>' : '';
-  const body = x.quran ? `<span class="ayah-br">﴿</span>${esc(noVerseNumbers(x.text))}<span class="ayah-br">﴾</span>` : esc(x.text);
+  const body = x.quran ? `<span class="ayah-br">﴿</span>${esc(x.text)}<span class="ayah-br">﴾</span>` : esc(x.text);
   const times = x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`;
   // One row on top: the title, then how many times and the counter (a ring counting
   // down, or for a dhikr said once a small tick), so the card holds no empty row of its own.
