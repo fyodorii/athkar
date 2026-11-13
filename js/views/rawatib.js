@@ -27,5 +27,5 @@ export function render(view) {
       }).join('')}
     </section>
     <p class="rw-total">المجموع: ${num(12)} ركعة</p>
-    <a class="btn ghost wide" href="#/worship">سجّلها في متابعة العبادات</a>`;
+    <a class="btn ghost wide" href="#/worship">سجّلها في المتابعة</a>`;
 }

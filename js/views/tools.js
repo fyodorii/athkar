@@ -18,6 +18,7 @@ import {
   WALK,
   walkState,
 } from '../timers.js';
+import { NAHY_HADITH, NAHY_RULINGS, NAHY_TIMES } from '../nahy-data.js';
 import { QAILULAH_BEFORE, QAILULAH_BRIDGE, QAILULAH_GRADES, QAILULAH_MIDDAY, QAILULAH_SCIENCE } from '../qailulah-data.js';
 import { save, state } from '../store.js';
 import { today } from '../today.js';
@@ -26,14 +27,15 @@ import { $, esc, pageHeader, ring } from '../ui.js';
 const tools = () => state.tools;
 const mmss = (sec) => num(`${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`);
 
-function duration(min) {
+// `after`: the words follow «بعد» (ساعتين, not ساعتان).
+function duration(min, after = false) {
   const m = Math.round(min);
   const h = Math.floor(m / 60);
   const r = m % 60;
   const part = (n, one, two, few, many) => (n === 1 ? one : n === 2 ? two : n <= 10 ? `${num(n)} ${few}` : `${num(n)} ${many}`);
   const out = [];
-  if (h) out.push(part(h, 'ساعة', 'ساعتان', 'ساعات', 'ساعة'));
-  if (r || !h) out.push(part(r, 'دقيقة', 'دقيقتان', 'دقائق', 'دقيقة'));
+  if (h) out.push(part(h, 'ساعة', after ? 'ساعتين' : 'ساعتان', 'ساعات', 'ساعة'));
+  if (r || !h) out.push(part(r, 'دقيقة', after ? 'دقيقتين' : 'دقيقتان', 'دقائق', 'دقيقة'));
   return out.join(' و');
 }
 
@@ -45,6 +47,7 @@ const TOOLS = [
   ['#/reminders', 'تذكيراتي', 'ما تريد أن تُذكَّر به كل يوم في وقته', 'bell', 'rose'],
   ['#/debts', 'الديون', 'ما عليّ وما لي، مع تذكير قبل الاستحقاق', 'wallet', 'amber'],
   ['#/datecalc', 'حاسبة التاريخ', 'الفرق بين تاريخين، وتاريخ بعد أيام، هجري وميلادي', 'calendar', 'indigo'],
+  ['#/nahy', 'أوقات النهي', 'أوقاتها اليوم من شمس موقعك، وأحكامها من كتب العلماء', 'sunset', 'rose'],
   ['#/qailulah', 'القيلولة', 'حاسبة وقتها من شمس موقعك، بنصوص الفقهاء، ومؤقّت', 'moon', 'teal'],
   ['#/walk', 'المشي الياباني', '٥ جولات: ٣ دقائق سريع و٣ بطيء = ٣٠ دقيقة', 'stars', 'amber'],
   ['#/focus', 'قاعدة العشر دقائق', 'اكتب ما تسوّفه، والتزم به عشر دقائق فقط', 'clock', 'rose'],
@@ -61,6 +64,77 @@ export function renderTools(view) {
           <div class="cat-text"><b>${title}</b><span>${sub}</span></div>${icon('chevron', 18, 'muted')}</a>`
       ).join('')}
     </section>`;
+}
+
+// ---- The prohibited times ----
+// Today's five times from the prayer times: the two wide ones (after the Fajr and the Asr
+// prayers) and the three narrow ones of the hadith of 'Uqbah. The narrow ones use the app's own
+// margins: until Duha (sunrise + 20 minutes), from the end of Duha to Dhuhr, and the last ten
+// minutes before sunset (the estimates the scholars quoted in the tool give).
+
+const SUNSET_MIN = 10;
+
+function nahyDay(info = today()) {
+  const t = info.times;
+  const at = (ms, ref) => ({ at: ms, hours: ref.hours + (ms - ref.at) / 3600000 });
+  const dusk = at(t.maghrib.at - SUNSET_MIN * 60000, t.maghrib);
+  return [
+    { id: 'fajr', name: 'بعد صلاة الفجر حتى طلوع الشمس', kind: 'wide', from: t.fajr, to: t.sunrise, note: 'يبدأ لكل أحد بعد صلاته الفجر' },
+    { id: 'sunrise', name: 'من طلوع الشمس حتى ترتفع قيد رمح', kind: 'narrow', from: t.sunrise, to: t.duha, note: 'وبعده يدخل وقت الضحى' },
+    { id: 'zawal', name: 'حين يقوم قائم الظهيرة حتى تزول', kind: 'narrow', from: t.duhaEnd, to: t.dhuhr, note: 'قبيل أذان الظهر' },
+    { id: 'asr', name: 'بعد صلاة العصر حتى تتهيأ الشمس للغروب', kind: 'wide', from: t.asr, to: dusk, note: 'يبدأ لكل أحد بعد صلاته العصر' },
+    { id: 'sunset', name: 'حين تتضيّف الشمس للغروب حتى تغرب', kind: 'narrow', from: dusk, to: t.maghrib, note: `آخر ${num(SUNSET_MIN)} دقائق قبل المغرب تقريباً` },
+  ];
+}
+
+export function renderNahy(view) {
+  const h24 = state.settings.clock24;
+  const T = (x) => `<span class="t">${clockText(x.hours, h24)}</span>`;
+  const quote = (q) => `<figure class="q"><blockquote>${esc(q.text)}</blockquote><figcaption><a href="${q.url}" target="_blank" rel="noopener">${esc(q.src)} ${icon('chevron', 12)}</a></figcaption></figure>`;
+
+  const status = () => {
+    const info = today();
+    const n = Date.now();
+    const list = nahyDay(info);
+    const now = list.find((w) => n >= w.from.at && n < w.to.at);
+    if (now) return `<span class="pill ${now.kind === 'narrow' ? 'danger' : 'sun'}">الآن</span><span><b>وقت نهي:</b> ${esc(now.name)}. ينتهي بعد ${duration(Math.max(1, (now.to.at - n) / 60000), true)}، الساعة ${T(now.to)}.</span>`;
+    const next = list.find((w) => w.from.at > n) || { name: nahyDay({ times: info.tomorrow })[0].name, from: info.tomorrow.fajr };
+    return `<span class="pill ok">الآن</span><span><b>ليس وقت نهي.</b> القادم: ${esc(next.name)}، بعد ${duration((next.from.at - n) / 60000, true)}، الساعة ${T(next.from)}.</span>`;
+  };
+
+  const draw = () => {
+    const n = Date.now();
+    view.innerHTML = `
+      ${pageHeader('أوقات النهي', { back: '#/tools', sub: 'أوقات النهي عن صلاة النافلة اليوم، وأحكامها' })}
+      <section class="card nahy-now"><div class="nap-status" data-status>${status()}</div></section>
+      <section class="card nahy-list">
+        ${nahyDay()
+          .map(
+            (w) => `<div class="nahy-row ${w.kind} ${n >= w.from.at && n < w.to.at ? 'on' : ''} ${n >= w.to.at ? 'past' : ''}">
+              <span class="nahy-dot"></span>
+              <span class="nahy-text"><b>${esc(w.name)}</b><small>${w.kind === 'narrow' ? 'وقت مضيّق' : 'وقت موسّع'} • ${esc(w.note)}</small></span>
+              <span class="nahy-time">${T(w.from)}<small>إلى ${T(w.to)}</small></span>
+            </div>`
+          )
+          .join('')}
+        <p class="hint">الأوقات تقريبية من حساب الشمس لموقعك. الموسّع يبدأ لكل أحد من صلاته هو، والمضيّق قصير.</p>
+      </section>
+      <section class="card quotes"><h4>${icon('book', 18)} الأدلة</h4>${NAHY_HADITH.map(quote).join('')}</section>
+      <section class="card quotes"><h4>${icon('clock', 18)} مقدار كل وقت</h4>${NAHY_TIMES.map(quote).join('')}</section>
+      ${NAHY_RULINGS.map((r) => `<section class="card quotes"><h4>${icon('info', 18)} ${esc(r.title)}</h4>${r.items.map(quote).join('')}</section>`).join('')}
+      <p class="hint center">النصوص منقولة بألفاظها من كتب المكتبة الشاملة، ويفتح كل مصدر صفحته فيها. وفي المسائل خلاف بين العلماء، فاسأل من تثق بعلمه.</p>`;
+  };
+  draw();
+  let minute = new Date().getMinutes();
+  return {
+    tick() {
+      const m = new Date().getMinutes();
+      if (m !== minute) {
+        minute = m;
+        draw();
+      }
+    },
+  };
 }
 
 // ---- Qailulah ----
@@ -87,7 +161,7 @@ export function renderQailulah(view) {
     const n = Date.now();
     const { t, zawal, a0 } = d;
     if (n < t.sunrise.at) return ['idle', `قبل الشروق. تبدأ نافذة ما قبل الزوال الساعة ${T(a0)}.`];
-    if (n < a0.at) return ['idle', `تبدأ نافذة ما قبل الزوال بعد ${duration((a0.at - n) / 60000)}، الساعة ${T(a0)}.`];
+    if (n < a0.at) return ['idle', `تبدأ نافذة ما قبل الزوال بعد ${duration((a0.at - n) / 60000, true)}، الساعة ${T(a0)}.`];
     if (n < zawal.at) return ['sun', `أنت الآن في نافذة ما قبل الزوال. يبقى على الزوال ${duration((zawal.at - n) / 60000)}.`];
     if (n < t.asr.at) return ['shade', `مضى الزوال. أنت في نافذة ما بعد الظهر، ويبقى على العصر ${duration((t.asr.at - n) / 60000)}.`];
     if (n < t.maghrib.at) return ['idle', 'دخل وقت العصر؛ وقد كره الإمام أحمد النوم بعده.'];

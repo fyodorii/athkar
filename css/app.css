@@ -2098,3 +2098,23 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 /* Light subtle edges that were blue follow the colour. */
 :root[data-accent]:not([data-accent='blue']) .w-week, :root[data-accent]:not([data-accent='blue']) .w-week span, :root[data-accent]:not([data-accent='blue']) .w-streak { border-top-color: var(--line); }
 :root[data-accent]:not([data-accent='blue']):not([data-theme='dark']) .w-week span, :root[data-accent]:not([data-accent='blue']):not([data-theme='dark']) .w-streak { background: var(--primary-soft); }
+
+/* ---------- Version 37: the prohibited times ---------- */
+.nahy-now { padding: 14px 16px; }
+.pill.danger { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.pill.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.nahy-list { display: grid; gap: 4px; }
+.nahy-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.nahy-row:last-of-type { border-bottom: 0; }
+.nahy-row.past { opacity: 0.5; }
+.nahy-row.on { background: var(--primary-soft); border-radius: 14px; padding-inline: 10px; border-bottom-color: transparent; }
+.nahy-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--gold); }
+.nahy-row.narrow .nahy-dot { background: var(--danger); }
+.nahy-text { flex: 1; min-width: 0; display: grid; }
+.nahy-text b { font-size: 14.5px; line-height: 1.5; }
+.nahy-text small { color: var(--ink-3); font-size: 12px; }
+.nahy-time { display: grid; text-align: left; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.nahy-time small { font-weight: 400; color: var(--ink-3); font-size: 12px; }
+.quotes h4 .ic { color: var(--primary); }
+.q figcaption a { color: var(--primary); display: inline-flex; align-items: center; gap: 2px; }
+.quotes .q blockquote { font-size: 17px; }
