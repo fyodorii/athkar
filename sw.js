@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline, and opens
 // the app at the right screen when a reminder is tapped.
 
-const VERSION = 'v45'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v46'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const FILES = [
   './',
@@ -96,14 +96,23 @@ const FILES = [
   'icons/alt/gold.png',
 ];
 
+// A release is saved whole or not at all: each file is asked for with the release in its address,
+// so no cache on the way (the browser's, GitHub's) can hand back an older copy, and if one file
+// fails the new release is not installed and the one on the device stays.
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(FILES.map((f) => new Request(f, { cache: 'reload' }))))
-      .catch(() => {})
+    (async () => {
+      const cache = await caches.open(CACHE);
+      await Promise.all(
+        FILES.map(async (f) => {
+          const res = await fetch(new Request(`${f}${f.includes('?') ? '&' : '?'}v=${VERSION}`, { cache: 'reload' }));
+          if (!res.ok) throw new Error(`${f}: ${res.status}`);
+          await cache.put(f, res);
+        })
+      );
+      await self.skipWaiting();
+    })()
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -115,7 +124,9 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Answer from the device at once, and refresh the saved copy in the background.
+// The release's own files come from the device: all of them from the same release, so the app
+// never runs half old and half new (a new release arrives whole, as a new service worker). Other
+// files of the site come from the internet, with the saved copy when offline.
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -126,17 +137,14 @@ self.addEventListener('fetch', (event) => {
       const cache = await caches.open(CACHE);
       const key = request.mode === 'navigate' ? 'index.html' : request;
       const saved = await cache.match(key, { ignoreSearch: request.mode === 'navigate' });
-      const fresh = fetch(request)
-        .then((res) => {
-          if (res.ok && !res.redirected) cache.put(key, res.clone());
-          return res;
-        })
-        .catch(() => saved);
-      if (saved) {
-        event.waitUntil(fresh);
-        return saved;
+      if (saved) return saved;
+      try {
+        const res = await fetch(request);
+        if (res.ok && !res.redirected && request.mode !== 'navigate') cache.put(request, res.clone());
+        return res;
+      } catch (e) {
+        return (await caches.match(key, { ignoreSearch: true })) || Response.error();
       }
-      return fresh;
     })()
   );
 });

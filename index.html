@@ -60,5 +60,36 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <noscript><p style="padding: 2rem; text-align: center">يحتاج التطبيق إلى تفعيل JavaScript.</p></noscript>
     <script type="module" src="js/app.js"></script>
+    <script>
+      // A safety net: if the app has not started after a few seconds (a broken saved copy on the
+      // device), clear the saved copy and load the app afresh from the internet, once; if it still
+      // does not start, say so with the error and a button to try again.
+      (function () {
+        var errors = [];
+        window.addEventListener('error', function (e) { errors.push(e.message || (e.target && (e.target.src || e.target.href)) || 'error'); }, true);
+        window.addEventListener('unhandledrejection', function (e) { errors.push(String((e.reason && e.reason.message) || e.reason)); });
+        var started = function () { return document.documentElement.classList.contains('ready'); };
+        var repair = function () {
+          try { sessionStorage.setItem('adhkar-app:repair', '1'); } catch (e) {}
+          var jobs = [];
+          if (window.caches) jobs.push(caches.keys().then(function (k) { return Promise.all(k.map(function (n) { return caches.delete(n); })); }));
+          if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (r) { return Promise.all(r.map(function (x) { return x.unregister(); })); }));
+          Promise.all(jobs).catch(function () {}).then(function () { location.reload(); });
+        };
+        setTimeout(function () {
+          if (started()) return;
+          var tried = false;
+          try { tried = sessionStorage.getItem('adhkar-app:repair') === '1'; } catch (e) {}
+          if (!tried) return repair();
+          var box = document.createElement('div');
+          box.setAttribute('style', 'position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:#eef3fb;color:#0e1b33;font:16px -apple-system,system-ui,sans-serif;direction:rtl');
+          box.innerHTML = '<b style="font-size:20px">تعذر تشغيل التطبيق</b><span>تأكد من الاتصال بالإنترنت ثم اضغط «إعادة المحاولة».</span><button style="padding:12px 22px;border:0;border-radius:14px;background:#2c6fcc;color:#fff;font:inherit;font-weight:700">إعادة المحاولة</button><small style="direction:ltr;opacity:.6;max-width:90vw;word-break:break-word"></small>';
+          box.querySelector('small').textContent = errors.slice(0, 3).join(' | ');
+          box.querySelector('button').onclick = repair;
+          document.body.appendChild(box);
+          var check = setInterval(function () { if (started()) { box.remove(); clearInterval(check); } }, 1000);
+        }, 8000);
+      })();
+    </script>
   </body>
 </html>
