@@ -2118,3 +2118,6 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .quotes h4 .ic { color: var(--primary); }
 .q figcaption a { color: var(--primary); display: inline-flex; align-items: center; gap: 2px; }
 .quotes .q blockquote { font-size: 17px; }
+
+/* ---------- Version 38: a hundred times on the tasbeeh ---------- */
+.dhikr-count .times { display: inline-flex; align-items: center; gap: 4px; }
