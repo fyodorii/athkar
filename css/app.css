@@ -2179,7 +2179,7 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .poem li span:last-child { padding-right: 24px; }
 
 /* ---------- Version 43: «حبّات المسبحة», a light tasbeeh with a ring of beads ---------- */
-.tsb-beads { --tb-bg: #f7f7f9; --tb-ink: #1c1c1e; --tb-soft: #6e6e73; --tb-core: #f1f2f7; --tb-off: #e7e7ec; --tb-1: color-mix(in srgb, var(--primary) 70%, #7aa0ff); --tb-2: var(--primary); --tb-btn: #fff; background: var(--tb-bg) !important; color: var(--tb-ink); }
+.tsb-beads { --tb-bg: #f7f7f9; --tb-ink: #1c1c1e; --tb-soft: #6e6e73; --tb-core: #f1f2f7; --tb-off: #e7e7ec; --tb-1: color-mix(in srgb, var(--primary) 70%, #7aa0ff); --tb-2: var(--primary); --tb-btn: #fff; color: var(--tb-ink); }
 [data-theme='dark'] .tsb-beads { --tb-bg: #101216; --tb-ink: #f2f2f5; --tb-soft: #9a9aa2; --tb-core: #1a1d24; --tb-off: #2a2e37; --tb-btn: #1c1f26; }
 .tsb-beads .tsb-tap { padding: calc(var(--safe-top) + 74px) 22px calc(var(--safe-bottom) + 108px); justify-content: flex-start; gap: 6px; }
 .tsb-beads .tb-title-gap { height: 30px; flex-shrink: 0; }
@@ -2212,3 +2212,12 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .tb-voice.on { background: var(--danger); color: #fff; }
 .tb-reset { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: var(--tb-ink); }
 .tsb-beads .tsb-gear, .tsb-beads .tsb-back { display: none; }
+
+/* ---------- Version 45: the bead ring on the chosen background, no title, no voice ---------- */
+.tsb-beads.dark { --tb-ink: #fff; --tb-soft: rgba(255, 255, 255, 0.72); --tb-core: rgba(255, 255, 255, 0.08); --tb-off: rgba(255, 255, 255, 0.2); --tb-btn: rgba(255, 255, 255, 0.14); --tb-1: #a9c2ff; --tb-2: #6f97ff; }
+.tsb-beads.light { --tb-ink: #1c1c1e; --tb-soft: #6e6e73; --tb-core: rgba(0, 0, 0, 0.04); --tb-off: rgba(0, 0, 0, 0.1); --tb-btn: #fff; }
+.tsb-beads { background: none; }
+.tsb-beads .tsb-tap { padding-top: calc(var(--safe-top) + 84px); padding-bottom: calc(var(--safe-bottom) + 96px); }
+.tsb-beads .tb-phrase { margin-top: 8px; }
+.tb-bar { justify-content: center; }
+.tb-reset { background: var(--tb-btn); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06); }

@@ -382,6 +382,7 @@ const T_BGS = [
   { id: 'gray', name: 'رمادي', css: 'linear-gradient(170deg, #3a3f45 0%, #202428 55%, #0f1113 100%)' },
   { id: 'sand', name: 'رملي', css: 'linear-gradient(170deg, #f7efdc 0%, #ecdcb7 100%)', light: true },
   { id: 'white', name: 'أبيض', css: '#fbfaf6', light: true },
+  { id: 'light', name: 'فاتح', css: '#f7f7f9', light: true },
 ];
 const T_INKS = ['#ffffff', '#e3c27a', '#a7f3d0', '#bae6fd', '#fbcfe8', '#fde68a', '#0f5c4d', '#7a4b12', '#1e293b', '#000000'];
 const DIM_STEPS = [0, 30, 50, 70];
@@ -498,11 +499,9 @@ export function renderTasbeeh(view, mineId) {
     return `الدورة ${num(Math.ceil(c / n) || 1)} • الهدف ${num(n)}`;
   };
 
-  // «حبّات المسبحة»: a ring of 33 beads filling as the count goes round, the count in its middle,
-  // and counting by voice at the bottom.
+  // «حبّات المسبحة»: a ring of 33 beads filling clockwise as the count goes round, the count in
+  // its middle.
   const BEADS = 33;
-  let listening = false; // counting by voice (below)
-  let rec = null;
   const beadsOn = () => t.style === 'beads';
   const roundOf = () => {
     const [c, n] = [src.count(), src.target()];
@@ -515,7 +514,7 @@ export function renderTasbeeh(view, mineId) {
     const filled = Math.round((inRound / size) * BEADS);
     const R = 128;
     const beads = Array.from({ length: BEADS }, (_, i) => {
-      const a = (-90 - (i * 360) / BEADS) * (Math.PI / 180); // from the top, round to the left
+      const a = (-90 + (i * 360) / BEADS) * (Math.PI / 180); // from the top, clockwise
       const x = (150 + R * Math.cos(a)).toFixed(1);
       const y = (150 + R * Math.sin(a)).toFixed(1);
       const on = i < filled;
@@ -532,8 +531,6 @@ export function renderTasbeeh(view, mineId) {
     const done = inRound === n && c > 0;
     return `<span class="tb-done ${done ? 'on' : ''}">${done ? icon('check', 13) : ''}</span><span>${num(inRound)} / ${num(n)}${rounds ? ` • دورات: ${num(rounds)}` : ''}</span>`;
   };
-  const titleText = () => (group ? group.name : wird ? wirdCat.title : mine ? 'أذكاري' : 'التسبيح');
-  const canPick = () => !mine && !wird;
 
   // Only the dhikr and its count are on the screen. The whole of it is a label of the hidden
   // switch that gives the iPhone its tick (ui.js), so every count is felt; the way out is at
@@ -545,22 +542,17 @@ export function renderTasbeeh(view, mineId) {
     // the page behind it (seen when iOS bounces) the bottom.
     const shades = (bg.css || '#2a5cc4 #070f2c').match(/#[0-9a-f]{3,6}/gi);
     if (beadsOn()) {
-      const dark = document.documentElement.dataset.theme === 'dark';
+      const style2 = [`background:${bg.css || 'linear-gradient(170deg, #2a5cc4 0%, #12296a 50%, #070f2c 100%)'}`, `--tsb-scale:${t.counterSize}`, t.ink && `--tsb-ink:${t.ink}`].filter(Boolean).join(';');
       view.innerHTML = `
-      <section class="tsb tsb-beads ${dark ? '' : 'light'}" data-area data-top="${dark ? '#101216' : '#f7f7f9'}" style="--tsb-scale:${t.counterSize}${t.ink ? `;--tsb-ink:${t.ink}` : ''}">
+      <section class="tsb tsb-beads ${bg.light ? 'light' : 'dark'}" data-area data-top="${shades[0]}" style="${style2}">
         <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
-          <span class="tb-title-gap"></span>
           <div class="tsb-phrase tb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${Math.min(box.fontSize || 40, 34)}px"><span>${esc(src.phrase())}</span></div>
           <div class="tb-ring" data-ring>${ringHTML()}</div>
           <div class="tb-foot" data-foot>${footHTML()}</div>
         </label>
-        <button class="tb-title" data-ui ${canPick() ? 'data-pick-phrase' : 'disabled'}>${esc(titleText())}${canPick() ? icon('chevron', 16) : ''}</button>
         <a class="tb-round tb-close" data-ui href="${backTo}" aria-label="خروج">${icon('close', 22)}</a>
         <button class="tb-round tb-menu" data-ui data-settings aria-label="إعدادات السبحة">${icon('beads', 22)}</button>
-        <div class="tb-bar">
-          <button class="tb-reset" data-ui data-reset aria-label="تصفير">${icon('reset', 22)}</button>
-          <button class="tb-voice ${listening ? 'on' : ''}" data-ui data-voice>${icon('mic', 22)} ${listening ? 'إيقاف العدّ بالصوت' : 'العدّ بالصوت'}</button>
-        </div>
+        <div class="tb-bar"><button class="tb-reset" data-ui data-reset aria-label="تصفير">${icon('reset', 22)}</button></div>
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
       return;
@@ -739,79 +731,8 @@ export function renderTasbeeh(view, mineId) {
     );
   };
 
-  // Counting by voice: the browser's speech recognition hears the dhikr, and each time its key
-  // word is heard it counts once. Safari stops listening after a silence; it is started again
-  // while the button is on.
-  const strip = (x) => String(x).replace(/[ً-ٰٟۖ-ۭـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
-  const keyWord = () => {
-    const words = strip(src.phrase()).split(/\s+/).filter(Boolean);
-    return words[0]?.length >= 3 ? words[0] : words.sort((a, b) => b.length - a.length)[0] || '';
-  };
-  const heardCounts = new Map(); // result index → times the key word was counted in it
-  const stopVoice = () => {
-    listening = false;
-    try {
-      rec?.stop();
-    } catch (e) {}
-    rec = null;
-    heardCounts.clear();
-  };
-  const startVoice = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return toast('العدّ بالصوت غير متاح على هذا الجهاز أو المتصفح');
-    listening = true;
-    const key = keyWord();
-    const run = () => {
-      rec = new SR();
-      rec.lang = 'ar-SA';
-      rec.continuous = true;
-      rec.interimResults = true;
-      heardCounts.clear();
-      rec.onresult = (ev) => {
-        for (let i = ev.resultIndex; i < ev.results.length; i++) {
-          const said = strip(ev.results[i][0].transcript);
-          const times = key ? said.split(key).length - 1 : 0;
-          const before = heardCounts.get(i) || 0;
-          for (let k = before; k < times; k++) tap();
-          if (times > before) heardCounts.set(i, times);
-        }
-      };
-      rec.onerror = (ev) => {
-        if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
-          toast('اسمح للتطبيق باستخدام الميكروفون للعدّ بالصوت');
-          stopVoice();
-          paint();
-        }
-      };
-      rec.onend = () => {
-        if (listening) {
-          try {
-            run();
-          } catch (e) {
-            stopVoice();
-            paint();
-          }
-        }
-      };
-      rec.start();
-    };
-    try {
-      run();
-      toast(`${icon('mic', 18)} قل «${esc(src.phrase())}» ويُعدّ تلقائياً`);
-    } catch (e) {
-      stopVoice();
-      toast('تعذر بدء العدّ بالصوت');
-    }
-  };
-
   const onClick = (e) => {
-    if (e.target.closest('[data-voice]')) {
-      if (listening) stopVoice();
-      else startVoice();
-      return paint();
-    }
     if (e.target.closest('[data-reset]')) return reset();
-    if (e.target.closest('[data-pick-phrase]')) return group ? tasbeehGroups() : choosePhrase(paint);
     if (e.target.closest('[data-settings]')) return settings();
     if (e.target.closest('[data-ui], a, button')) return;
     tap(e.clientX, e.clientY);
@@ -853,7 +774,6 @@ export function renderTasbeeh(view, mineId) {
     // After midnight the counts belong to a new day: draw the screen again for it.
     tick: () => (today().key !== dayNow ? 'rerender' : undefined),
     destroy() {
-      stopVoice();
       view.removeEventListener('click', guardClick, true);
       view.removeEventListener('click', onClick);
       view.removeEventListener('gesturestart', onGestureStart);
@@ -1002,7 +922,10 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         const b = e.target.closest('[data-bg]');
         const k = e.target.closest('[data-ink]');
         const st = e.target.closest('[data-style] [data-v]');
-        if (st) t.style = st.dataset.v;
+        if (st) {
+          t.style = st.dataset.v;
+          if (t.style === 'beads' && (t.bg || 'blue') === 'blue') t.bg = 'light';
+        }
         else if (b) t.bg = b.dataset.bg;
         else if (k) t.ink = k.dataset.ink;
         else if (e.target.closest('[data-look-reset]')) {
