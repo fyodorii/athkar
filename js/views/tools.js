@@ -18,6 +18,7 @@ import {
   WALK,
   walkState,
 } from '../timers.js';
+import { SAHW_CASES, SAHW_HADITH, SAHW_INTRO, SAHW_PLACE, SAHW_SCHOOLS } from '../sahw-data.js';
 import { NAHY_HADITH, NAHY_RULINGS, NAHY_TIMES } from '../nahy-data.js';
 import { QAILULAH_BEFORE, QAILULAH_BRIDGE, QAILULAH_GRADES, QAILULAH_MIDDAY, QAILULAH_SCIENCE } from '../qailulah-data.js';
 import { save, state } from '../store.js';
@@ -47,6 +48,7 @@ const TOOLS = [
   ['#/reminders', 'تذكيراتي', 'ما تريد أن تُذكَّر به كل يوم في وقته', 'bell', 'rose'],
   ['#/debts', 'الديون', 'ما عليّ وما لي، مع تذكير قبل الاستحقاق', 'wallet', 'amber'],
   ['#/datecalc', 'حاسبة التاريخ', 'الفرق بين تاريخين، وتاريخ بعد أيام، هجري وميلادي', 'calendar', 'indigo'],
+  ['#/sahw', 'سجود السهو', 'ماذا تفعل إن زدت أو نقصت أو شككت، قبل السلام أو بعده', 'rows', 'indigo'],
   ['#/nahy', 'أوقات النهي', 'أوقاتها اليوم من شمس موقعك، وأحكامها من كتب العلماء', 'sunset', 'rose'],
   ['#/qailulah', 'القيلولة', 'حاسبة وقتها من شمس موقعك، بنصوص الفقهاء، ومؤقّت', 'moon', 'teal'],
   ['#/walk', 'المشي الياباني', '٥ جولات: ٣ دقائق سريع و٣ بطيء = ٣٠ دقيقة', 'stars', 'amber'],
@@ -64,6 +66,47 @@ export function renderTools(view) {
           <div class="cat-text"><b>${title}</b><span>${sub}</span></div>${icon('chevron', 18, 'muted')}</a>`
       ).join('')}
     </section>`;
+}
+
+// ---- Sujud al-sahw ----
+// The two prostrations of forgetfulness: where they go, and what to do case by case, in the
+// words of the scholars (sahw-data.js).
+
+const WHEN = {
+  before: ['before', 'قبل السلام'],
+  after: ['after', 'بعد السلام'],
+  follow: ['follow', 'مع الإمام'],
+  none: ['none', 'لا سجود'],
+};
+
+export function renderSahw(view) {
+  const src = (q) => `<a class="q-src" href="${q.url}" target="_blank" rel="noopener">${esc(q.src)} ${icon('chevron', 12)}</a>`;
+  const quote = (q) => `<figure class="q"><blockquote>${esc(q.text)}</blockquote><figcaption>${src(q)}</figcaption></figure>`;
+  const tile = ([title, sub]) => `<div><b>${esc(title)}</b><small>${esc(sub)}</small></div>`;
+  view.innerHTML = `
+    ${pageHeader('سجود السهو', { back: '#/tools', sub: 'أحكامه بنصوص العلماء من المكتبة الشاملة' })}
+    <section class="card quotes">${quote(SAHW_INTRO)}</section>
+    <section class="card sahw-place">
+      <h4>${icon('info', 18)} متى يكون؟</h4>
+      <div class="sahw-cols">
+        <div class="sahw-col before"><span class="pill">قبل السلام</span>${SAHW_PLACE.before.map(tile).join('')}</div>
+        <div class="sahw-col after"><span class="pill">بعد السلام</span>${SAHW_PLACE.after.map(tile).join('')}</div>
+      </div>
+      <p class="hint">${esc(SAHW_PLACE.note)} وهذا على ما رجّحه ابن عثيمين؛ وأقوال المذاهب في آخر الصفحة.</p>
+      <details class="sahw-more"><summary>النص ${icon('chevron', 14)}</summary>${SAHW_PLACE.quotes.map(quote).join('')}</details>
+    </section>
+    <h3 class="section-title">${icon('rows', 18)} ماذا أفعل إن…</h3>
+    <section class="sahw-cases">
+      ${SAHW_CASES.map(
+        (c) => `<details class="card sahw-case">
+          <summary><b>${esc(c.title)}</b><span class="sahw-when ${WHEN[c.when][0]}">${WHEN[c.when][1]}</span>${icon('chevron', 16, 'muted')}</summary>
+          <figure class="q"><blockquote>${esc(c.text)}</blockquote><figcaption>${src(c)}</figcaption></figure>
+        </details>`
+      ).join('')}
+    </section>
+    <section class="card quotes"><h4>${icon('book', 18)} الأدلة</h4>${SAHW_HADITH.map(quote).join('')}</section>
+    <section class="card quotes"><h4>${icon('layers', 18)} قبل السلام أو بعده: أقوال المذاهب</h4>${SAHW_SCHOOLS.map(quote).join('')}</section>
+    <p class="hint center">النصوص منقولة بألفاظها من كتب المكتبة الشاملة، ويفتح كل مصدر صفحته فيها. وفي بعض المسائل خلاف بين العلماء، فاسأل من تثق بعلمه.</p>`;
 }
 
 // ---- The prohibited times ----
@@ -90,7 +133,7 @@ function nahyDay(info = today()) {
 export function renderNahy(view) {
   const h24 = state.settings.clock24;
   const T = (x) => `<span class="t">${clockText(x.hours, h24)}</span>`;
-  const quote = (q) => `<figure class="q"><blockquote>${esc(q.text)}</blockquote><figcaption><a href="${q.url}" target="_blank" rel="noopener">${esc(q.src)} ${icon('chevron', 12)}</a></figcaption></figure>`;
+  const quote = (q) => `<figure class="q"><blockquote>${esc(q.text)}</blockquote><figcaption><a class="q-src" href="${q.url}" target="_blank" rel="noopener">${esc(q.src)} ${icon('chevron', 12)}</a></figcaption></figure>`;
 
   const status = () => {
     const info = today();
