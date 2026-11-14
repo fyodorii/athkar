@@ -9,6 +9,7 @@ import { METHODS, PRAYER_NAMES } from '../prayer.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
+import { disablePush, enablePush, pushBlocker } from '../webpush.js';
 import { PRAYERS } from '../today.js';
 import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
 
@@ -513,6 +514,14 @@ export function renderNotify(view) {
         <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً أو حيّاً في الخلفية، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه. تطبيقات الويب لا تستطيع جدولة إشعار وهي مغلقة تماماً، فلا تعتمد عليه وحده للاستيقاظ.</p>
         ${n.on ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} جرّب التنبيه</button>` : ''}
       </div>
+      <div class="group">
+        ${(() => {
+          const why = pushBlocker();
+          const sub = why === 'setup' ? 'قيد الإعداد: يعمل بعد تشغيل خادم التنبيهات' : why === 'install' ? 'أضف التطبيق إلى الشاشة الرئيسية من Safari أولاً' : why === 'unsupported' ? 'هذا المتصفح لا يدعم إشعارات الدفع' : n.push ? 'مفعّل: تصلك التنبيهات والتطبيق مغلق' : 'تصلك التنبيهات المفعّلة هنا والتطبيق مغلق';
+          return `<div class="row ${why ? 'off' : ''}"><span class="row-icon">${icon('bell', 20)}</span><span class="row-label">والتطبيق مغلق<small>${sub}</small></span>${toggle('push', !!n.push && !why, why ? 'disabled' : '')}</div>`;
+        })()}
+        <p class="hint">يحفظ التطبيق تنبيهات الأيام السبعة القادمة لدى خادم التنبيهات فيرسلها في وقتها، ويحدّثها كلما فتحته. افتحه مرة في الأسبوع على الأقل.</p>
+      </div>
       <div class="group ${n.on ? '' : 'off'}">
         <h4>الصلوات</h4>
         ${PRAYERS.map((k) => sw(`p:${k}`, PRAYER_NAMES[k], n.prayers[k], clockText(t[k].hours, s.clock24), 'mosque')).join('')}
@@ -543,6 +552,17 @@ export function renderNotify(view) {
   draw();
   view.onchange = async (e) => {
     const t = e.target;
+    if (t.name === 'push') {
+      if (t.checked) {
+        try {
+          await enablePush();
+          toast(`${icon('check', 18)} ستصلك التنبيهات والتطبيق مغلق`);
+        } catch (err) {
+          toast(err.message === 'permission' ? 'اسمح بالإشعارات لهذا التطبيق من إعدادات الجهاز' : 'تعذر تفعيل التنبيهات والتطبيق مغلق');
+        }
+      } else await disablePush();
+      return draw();
+    }
     if (t.name === 'on') {
       n.on = t.checked;
       if (n.on) {
