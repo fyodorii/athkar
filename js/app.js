@@ -25,6 +25,7 @@ import { takeRedirect } from './google.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
 import { APP_NAME, DESIGNER } from './config.js';
 import { checkReminders } from './notify.js';
+import { syncPush } from './webpush.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
 import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from './radio.js';
 
@@ -228,8 +229,12 @@ if (signedIn) history.replaceState(null, '', location.pathname + location.search
 route();
 if (signedIn?.error) toast(signedIn.error);
 window.addEventListener('hashchange', route);
+let pushTimer;
 onChange(() => {
   applyTheme();
+  // The reminders may have changed (times, switches, a khatma): send them again, a moment later.
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(syncPush, 8000);
 });
 
 setInterval(() => {
@@ -249,11 +254,13 @@ document.addEventListener('visibilitychange', () => {
   checkForUpdate();
   checkTimers();
   checkReminders();
+  syncPush();
   // The screen lock is dropped when the app is hidden; take it again for a running timer.
   if (anyTimerRunning()) keepAwake(true);
 });
 
 registerServiceWorker();
+syncPush();
 persistStorage();
 installHint();
 document.documentElement.classList.add('ready');

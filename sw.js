@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline, and opens
 // the app at the right screen when a reminder is tapped.
 
-const VERSION = 'v43'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v44'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 const FILES = [
   './',
@@ -17,6 +17,7 @@ const FILES = [
   'js/qailulah-data.js',
   'js/nahy-data.js',
   'js/sahw-data.js',
+  'js/webpush.js',
   'js/audio-data.js',
   'js/views/audio.js',
   'js/quran-data.js',
@@ -137,6 +138,27 @@ self.addEventListener('fetch', (event) => {
       }
       return fresh;
     })()
+  );
+});
+
+// A reminder sent by the push server while the app is closed (js/webpush.js, push/worker.js).
+self.addEventListener('push', (event) => {
+  let d = {};
+  try {
+    d = event.data ? event.data.json() : {};
+  } catch (e) {
+    d = { body: event.data?.text() };
+  }
+  event.waitUntil(
+    self.registration.showNotification(d.title || 'مواقيت', {
+      body: d.body || '',
+      tag: d.tag || undefined,
+      icon: 'icons/icon-192.png',
+      badge: 'icons/icon-192.png',
+      lang: 'ar',
+      dir: 'rtl',
+      data: { url: d.url || '#/home' },
+    })
   );
 });
 
