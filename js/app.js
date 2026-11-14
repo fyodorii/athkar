@@ -23,7 +23,7 @@ import * as reminders from './views/reminders.js';
 import * as account from './views/account.js';
 import { takeRedirect } from './google.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
-import { APP_NAME, DESIGNER } from './config.js';
+import { APP_NAME, APP_VERSION, DESIGNER } from './config.js';
 import { checkReminders } from './notify.js';
 import { syncPush } from './webpush.js';
 import { anyTimerRunning, checkTimers, keepAwake } from './timers.js';
@@ -105,7 +105,13 @@ function route() {
   if (hash !== currentHash) window.scrollTo(0, 0);
   currentHash = hash;
   closeNav();
-  current = fn(view, ...m.slice(1)) || null;
+  try {
+    current = fn(view, ...m.slice(1)) || null;
+  } catch (err) {
+    // A screen that cannot be drawn shows why, instead of a blank page.
+    current = null;
+    showError(err);
+  }
   // What sticks under the header (the adhkar progress line) needs its height.
   view.style.setProperty('--head-h', `${view.querySelector('.page-head')?.offsetHeight || 0}px`);
   for (const a of document.querySelectorAll('#tabs a')) a.classList.toggle('on', a.dataset.tab === tab);
@@ -116,6 +122,40 @@ function route() {
   void view.offsetWidth;
   view.classList.add('enter');
 }
+
+// ---- When something fails: the error on the screen, with ways out ----
+
+function showError(err) {
+  console.error(err);
+  const text = `${err?.name || 'Error'}: ${err?.message || err}\n${String(err?.stack || '').split('\n').slice(0, 4).join('\n')}\n${location.hash} · v${APP_VERSION}`;
+  view.className = 'view';
+  view.innerHTML = `
+    <section class="app-error">
+      <b>حدث خطأ في هذه الصفحة</b>
+      <p>أرسل صورة هذه الشاشة لمصمم التطبيق ليصلحه.</p>
+      <pre dir="ltr">${esc(text)}</pre>
+      <div>
+        <a class="btn primary" href="#/home">الرئيسية</a>
+        <button class="btn ghost" data-err-copy>نسخ الخطأ</button>
+        <button class="btn ghost" data-err-repair>إعادة تحميل التطبيق</button>
+      </div>
+    </section>`;
+  view.querySelector('[data-err-copy]').onclick = () => navigator.clipboard?.writeText(text).then(() => toast('نُسخ الخطأ'), () => {});
+  view.querySelector('[data-err-repair]').onclick = async () => {
+    try {
+      for (const k of await caches.keys()) await caches.delete(k);
+      for (const r of (await navigator.serviceWorker?.getRegistrations()) || []) await r.unregister();
+    } catch (e) {}
+    location.reload();
+  };
+}
+// An error after the page was drawn (a tap, a timer) that left the screen empty is shown too.
+window.addEventListener('error', (e) => {
+  if (!view.children.length) showError(e.error || e.message);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  if (!view.children.length) showError(e.reason);
+});
 
 function renderTabs() {
   $('#tabs').innerHTML =

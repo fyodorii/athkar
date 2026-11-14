@@ -68,12 +68,22 @@
         var errors = [];
         window.addEventListener('error', function (e) { errors.push(e.message || (e.target && (e.target.src || e.target.href)) || 'error'); }, true);
         window.addEventListener('unhandledrejection', function (e) { errors.push(String((e.reason && e.reason.message) || e.reason)); });
-        var started = function () { return document.documentElement.classList.contains('ready'); };
+        var started = function () { var v = document.getElementById('view'); return document.documentElement.classList.contains('ready') && v && v.children.length > 0; };
         var repair = function () {
           try { sessionStorage.setItem('adhkar-app:repair', '1'); } catch (e) {}
           var jobs = [];
           if (window.caches) jobs.push(caches.keys().then(function (k) { return Promise.all(k.map(function (n) { return caches.delete(n); })); }));
           if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (r) { return Promise.all(r.map(function (x) { return x.unregister(); })); }));
+          // The browser's own cache may keep older copies of some files for a few minutes after an
+          // update: ask the internet again for every file this page loaded, so all are the same release.
+          try {
+            var seen = {};
+            (performance.getEntriesByType('resource') || []).forEach(function (r) {
+              var u = r.name.split('#')[0];
+              if (u.indexOf(location.origin) === 0 && !seen[u]) { seen[u] = 1; jobs.push(fetch(u, { cache: 'reload' }).catch(function () {})); }
+            });
+            jobs.push(fetch(location.pathname, { cache: 'reload' }).catch(function () {}));
+          } catch (e) {}
           Promise.all(jobs).catch(function () {}).then(function () { location.reload(); });
         };
         setTimeout(function () {

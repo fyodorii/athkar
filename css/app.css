@@ -2221,3 +2221,10 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .tsb-beads .tb-phrase { margin-top: 8px; }
 .tb-bar { justify-content: center; }
 .tb-reset { background: var(--tb-btn); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06); }
+
+/* ---------- Version 47: an error on the screen instead of a blank page ---------- */
+.app-error { margin: calc(var(--safe-top) + 40px) 0 0; display: grid; gap: 12px; text-align: center; }
+.app-error b { font-size: 20px; }
+.app-error p { margin: 0; color: var(--ink-2); }
+.app-error pre { margin: 0; padding: 12px; border-radius: 14px; background: var(--bg-2); color: var(--ink); font-size: 12px; white-space: pre-wrap; word-break: break-word; text-align: left; }
+.app-error div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
