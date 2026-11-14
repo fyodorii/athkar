@@ -10,7 +10,7 @@ import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
 import { PRAYERS } from '../today.js';
-import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
+import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -27,6 +27,11 @@ export function render(view) {
       ${row('#/settings/method', 'sun', 'طريقة الحساب', esc(METHODS[s.method]?.name.split(' — ')[0]))}
       ${row('#/settings/notify', s.notify.on ? 'bell' : 'bellOff', 'التنبيهات والإقامة', s.notify.on ? 'مفعّلة' : 'متوقفة')}
       ${row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
+    </div>
+    <div class="group">
+      <h4>الاهتزاز</h4>
+      <div class="row"><span class="row-icon">${icon('vibrate', 20)}</span><span class="row-label">الاهتزاز<small>${s.haptics ? 'مفعّل: عند العدّ والتسجيل وتنبيه الأعداد' : 'متوقف: لا يهتز التطبيق أبداً'}</small></span>${toggle('haptics', s.haptics)}</div>
+      <p class="hint">على الآيفون يُحَسّ الاهتزاز بعد تفعيل «اللمس الاهتزازي للنظام» في إعدادات الجهاز ← الأصوات واللمس.</p>
     </div>
     <div class="group">
       <h4>العرض</h4>
@@ -48,7 +53,6 @@ export function render(view) {
       <div class="row"><span class="row-icon">${icon('calendar', 20)}</span><span class="row-label">تعديل التاريخ الهجري</span>
         <div class="stepper" data-hijri><button data-d="-1">−</button><b>${num(s.hijriAdjust > 0 ? '+' + s.hijriAdjust : s.hijriAdjust)}</b><button data-d="1">+</button></div></div>
       <p class="hint">اليوم: ${hijriText(today().day, s.hijriAdjust)}. عدّله يوماً إن خالف رؤية الهلال في بلدك.</p>
-      <div class="row"><span class="row-icon">${icon('vibrate', 20)}</span><span class="row-label">الاهتزاز<small>عند العدّ والتسجيل، حيث يدعمه الجهاز</small></span>${toggle('haptics', s.haptics)}</div>
     </div>
     <div class="group">
       <h4>بياناتك</h4>
@@ -70,6 +74,7 @@ export function render(view) {
     const t = e.target;
     if (t.name === 'clock24') s.clock24 = t.checked;
     if (t.name === 'haptics') s.haptics = t.checked;
+    if (t.name === 'haptics' && s.haptics) haptic(30, true); // a buzz to feel it on
     if (t.name === 'flat') s.flat = t.checked;
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {
@@ -84,7 +89,7 @@ export function render(view) {
       return;
     }
     save();
-    if (t.name === 'clock24') render(view);
+    if (t.name === 'clock24' || t.name === 'haptics') render(view);
   };
   const onClick = (e) => {
     const dg = e.target.closest('[data-digits] [data-v]');

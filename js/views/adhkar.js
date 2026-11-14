@@ -627,6 +627,7 @@ export function renderTasbeeh(view, mineId) {
               <button data-a="alerts">${icon('bell', 20)} تنبيه الأعداد</button>
               <button data-a="look">${icon('palette', 20)} الألوان وحجم الخط</button>
               <button data-a="dim">${icon('moon', 20)} تعتيم الصفحة${t.dim ? ` (${num(t.dim)}٪)` : ''}</button>
+              <button data-a="vibrate">${icon('vibrate', 20)} الاهتزاز: ${state.settings.haptics ? 'مفعّل' : 'متوقف'}</button>
               <button data-a="reset">${icon('reset', 20)} ${group ? 'البدء من أول المجموعة' : 'تصفير العدّاد'}</button>
             </div>`;
         };
@@ -648,6 +649,13 @@ export function renderTasbeeh(view, mineId) {
           }
           const a = e.target.closest('[data-a]')?.dataset.a;
           if (!a) return;
+          if (a === 'vibrate') {
+            state.settings.haptics = !state.settings.haptics;
+            save();
+            if (state.settings.haptics) haptic(30, true);
+            paint(); // the tap area ticks on the iPhone only while vibration is on
+            return drawSheet();
+          }
           if (a === 'dim') {
             // Steps through the dimming levels; from a level set on the slider, to the next one up.
             t.dim = DIM_STEPS.find((d) => d > t.dim) ?? 0;

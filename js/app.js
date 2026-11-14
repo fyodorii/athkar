@@ -12,6 +12,7 @@ import * as notebook from './views/notebook.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as radioView from './views/radio.js';
+import * as audioView from './views/audio.js';
 import * as occasions from './views/occasions.js';
 import * as tools from './views/tools.js';
 import * as khatma from './views/khatma.js';
@@ -34,6 +35,7 @@ const TABS = [
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
   ['worship', 'متابعة', 'check', '#/worship'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
+  ['audio', 'الصوتيات', 'play', '#/audio'],
   ['occasions', 'المناسبات', 'calendar', '#/occasions'],
   '',
   ['khatma', 'الختمات', 'quran', '#/khatma'],
@@ -54,6 +56,7 @@ const ROUTES = [
   [/^#\/adhkar(?:\/([\w-]+))?$/, 'mine', (v, id) => (CATEGORY_BY_ID[id] ? adhkar.renderWird(v, id) : adhkar.renderMine(v))],
   [/^#\/occasions$/, 'occasions', (v) => occasions.renderOccasions(v)],
   [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
+  [/^#\/audio$/, 'audio', (v) => audioView.render(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
@@ -176,7 +179,7 @@ media.addEventListener?.('change', applyTheme);
 function renderMini() {
   const el = $('#mini');
   const { status, station } = radioStatus();
-  const onRadioPage = location.hash === '#/radio';
+  const onRadioPage = location.hash === '#/radio' || location.hash === '#/audio';
   if (!station || onRadioPage || document.body.dataset.tab === 'tasbeeh') {
     el.hidden = true;
     return;
@@ -184,7 +187,7 @@ function renderMini() {
   el.hidden = false;
   const live = status === 'playing' || status === 'loading';
   el.innerHTML = `
-    <a href="#/radio" class="mini-info">${icon('radio', 20)}<span><b>${esc(station.name)}</b><small>${radioView.statusText(status)}</small></span></a>
+    <a href="#/radio" class="mini-info">${icon('radio', 20)}<span><b>${esc(station.name)}</b><small>${station.clip ? `${esc(station.sub || '')} • ${radioView.statusText(status, true)}` : radioView.statusText(status)}</small></span></a>
     <button class="icon-btn ghost sm" data-mini="toggle" aria-label="${live ? 'إيقاف مؤقت' : 'تشغيل'}">${icon(live ? 'pause' : 'play', 20)}</button>
     <button class="icon-btn ghost sm" data-mini="stop" aria-label="إيقاف">${icon('close', 20)}</button>`;
 }
