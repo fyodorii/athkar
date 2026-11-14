@@ -62,6 +62,7 @@ const ROUTES = [
   [/^#\/walk$/, 'tools', (v) => tools.renderWalk(v)],
   [/^#\/focus$/, 'tools', (v) => tools.renderFocus(v)],
   [/^#\/nahy$/, 'tools', (v) => tools.renderNahy(v)],
+  [/^#\/sahw$/, 'tools', (v) => tools.renderSahw(v)],
   [/^#\/khatma$/, 'khatma', (v) => khatma.render(v)],
   [/^#\/debts$/, 'debts', (v) => debts.render(v)],
   [/^#\/datecalc$/, 'datecalc', (v) => datecalc.render(v)],

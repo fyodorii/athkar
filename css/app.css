@@ -2121,3 +2121,32 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 
 /* ---------- Version 38: a hundred times on the tasbeeh ---------- */
 .dhikr-count .times { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- Version 39: sujud al-sahw ---------- */
+.sahw-place { display: grid; gap: 10px; }
+.sahw-place h4 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.sahw-place h4 .ic { color: var(--primary); }
+.sahw-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sahw-col { display: grid; gap: 6px; align-content: start; padding: 10px; border-radius: 16px; background: var(--bg-2); }
+.sahw-col .pill { justify-self: start; }
+.sahw-col.before .pill { background: var(--primary-soft); color: var(--primary); }
+.sahw-col.after .pill { background: var(--gold-soft); color: var(--gold); }
+.sahw-col div { display: grid; }
+.sahw-col b { font-size: 14px; line-height: 1.5; }
+.sahw-col small { color: var(--ink-3); font-size: 12px; line-height: 1.5; }
+.sahw-more summary, .sahw-case summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.sahw-more summary::-webkit-details-marker, .sahw-case summary::-webkit-details-marker { display: none; }
+.sahw-more summary { color: var(--primary); font-weight: 600; font-size: 14px; }
+.sahw-more summary .ic, .sahw-case summary .ic { transition: transform 0.2s; transform: rotate(-90deg); }
+.sahw-more[open] summary .ic, .sahw-case[open] summary .ic { transform: rotate(90deg); }
+.sahw-more[open] { display: grid; gap: 10px; }
+.sahw-cases { display: grid; gap: 8px; margin-bottom: 14px; }
+.sahw-case { padding: 12px 14px; }
+.sahw-case summary b { flex: 1; font-size: 15px; line-height: 1.5; }
+.sahw-case[open] summary { margin-bottom: 8px; }
+.sahw-when { flex-shrink: 0; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.sahw-when.before { background: var(--primary-soft); color: var(--primary); }
+.sahw-when.after { background: var(--gold-soft); color: var(--gold); }
+.sahw-when.follow { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.sahw-when.none { background: var(--bg-2); color: var(--ink-3); }
+.q-src { color: var(--primary); display: inline-flex; align-items: center; gap: 2px; }
