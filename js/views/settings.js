@@ -39,12 +39,8 @@ export function render(view) {
         <div class="seg-mini" data-theme>
           ${[['auto', 'تلقائي'], ['light', 'فاتح'], ['dark', 'داكن']].map(([v, l]) => `<button class="${s.theme === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
         </div></div>
-      <div class="row accent-row"><span class="row-icon">${icon('drop', 20)}</span><span class="row-label">لون التطبيق<small>${esc(ACCENTS.find((a) => a[0] === (s.accent || 'blue'))?.[1] || '')}</small></span></div>
-      <div class="accent-pick" data-accent-pick>
-        ${ACCENTS.map(([id, name, c]) => `<button class="${(s.accent || 'blue') === id ? 'on' : ''}" data-v="${id}" style="--c:${c}" aria-label="${name}">${(s.accent || 'blue') === id ? icon('check', 18) : ''}</button>`).join('')}
-      </div>
       <div class="row"><span class="row-icon">${icon('layers', 20)}</span><span class="row-label">تصميم مسطّح<small>ضوء مسطّح وألوان أقل، بلا زجاج سائل</small></span>${toggle('flat', s.flat)}</div>
-      ${row('#/settings/fonts', 'type', 'الخطوط وأحجامها', `${FONT_NAMES[s.fontUi] || ''} · ${WEIGHTS.find((w) => w[0] === s.uiWeight)?.[1] || ''}`)}
+      ${row('#/settings/fonts', 'type', 'الخطوط والألوان', `${ACCENTS.find((a) => a[0] === (s.accent || 'blue'))?.[1] || ''} · ${FONT_NAMES[s.fontUi] || ''}`)}
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
       <div class="row"><span class="row-icon">${icon('digits', 20)}</span><span class="row-label">نوع الأرقام</span>
         <div class="seg-mini" data-digits>
@@ -95,12 +91,6 @@ export function render(view) {
     const dg = e.target.closest('[data-digits] [data-v]');
     if (dg) {
       s.digits = dg.dataset.v;
-      save();
-      return render(view);
-    }
-    const ac = e.target.closest('[data-accent-pick] [data-v]');
-    if (ac) {
-      s.accent = ac.dataset.v;
       save();
       return render(view);
     }
@@ -428,7 +418,13 @@ export function renderFonts(view) {
   };
   const draw = () => {
     view.innerHTML = `
-      ${pageHeader('الخطوط', { back: '#/settings' })}
+      ${pageHeader('الخطوط والألوان', { back: '#/settings' })}
+      <div class="group fonts">
+        <div class="f-head"><h4>لون التطبيق</h4><span>${esc(ACCENTS.find((a) => a[0] === (s.accent || 'blue'))?.[1] || '')}</span></div>
+        <div class="accent-pick" data-accent-pick>
+          ${ACCENTS.map(([id, name, c]) => `<button class="${(s.accent || 'blue') === id ? 'on' : ''}" data-v="${id}" style="--c:${c}" aria-label="${name}">${(s.accent || 'blue') === id ? icon('check', 18) : ''}</button>`).join('')}
+        </div>
+      </div>
       ${picker('fontUi', 'uiWeight', 'خط الواجهة')}
       <div class="group fonts">
         <div class="f-head"><h4>حجم العناوين</h4><span data-head-pct>${num(Math.round(s.headScale * 100))}%</span></div>
@@ -456,6 +452,14 @@ export function renderFonts(view) {
     $('[data-head-range]', view).value = s.headScale;
   };
   view.onclick = (e) => {
+    const ac = e.target.closest('[data-accent-pick] [data-v]');
+    if (ac) {
+      s.accent = ac.dataset.v;
+      save();
+      const y = window.scrollY;
+      draw();
+      return window.scrollTo(0, y);
+    }
     const f = e.target.closest('[data-font] [data-v]');
     const w = e.target.closest('[data-weight] [data-v]');
     if (f) s[f.closest('[data-font]').dataset.font] = f.dataset.v;

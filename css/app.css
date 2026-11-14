@@ -2177,3 +2177,38 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .poem li { counter-increment: bayt; display: grid; gap: 2px; padding-right: 30px; position: relative; font-family: var(--font-text); font-size: 18px; line-height: 1.8; }
 .poem li::before { content: counter(bayt, arabic-indic); position: absolute; right: 0; top: 4px; font-size: 12px; color: var(--ink-3); }
 .poem li span:last-child { padding-right: 24px; }
+
+/* ---------- Version 43: «حبّات المسبحة», a light tasbeeh with a ring of beads ---------- */
+.tsb-beads { --tb-bg: #f7f7f9; --tb-ink: #1c1c1e; --tb-soft: #6e6e73; --tb-core: #f1f2f7; --tb-off: #e7e7ec; --tb-1: color-mix(in srgb, var(--primary) 70%, #7aa0ff); --tb-2: var(--primary); --tb-btn: #fff; background: var(--tb-bg) !important; color: var(--tb-ink); }
+[data-theme='dark'] .tsb-beads { --tb-bg: #101216; --tb-ink: #f2f2f5; --tb-soft: #9a9aa2; --tb-core: #1a1d24; --tb-off: #2a2e37; --tb-btn: #1c1f26; }
+.tsb-beads .tsb-tap { padding: calc(var(--safe-top) + 74px) 22px calc(var(--safe-bottom) + 108px); justify-content: flex-start; gap: 6px; }
+.tsb-beads .tb-title-gap { height: 30px; flex-shrink: 0; }
+.tb-title { position: absolute; top: calc(var(--safe-top) + 82px); left: 50%; transform: translateX(-50%); z-index: 6; display: inline-flex; align-items: center; gap: 6px; font-size: 24px; font-weight: 800; color: var(--tb-ink); white-space: nowrap; }
+.tb-title .ic { transform: rotate(-90deg); color: var(--tb-soft); }
+.tb-title:disabled { opacity: 1; cursor: default; }
+.tb-phrase { flex: 0 1 auto; max-height: 22vh; min-height: 0; margin-top: 26px; color: var(--tsb-ink, var(--tb-ink)) !important; text-shadow: none !important; }
+.tb-round { position: absolute; top: calc(var(--safe-top) + 10px); z-index: 6; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: var(--tb-btn); color: var(--tb-ink); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 6px 16px -10px rgba(0, 0, 0, 0.35); }
+.tb-close { left: 18px; }
+.tb-menu { right: 18px; }
+.tb-ring { position: relative; width: min(78vw, 46vh, 340px); aspect-ratio: 1; margin: auto 0 0; transform: scale(var(--tsb-scale, 1)); }
+.tb-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.tb-track { fill: none; stroke: var(--tb-off); stroke-width: 1.2; }
+.tb-core { fill: var(--tb-core); }
+.tb-bead { fill: var(--tb-off); transition: r 0.15s; }
+.tb-bead.on { fill: url(#tbg); }
+.tb-halo { fill: color-mix(in srgb, var(--primary) 16%, transparent); }
+.tb-mid { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.tb-mid b { font-size: clamp(56px, 19vw, 84px); line-height: 1; font-weight: 800; color: var(--tb-ink); font-variant-numeric: tabular-nums; }
+.tb-mid small { margin-top: 10px; font-size: 16px; color: var(--tb-soft); }
+.tb-mid.pop b { animation: tb-pop 0.18s ease; }
+@keyframes tb-pop { 50% { transform: scale(1.08); } }
+.tb-foot { margin: 18px 0 auto; display: inline-flex; align-items: center; gap: 8px; color: var(--tb-soft); font-size: 16px; }
+.tb-done { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--tb-soft); color: #fff; }
+.tb-done:not(.on) { box-shadow: none; border: 1.5px dotted var(--tb-soft); }
+.tb-done.on { background: var(--tb-soft); }
+.tb-bar { position: absolute; left: 18px; right: 18px; bottom: calc(var(--safe-bottom) + 22px); z-index: 6; display: flex; align-items: center; gap: 14px; }
+.tb-voice { flex: 1; height: 58px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; background: #232325; color: #fff; font-size: 19px; font-weight: 700; }
+[data-theme='dark'] .tb-voice { background: #f2f2f5; color: #111; }
+.tb-voice.on { background: var(--danger); color: #fff; }
+.tb-reset { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: var(--tb-ink); }
+.tsb-beads .tsb-gear, .tsb-beads .tsb-back { display: none; }

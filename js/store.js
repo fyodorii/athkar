@@ -49,7 +49,7 @@ export const DEFAULTS = {
   progress: { day: '', counts: {} },
   custom: [],
   notebook: [],
-  tasbeeh: { phrase: 'سبحان الله وبحمده', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0, alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
+  tasbeeh: { phrase: 'سبحان الله وبحمده', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0, ripple: false, style: 'classic', alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},

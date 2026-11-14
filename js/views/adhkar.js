@@ -498,6 +498,43 @@ export function renderTasbeeh(view, mineId) {
     return `الدورة ${num(Math.ceil(c / n) || 1)} • الهدف ${num(n)}`;
   };
 
+  // «حبّات المسبحة»: a ring of 33 beads filling as the count goes round, the count in its middle,
+  // and counting by voice at the bottom.
+  const BEADS = 33;
+  let listening = false; // counting by voice (below)
+  let rec = null;
+  const beadsOn = () => t.style === 'beads';
+  const roundOf = () => {
+    const [c, n] = [src.count(), src.target()];
+    const size = n || BEADS;
+    const inRound = c > 0 && c % size === 0 ? size : c % size;
+    return { c, n, size, inRound, rounds: Math.floor(c / size) };
+  };
+  const ringHTML = () => {
+    const { c, n, size, inRound } = roundOf();
+    const filled = Math.round((inRound / size) * BEADS);
+    const R = 128;
+    const beads = Array.from({ length: BEADS }, (_, i) => {
+      const a = (-90 - (i * 360) / BEADS) * (Math.PI / 180); // from the top, round to the left
+      const x = (150 + R * Math.cos(a)).toFixed(1);
+      const y = (150 + R * Math.sin(a)).toFixed(1);
+      const on = i < filled;
+      const cur = filled > 0 && i === (filled === BEADS ? 0 : filled - 1);
+      return `${cur ? `<circle class="tb-halo" cx="${x}" cy="${y}" r="17"/>` : ''}<circle class="tb-bead ${on ? 'on' : ''}" cx="${x}" cy="${y}" r="${cur ? 11.5 : 7.5}"/>`;
+    }).join('');
+    return `<svg class="tb-svg" viewBox="0 0 300 300" aria-hidden="true"><defs><linearGradient id="tbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--tb-1)"/><stop offset="1" stop-color="var(--tb-2)"/></linearGradient></defs>
+      <circle class="tb-track" cx="150" cy="150" r="${R}"/><circle class="tb-core" cx="150" cy="150" r="96"/>${beads}</svg>
+      <div class="tb-mid"><b data-count>${num(n ? inRound : c)}</b><small>ذكراً</small></div>`;
+  };
+  const footHTML = () => {
+    const { c, n, inRound, rounds } = roundOf();
+    if (!n) return `<span>عدّ مفتوح • المجموع ${num(c)}</span>`;
+    const done = inRound === n && c > 0;
+    return `<span class="tb-done ${done ? 'on' : ''}">${done ? icon('check', 13) : ''}</span><span>${num(inRound)} / ${num(n)}${rounds ? ` • دورات: ${num(rounds)}` : ''}</span>`;
+  };
+  const titleText = () => (group ? group.name : wird ? wirdCat.title : mine ? 'أذكاري' : 'التسبيح');
+  const canPick = () => !mine && !wird;
+
   // Only the dhikr and its count are on the screen. The whole of it is a label of the hidden
   // switch that gives the iPhone its tick (ui.js), so every count is felt; the way out is at
   // the top, and the settings float on the left.
@@ -507,6 +544,27 @@ export function renderTasbeeh(view, mineId) {
     // The whole screen is the tasbeeh: the phone's status bar takes the top of its colour, and
     // the page behind it (seen when iOS bounces) the bottom.
     const shades = (bg.css || '#2a5cc4 #070f2c').match(/#[0-9a-f]{3,6}/gi);
+    if (beadsOn()) {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      view.innerHTML = `
+      <section class="tsb tsb-beads ${dark ? '' : 'light'}" data-area data-top="${dark ? '#101216' : '#f7f7f9'}" style="--tsb-scale:${t.counterSize}${t.ink ? `;--tsb-ink:${t.ink}` : ''}">
+        <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
+          <span class="tb-title-gap"></span>
+          <div class="tsb-phrase tb-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${Math.min(box.fontSize || 40, 34)}px"><span>${esc(src.phrase())}</span></div>
+          <div class="tb-ring" data-ring>${ringHTML()}</div>
+          <div class="tb-foot" data-foot>${footHTML()}</div>
+        </label>
+        <button class="tb-title" data-ui ${canPick() ? 'data-pick-phrase' : 'disabled'}>${esc(titleText())}${canPick() ? icon('chevron', 16) : ''}</button>
+        <a class="tb-round tb-close" data-ui href="${backTo}" aria-label="خروج">${icon('close', 22)}</a>
+        <button class="tb-round tb-menu" data-ui data-settings aria-label="إعدادات السبحة">${icon('beads', 22)}</button>
+        <div class="tb-bar">
+          <button class="tb-reset" data-ui data-reset aria-label="تصفير">${icon('reset', 22)}</button>
+          <button class="tb-voice ${listening ? 'on' : ''}" data-ui data-voice>${icon('mic', 22)} ${listening ? 'إيقاف العدّ بالصوت' : 'العدّ بالصوت'}</button>
+        </div>
+        <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
+      </section>`;
+      return;
+    }
     view.innerHTML = `
       <section class="tsb ${bg.light ? 'light' : ''}" data-area data-top="${shades[0]}" style="${style}">
         <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
@@ -532,8 +590,9 @@ export function renderTasbeeh(view, mineId) {
     const shades = $('[data-area]', view).dataset.top;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', shades);
     document.documentElement.style.setProperty('--tsb-page', ((tsbBg(t).css || '#070f2c').match(/#[0-9a-f]{3,6}/gi) || ['#070f2c']).at(-1));
-    if (mine && !mine.fontSize) fit();
-    if (group) fit(t.fontSize || 40); // a long dhikr of the group is shown whole
+    if (!beadsOn() && mine && !mine.fontSize) fit();
+    if (!beadsOn() && group) fit(t.fontSize || 40); // a long dhikr of the group is shown whole
+    if (beadsOn()) fit(Math.min(box.fontSize || 40, 34));
   };
   paint();
 
@@ -552,14 +611,14 @@ export function renderTasbeeh(view, mineId) {
     const alert = t.alerts.includes(c) && (t.alertSound || t.alertVibrate);
     if (alert) {
       if (t.alertSound) chime([0, 0.25], false);
-      if (t.alertVibrate) haptic(200, true);
+      if (t.alertVibrate) haptic(200, true, true);
       if (!reached) toast(`${icon('bell', 18)} بلغت ${num(c)}`);
     } else if (navigator.vibrate) haptic(reached ? 40 : 10); // on the iPhone the tap on the label has already ticked
     if (reached && group) {
       // This dhikr is done: on to the next one, or the group is complete and starts over.
       const last = group.i + 1 >= group.items.length;
       if (t.alertSound) chime(last ? [0, 0.25, 0.5] : [0, 0.25], false);
-      haptic(200, true);
+      haptic(200, true, t.alertVibrate);
       toast(`${icon('check', 18)} ${last ? `أتممت «${esc(group.name)}»، تقبّل الله منك` : `أتممت ${num(n)} — إلى الذكر التالي`}`);
       Object.assign(group, { i: last ? 0 : group.i + 1, count: 0 });
       save();
@@ -570,13 +629,18 @@ export function renderTasbeeh(view, mineId) {
       toast(`${icon('check', 18)} أتممت ${num(n)}، تقبّل الله منك`);
       setTimeout(() => location.hash === `#/tasbeeh/${mineId}` && (location.hash = backTo), 900);
     } else if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
-    $('[data-count]', view).textContent = num(c);
-    $('[data-round]', view).textContent = roundText();
-    const counter = $('.tsb-num', view);
+    if (beadsOn()) {
+      $('[data-ring]', view).innerHTML = ringHTML();
+      $('[data-foot]', view).innerHTML = footHTML();
+    } else {
+      $('[data-count]', view).textContent = num(c);
+      $('[data-round]', view).textContent = roundText();
+    }
+    const counter = $(beadsOn() ? '.tb-mid' : '.tsb-num', view);
     counter.classList.remove('pop');
     void counter.offsetWidth;
     counter.classList.add('pop');
-    if (x !== undefined) {
+    if (x !== undefined && t.ripple) {
       const r = document.createElement('i');
       r.className = 'tsb-ripple';
       r.style.left = `${x}px`;
@@ -675,7 +739,79 @@ export function renderTasbeeh(view, mineId) {
     );
   };
 
+  // Counting by voice: the browser's speech recognition hears the dhikr, and each time its key
+  // word is heard it counts once. Safari stops listening after a silence; it is started again
+  // while the button is on.
+  const strip = (x) => String(x).replace(/[ً-ٰٟۖ-ۭـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+  const keyWord = () => {
+    const words = strip(src.phrase()).split(/\s+/).filter(Boolean);
+    return words[0]?.length >= 3 ? words[0] : words.sort((a, b) => b.length - a.length)[0] || '';
+  };
+  const heardCounts = new Map(); // result index → times the key word was counted in it
+  const stopVoice = () => {
+    listening = false;
+    try {
+      rec?.stop();
+    } catch (e) {}
+    rec = null;
+    heardCounts.clear();
+  };
+  const startVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return toast('العدّ بالصوت غير متاح على هذا الجهاز أو المتصفح');
+    listening = true;
+    const key = keyWord();
+    const run = () => {
+      rec = new SR();
+      rec.lang = 'ar-SA';
+      rec.continuous = true;
+      rec.interimResults = true;
+      heardCounts.clear();
+      rec.onresult = (ev) => {
+        for (let i = ev.resultIndex; i < ev.results.length; i++) {
+          const said = strip(ev.results[i][0].transcript);
+          const times = key ? said.split(key).length - 1 : 0;
+          const before = heardCounts.get(i) || 0;
+          for (let k = before; k < times; k++) tap();
+          if (times > before) heardCounts.set(i, times);
+        }
+      };
+      rec.onerror = (ev) => {
+        if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+          toast('اسمح للتطبيق باستخدام الميكروفون للعدّ بالصوت');
+          stopVoice();
+          paint();
+        }
+      };
+      rec.onend = () => {
+        if (listening) {
+          try {
+            run();
+          } catch (e) {
+            stopVoice();
+            paint();
+          }
+        }
+      };
+      rec.start();
+    };
+    try {
+      run();
+      toast(`${icon('mic', 18)} قل «${esc(src.phrase())}» ويُعدّ تلقائياً`);
+    } catch (e) {
+      stopVoice();
+      toast('تعذر بدء العدّ بالصوت');
+    }
+  };
+
   const onClick = (e) => {
+    if (e.target.closest('[data-voice]')) {
+      if (listening) stopVoice();
+      else startVoice();
+      return paint();
+    }
+    if (e.target.closest('[data-reset]')) return reset();
+    if (e.target.closest('[data-pick-phrase]')) return group ? tasbeehGroups() : choosePhrase(paint);
     if (e.target.closest('[data-settings]')) return settings();
     if (e.target.closest('[data-ui], a, button')) return;
     tap(e.clientX, e.clientY);
@@ -717,6 +853,7 @@ export function renderTasbeeh(view, mineId) {
     // After midnight the counts belong to a new day: draw the screen again for it.
     tick: () => (today().key !== dayNow ? 'rerender' : undefined),
     destroy() {
+      stopVoice();
       view.removeEventListener('click', guardClick, true);
       view.removeEventListener('click', onClick);
       view.removeEventListener('gesturestart', onGestureStart);
@@ -843,6 +980,11 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
       const draw = () => {
         const bg = tsbBg(t);
         body.innerHTML = `
+          <h4 class="sheet-sub">شكل السبحة</h4>
+          <div class="seg-mini wide" data-style>
+            ${[['classic', 'كلاسيكي'], ['beads', 'حبّات المسبحة']].map(([v, l]) => `<button class="${(t.style || 'classic') === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
+          </div>
+          <div class="row"><span class="row-label">تأثير اللمس<small>دائرة تظهر حيث تضغط</small></span>${toggle('ripple', !!t.ripple)}</div>
           <h4 class="sheet-sub">لون الخلفية</h4>
           <div class="swatches">${T_BGS.map((b) => `<button class="swatch ${b.id === bg.id ? 'on' : ''}" data-bg="${b.id}" style="background:${b.css || 'linear-gradient(170deg, #2a5cc4, #070f2c)'}" aria-label="${b.name}" title="${b.name}"></button>`).join('')}</div>
           <h4 class="sheet-sub">لون الذكر</h4>
@@ -859,7 +1001,9 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
       body.addEventListener('click', (e) => {
         const b = e.target.closest('[data-bg]');
         const k = e.target.closest('[data-ink]');
-        if (b) t.bg = b.dataset.bg;
+        const st = e.target.closest('[data-style] [data-v]');
+        if (st) t.style = st.dataset.v;
+        else if (b) t.bg = b.dataset.bg;
         else if (k) t.ink = k.dataset.ink;
         else if (e.target.closest('[data-look-reset]')) {
           Object.assign(t, { bg: 'blue', ink: '', counterSize: 1, dim: 0 });
@@ -871,6 +1015,11 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         save();
         redraw();
         draw();
+      });
+      body.addEventListener('change', (e) => {
+        if (e.target.name !== 'ripple') return;
+        t.ripple = e.target.checked;
+        save();
       });
       body.addEventListener('input', (e) => {
         const r = e.target.closest('[data-range]');
@@ -904,7 +1053,7 @@ function tasbeehAlerts(redraw) {
             <button class="btn primary" type="submit">${icon('plus', 18)} إضافة</button>
           </form>
           <div class="row"><span class="row-label">الصوت</span>${toggle('alertSound', t.alertSound)}</div>
-          <div class="row"><span class="row-label">الاهتزاز</span>${toggle('alertVibrate', t.alertVibrate)}</div>
+          <div class="row"><span class="row-label">الاهتزاز<small>يعمل عند هذه الأعداد ولو كان الاهتزاز متوقفاً في الإعدادات</small></span>${toggle('alertVibrate', t.alertVibrate)}</div>
           <p class="hint">الصوت لا يُسمع والجوال على الصامت. والاهتزاز على الآيفون نقرة خفيفة، ويحتاج iOS 17.4 أو أحدث.</p>`;
       };
       draw();
@@ -931,7 +1080,7 @@ function tasbeehAlerts(redraw) {
         t[name] = e.target.checked;
         save();
         // Let the choice be heard or felt at once.
-        if (t[name]) name === 'alertSound' ? (unlockAudio(), chime([0, 0.25], false)) : haptic(200, true);
+        if (t[name]) name === 'alertSound' ? (unlockAudio(), chime([0, 0.25], false)) : haptic(200, true, true);
         redraw();
       });
     },
