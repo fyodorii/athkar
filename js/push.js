@@ -13,10 +13,11 @@ export function registerServiceWorker() {
   if (!registration) {
     // A new release takes over the page while it is open: reload once so the new
     // files show now rather than on the next launch. Not on the very first install.
-    const hadController = !!navigator.serviceWorker.controller;
+    let controlled = !!navigator.serviceWorker.controller;
     let reloading = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadController || reloading) return;
+      if (!controlled) return void (controlled = true); // the first install takes over quietly
+      if (reloading) return;
       reloading = true;
       location.reload();
     });
