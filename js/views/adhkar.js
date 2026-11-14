@@ -29,6 +29,11 @@ const counts = () => {
   newDay(today().key);
   return state.progress.counts;
 };
+// A dhikr said a hundred times is counted on the tasbeeh's full screen (#/tasbeeh/w-<id>); back
+// on its wird the page opens at its card.
+export const TSB_FROM = 100;
+let returnTo = null;
+
 export const wirdDone = (cat) => cat.items.filter((x) => (counts()[x.id] || 0) >= x.count).length;
 
 export function renderWird(view, id) {
@@ -54,6 +59,11 @@ export function renderWird(view, id) {
       </div>`;
   };
   draw();
+  if (returnTo) {
+    const back = view.querySelector(`.dhikr[data-id="${returnTo}"]`);
+    returnTo = null;
+    if (back) requestAnimationFrame(() => back.scrollIntoView({ block: 'center' }));
+  }
 
   const count = (card, item) => {
     const c = counts();
@@ -94,6 +104,11 @@ export function renderWird(view, id) {
     if (!card) return;
     const item = cat.items.find((x) => x.id === card.dataset.id);
     if (e.target.closest('summary, details')) return;
+    if (item.count >= TSB_FROM && (counts()[item.id] || 0) < item.count) {
+      returnTo = item.id;
+      location.hash = `#/tasbeeh/w-${item.id}`;
+      return;
+    }
     count(card, item);
   };
   return { destroy: () => (view.onclick = null) };
@@ -123,7 +138,7 @@ function wirdCard(x, n) {
         <span class="counter-ring">${ring(n / x.count, 44, 3)}</span>
         <span class="counter-num" data-left>${done ? icon('check', 20) : num(left)}</span>
       </button>
-      <span class="times">${times}</span>
+      <span class="times">${x.count >= TSB_FROM ? icon('beads', 12) : ''}${times}</span>
     </div>`
         : TICK
     }
@@ -393,11 +408,43 @@ export function renderTasbeeh(view, mineId) {
   tasbeehList();
   newDay(dayNow);
   const group = mineId?.startsWith('g-') ? state.groups.find((g) => g.id === mineId.slice(2) && g.items.length) : null;
-  const mine = mineId && !group ? state.custom.find((c) => c.id === mineId) : null;
+  // A dhikr of the morning or evening wird, counted into the wird (and kept within its number).
+  const wirdCat = mineId?.startsWith('w-') ? WIRDS.map((id) => CATEGORY_BY_ID[id]).find((c) => c.items.some((x) => x.id === mineId.slice(2))) : null;
+  const wirdItem = wirdCat?.items.find((x) => x.id === mineId.slice(2));
+  const wird = wirdItem
+    ? {
+        id: wirdItem.id,
+        text: wirdItem.text,
+        target: wirdItem.count,
+        quran: wirdItem.quran,
+        get today() {
+          return counts()[wirdItem.id] || 0;
+        },
+        set today(v) {
+          counts()[wirdItem.id] = Math.max(0, Math.min(wirdItem.count, v));
+        },
+        get total() {
+          return t.total;
+        },
+        set total(v) {
+          t.total = v;
+          t.today = (t.today || 0) + 1;
+        },
+        get fontSize() {
+          return t.wirdFont;
+        },
+        set fontSize(v) {
+          t.wirdFont = v;
+        },
+      }
+    : null;
+  const mine = wird || (mineId && !group ? state.custom.find((c) => c.id === mineId) : null);
   if (mineId && !mine && !group) {
     location.replace(mineId.startsWith('g-') ? '#/tasbeeh' : '#/mine');
     return null;
   }
+  const backTo = group ? '#/tasbeeh' : wird ? `#/adhkar/${wirdCat.id}` : mine ? `#/mine/${mine.id}` : '#/home';
+  if (wird) returnTo = wird.id;
   if (group) group.i = Math.max(0, Math.min(group.items.length - 1, group.i || 0));
   const step = () => group.items[group.i];
   const box = mine || t; // whose text size is shown and changed (each dhikr of «أذكاري» keeps its own)
@@ -446,6 +493,7 @@ export function renderTasbeeh(view, mineId) {
     const [c, n] = [src.count(), src.target()];
     if (!n) return 'عدّ مفتوح بلا حد';
     if (group) return `الهدف ${num(n)} • ثم ${group.i + 1 < group.items.length ? 'الذكر التالي' : 'تتم المجموعة'}`;
+    if (wird) return c >= n ? `تمّ — ${wird.target === 100 ? 'مائة مرة' : num(n)}` : `من ${num(n)} • ${esc(wirdCat.title)}`;
     if (mine) return c >= n ? `أتممت وردك اليومي (${num(n)})` : `الهدف اليومي ${num(n)}`;
     return `الدورة ${num(Math.ceil(c / n) || 1)} • الهدف ${num(n)}`;
   };
@@ -467,7 +515,7 @@ export function renderTasbeeh(view, mineId) {
             <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
           </div>
         </label>
-        <a class="icon-btn glass tsb-back" data-ui href="${group ? '#/tasbeeh' : mine ? `#/mine/${mine.id}` : '#/home'}" aria-label="خروج">${icon('back', 22)}</a>
+        <a class="icon-btn glass tsb-back" data-ui href="${backTo}" aria-label="خروج">${icon('back', 22)}</a>
         <button class="icon-btn glass tsb-gear" data-ui data-settings aria-label="إعدادات السبحة">${icon('gear', 22)}</button>
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
@@ -490,6 +538,7 @@ export function renderTasbeeh(view, mineId) {
   paint();
 
   const tap = (x, y) => {
+    if (wird && src.count() >= src.target()) return; // said its number: nothing more to count
     if (t.alertSound && (t.alerts.length || group)) unlockAudio(); // sound needs a touch to start
     src.add();
     if (isIstighfar(src.phrase())) {
@@ -516,7 +565,11 @@ export function renderTasbeeh(view, mineId) {
       save();
       return paint();
     }
-    if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
+    if (reached && wird) {
+      // Done: back to the wird, at this dhikr's card.
+      toast(`${icon('check', 18)} أتممت ${num(n)}، تقبّل الله منك`);
+      setTimeout(() => location.hash === `#/tasbeeh/${mineId}` && (location.hash = backTo), 900);
+    } else if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
     $('[data-count]', view).textContent = num(c);
     $('[data-round]', view).textContent = roundText();
     const counter = $('.tsb-num', view);
@@ -540,7 +593,7 @@ export function renderTasbeeh(view, mineId) {
   };
 
   const reset = async () => {
-    if (!(await confirmSheet(group ? 'البدء من أول المجموعة؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false }))) return;
+    if (!(await confirmSheet(group ? 'البدء من أول المجموعة؟' : wird ? 'تصفير عدد هذا الذكر في الورد؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false }))) return;
     if (group) group.i = 0;
     src.reset();
     save();
