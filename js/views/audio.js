@@ -1,8 +1,7 @@
-// «الصوتيات»: al-Fatiha by the ten readings, and the poems (al-Ilbiri, al-Zaynabiyya). The recordings play in
+// «الصوتيات»: al-Fatiha in the reading of Abu Amr, and the poems (al-Ilbiri, al-Zaynabiyya). The recordings play in
 // the app's shared player (radio.js), so they go on while the user moves around the app.
 
 import { FATIHA_QIRAAT, POEMS } from '../audio-data.js';
-import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { onRadio, playTrack, radioStatus, stop, toggle } from '../radio.js';
 import { esc, pageHeader } from '../ui.js';
@@ -18,14 +17,12 @@ export function render(view) {
     const { status, station } = radioStatus();
     const on = (id) => station?.id === id;
     const live = status === 'playing' || status === 'loading';
-    const total = FATIHA_QIRAAT.reduce((n, q) => n + q.rawis.length, 0);
-    const have = tracks.size;
     view.innerHTML = `
       ${pageHeader('الصوتيات', { sub: 'تلاوات وقصائد تستمع إليها' })}
       <section class="card au-sec">
-        <div class="au-head"><span class="au-ic">${icon('quran', 22)}</span><span><b>سورة الفاتحة بالقراءات العشر</b><small>القرّاء العشرة ورواتهم</small></span></div>
+        <div class="au-head"><span class="au-ic">${icon('quran', 22)}</span><span><b>سورة الفاتحة بقراءة أبي عمرو البصري</b><small>بروايتي الدوري والسوسي</small></span></div>
         ${FATIHA_QIRAAT.map(
-          (q, i) => `<div class="au-imam"><h4><i>${num(i + 1)}</i>${esc(q.imam)}</h4>
+          (q) => `<div class="au-imam">
             ${q.rawis
               .map((r) => {
                 const id = `fatiha-${r.id}`;
@@ -38,7 +35,7 @@ export function render(view) {
               })
               .join('')}</div>`
         ).join('')}
-        <p class="hint">التسجيلات من موقع mp3quran.net، وتحتاج اتصالاً بالإنترنت. متوفر منها ${num(have)} من ${num(total)} رواية.</p>
+        <p class="hint">التسجيلات من موقع mp3quran.net، وتحتاج اتصالاً بالإنترنت.</p>
       </section>
       ${POEMS.map((p) => {
         const id = `poem-${p.id}`;
