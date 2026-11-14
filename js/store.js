@@ -199,6 +199,17 @@ if (!state.migrated.flat31) {
   }
 }
 
+// Release 45: the bead ring takes the chosen background; it was always light before.
+if (!state.migrated.beadsBg) {
+  if (state.tasbeeh.style === 'beads' && (state.tasbeeh.bg || 'blue') === 'blue') state.tasbeeh.bg = 'light';
+  state.migrated.beadsBg = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
 const listeners = new Set();
 
 export function save() {
