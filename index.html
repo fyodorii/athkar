@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>مواقيت</title>
+    <meta name="description" content="مواقيت الصلاة والأذكار، متابعة العبادات، الختمة، السنن الرواتب، الديون وحاسبة التاريخ الهجري — مع تنبيهات." />
+    <meta name="theme-color" content="#2c6fcc" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="مواقيت" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/alt/sky.png?v=3" />
+    <link rel="preload" href="fonts/tajawal-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/tajawal-arabic-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="css/app.css" />
+    <script>
+      // Set the theme before the first paint so dark mode never flashes white.
+      try {
+        var st = JSON.parse(localStorage.getItem('adhkar-app:v1') || '{}').settings || {};
+        var t = st.theme || 'auto';
+        if (t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.dataset.theme = 'dark';
+          document.querySelector('meta[name=theme-color]').content = '#101b30';
+        }
+        // The chosen fonts, before the first paint (same stacks as FONTS in js/ui.js).
+        var sys = "-apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif";
+        var f = { tajawal: "'Tajawal', " + sys, cairo: "'Cairo', " + sys, plex: "'Plex', " + sys, vazirmatn: "'Vazirmatn', " + sys, amiri: "'Amiri', serif", lateef: "'Lateef', 'Amiri', serif", ruqaa: "'Aref Ruqaa', 'Amiri', serif" };
+        var r = document.documentElement.style;
+        if (f[st.fontText]) r.setProperty('--font-text', f[st.fontText]);
+        if (f[st.fontUi]) r.setProperty('--font-ui', f[st.fontUi]);
+        if (st.textWeight) r.setProperty('--text-weight', st.textWeight);
+        if (f[st.fontTsb]) r.setProperty('--font-tsb', f[st.fontTsb]);
+        if (st.tsbWeight) r.setProperty('--tsb-weight', st.tsbWeight);
+        if (st.uiWeight) r.setProperty('--ui-weight', st.uiWeight);
+        if (st.headScale) r.setProperty('--head-scale', st.headScale);
+        if (st.flat !== false) document.documentElement.setAttribute('data-flat', ''); // flat unless turned off
+        // The app colour (see ACCENTS in js/ui.js); the light status bar takes its main colour.
+        var acc = { blue: '#2c6fcc', green: '#1f8a6e', teal: '#12819a', violet: '#6b4fc8', rose: '#b8455e', gold: '#a87420', graphite: '#3d4a5c' };
+        var a = acc[st.accent] ? st.accent : 'blue';
+        document.documentElement.dataset.accent = a;
+        if (document.documentElement.dataset.theme !== 'dark') document.querySelector('meta[name=theme-color]').content = acc[a];
+        // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
+        // when the app is added to the home screen.
+        var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;
+        if (['emerald', 'night', 'violet', 'parchment', 'black', 'burgundy', 'gold'].indexOf(ic) < 0) ic = 'sky'; // the default is the blue one
+        document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png?v=3';
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <main id="view" class="view"></main>
+    <div id="mini" class="mini" hidden></div>
+    <div id="nav-backdrop"></div>
+    <nav id="tabs" aria-label="الأقسام"></nav>
+    <div id="sheet-root"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <noscript><p style="padding: 2rem; text-align: center">يحتاج التطبيق إلى تفعيل JavaScript.</p></noscript>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
