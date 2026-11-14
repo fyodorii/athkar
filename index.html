@@ -97,6 +97,21 @@
           box.querySelector('small').textContent = errors.slice(0, 3).join(' | ');
           box.querySelector('button').onclick = repair;
           document.body.appendChild(box);
+          // Which file the browser cannot load, and why: each of the app's modules is loaded on its
+          // own and the first ones that fail are listed with their error.
+          fetch('sw.js', { cache: 'reload' }).then(function (r) { return r.text(); }).then(function (t) {
+            var files = (t.match(/'js\/[^']+\.js'/g) || []).map(function (x) { return x.slice(1, -1); }).filter(function (f) { return f !== 'js/app.js'; });
+            var bad = [];
+            return files.reduce(function (p, f) {
+              return p.then(function () {
+                return import('./' + f + '?diag=' + Date.now()).catch(function (e) { bad.push(f + ': ' + ((e && (e.name + ': ' + e.message)) || e)); });
+              });
+            }, Promise.resolve()).then(function () {
+              return import('./js/app.js?diag=' + Date.now()).then(function () { bad.push('app.js: ok'); }, function (e) { bad.push('app.js: ' + ((e && (e.name + ': ' + e.message)) || e)); });
+            }).then(function () {
+              box.querySelector('small').textContent = bad.slice(0, 6).join(' | ') || errors.join(' | ');
+            });
+          }).catch(function () {});
           var check = setInterval(function () { if (started()) { box.remove(); clearInterval(check); } }, 1000);
         }, 8000);
       })();
