@@ -59,7 +59,8 @@ export function renderRadio(view) {
   };
 }
 
-export function statusText(status) {
+export function statusText(status, clip = false) {
+  if (clip) return { loading: 'جارٍ التحميل…', playing: 'يُتلى الآن', paused: 'متوقف مؤقتاً', error: 'تعذر التشغيل، تأكد من الإنترنت' }[status] || '';
   return (
     {
       loading: 'جارٍ الاتصال بالبث…',

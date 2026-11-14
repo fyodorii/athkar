@@ -80,8 +80,10 @@ export function hapticSwitch() {
   }
   return 'haptic-switch';
 }
+// `force`: also on the iPhone, where a tap on the tasbeeh already ticks. The setting «الاهتزاز»
+// turns every vibration of the app off.
 export function haptic(ms = 12, force = false) {
-  if (!state.settings.haptics && !force) return;
+  if (!state.settings.haptics) return;
   if (navigator.vibrate) return void navigator.vibrate(ms);
   try {
     hapticSwitch();

@@ -1,4 +1,4 @@
-// Live Quran radio: one shared <audio> element, so playback keeps going while the user
+// Live Quran radio, and the recordings of «الصوتيات»: one shared <audio> element, so playback keeps going while the user
 // moves around the app, with lock-screen controls through the Media Session API.
 
 import { state, save } from './store.js';
@@ -36,6 +36,7 @@ function ensureAudio() {
   audio.addEventListener('waiting', () => status !== 'paused' && set('loading'));
   audio.addEventListener('pause', () => status !== 'stopped' && set('paused'));
   audio.addEventListener('error', () => status !== 'stopped' && set('error'));
+  audio.addEventListener('ended', () => current?.clip && stop()); // a recording ends; a live stream does not
   if ('mediaSession' in navigator) {
     navigator.mediaSession.setActionHandler('play', () => resume());
     navigator.mediaSession.setActionHandler('pause', () => pause());
@@ -47,18 +48,27 @@ function ensureAudio() {
 // Must start from a tap: browsers only allow sound after a user gesture.
 export function play(id) {
   const st = stationById(id);
+  state.radio.station = st.id;
+  save();
+  start(st);
+}
+
+// A recording ({ id, name, sub, url }), played to its end in the same player.
+export function playTrack(track) {
+  start({ ...track, clip: true });
+}
+
+function start(st) {
   if (!st.url) return;
   const a = ensureAudio();
   current = st;
-  state.radio.station = st.id;
-  save();
   a.src = st.url;
   set('loading');
   a.play().catch(() => set('error'));
   if ('mediaSession' in navigator && window.MediaMetadata) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: st.name,
-      artist: st.sub || 'إذاعة القرآن الكريم',
+      artist: st.sub || (st.clip ? 'الصوتيات' : 'إذاعة القرآن الكريم'),
       album: 'مواقيت',
       artwork: [{ src: new URL('icons/icon-512.png', location.href).href, sizes: '512x512', type: 'image/png' }],
     });
@@ -73,7 +83,11 @@ export function pause() {
 
 export function resume() {
   if (!audio || !current) return;
-  // A live stream resumes at the live point, not where it was paused.
+  // A recording goes on where it was paused; a live stream resumes at the live point.
+  if (current.clip) {
+    set('loading');
+    return audio.play().catch(() => set('error'));
+  }
   audio.src = current.url;
   set('loading');
   audio.play().catch(() => set('error'));

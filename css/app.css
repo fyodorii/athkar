@@ -2150,3 +2150,30 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .sahw-when.follow { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
 .sahw-when.none { background: var(--bg-2); color: var(--ink-3); }
 .q-src { color: var(--primary); display: inline-flex; align-items: center; gap: 2px; }
+
+/* ---------- Version 40: the audio section ---------- */
+.au-sec { display: grid; gap: 10px; margin-bottom: 14px; }
+.au-head { display: flex; align-items: center; gap: 12px; }
+.au-head > span:last-child { display: grid; }
+.au-head b { font-size: 17px; }
+.au-head small { color: var(--ink-3); font-size: 13px; }
+.au-ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); flex-shrink: 0; }
+.au-imam { display: grid; gap: 4px; }
+.au-imam h4 { margin: 6px 0 2px; display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--ink-2); }
+.au-imam h4 i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--bg-2); color: var(--ink-2); }
+.au-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border-radius: 14px; text-align: right; background: var(--bg-2); }
+.au-row.on { background: var(--primary-soft); }
+.au-row.off { opacity: 0.55; }
+.au-btn { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: var(--primary); color: var(--primary-ink); }
+.au-row.off .au-btn { background: var(--line); color: var(--ink-3); }
+.au-text { display: grid; min-width: 0; }
+.au-text b { font-size: 15px; }
+.au-text small { color: var(--ink-3); font-size: 12.5px; }
+.au-poem summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-weight: 600; }
+.au-poem summary::-webkit-details-marker { display: none; }
+.au-poem summary .ic { transform: rotate(-90deg); transition: transform 0.2s; }
+.au-poem[open] summary .ic { transform: rotate(90deg); }
+.poem { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 10px; counter-reset: bayt; }
+.poem li { counter-increment: bayt; display: grid; gap: 2px; padding-right: 30px; position: relative; font-family: var(--font-text); font-size: 18px; line-height: 1.8; }
+.poem li::before { content: counter(bayt, arabic-indic); position: absolute; right: 0; top: 4px; font-size: 12px; color: var(--ink-3); }
+.poem li span:last-child { padding-right: 24px; }
