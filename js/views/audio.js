@@ -11,7 +11,7 @@ import { statusText } from './radio.js';
 const tracks = new Map(
   FATIHA_QIRAAT.flatMap((q) => q.rawis.filter((r) => r.url).map((r) => [`fatiha-${r.id}`, { id: `fatiha-${r.id}`, name: `الفاتحة برواية ${r.name}`, sub: r.reciter, url: r.url }]))
 );
-for (const p of POEMS) if (p.audio) tracks.set(`poem-${p.id}`, { id: `poem-${p.id}`, name: p.title, sub: p.audio.reader, url: p.audio.url });
+for (const p of POEMS) if (p.audio) tracks.set(`poem-${p.id}`, { id: `poem-${p.id}`, name: p.title, sub: p.audio.reader || 'إنشاد', url: p.audio.url });
 
 export function render(view) {
   const draw = () => {
@@ -47,7 +47,7 @@ export function render(view) {
         <div class="au-head"><span class="au-ic">${icon('book', 22)}</span><span><b>${esc(p.title)}</b><small>${esc(p.sub)}</small></span></div>
         ${p.audio ? `<button class="au-row ${on(id) ? 'on' : ''}" data-track="${id}">
           <span class="au-btn">${icon(playing ? 'pause' : 'play', 18)}</span>
-          <span class="au-text"><b>استمع إلى القصيدة</b><small>بصوت ${esc(p.audio.reader)} — من ${esc(p.audio.from)}${on(id) ? ` • ${statusText(status, true)}` : ''}</small></span>
+          <span class="au-text"><b>استمع إلى القصيدة</b><small>${p.audio.reader ? `بصوت ${esc(p.audio.reader)} — ` : 'إنشاد — '}من ${esc(p.audio.from)}${on(id) ? ` • ${statusText(status, true)}` : ''}</small></span>
         </button>` : ''}
         <details class="au-poem"><summary>${icon('chevron', 14)} نص القصيدة</summary>
           <ol class="poem">${p.lines.map(([a, b]) => `<li><span>${esc(a)}</span><span>${esc(b)}</span></li>`).join('')}</ol>
