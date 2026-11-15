@@ -34,7 +34,7 @@ export const DEFAULTS = {
     iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
     notify: {
       on: false,
-      push: false, // also while the app is closed (js/webpush.js)
+      push: false, // also while the app is closed (js/away.js)
       prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
       before: 0, // also remind this many minutes before the adhan (0 = no)
       iqama: false,
