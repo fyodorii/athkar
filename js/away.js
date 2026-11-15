@@ -60,7 +60,8 @@ export async function syncPush(force = false) {
     const events = upcoming();
     const sig = JSON.stringify([sub.endpoint, events.map((e) => [e.id, e.at, e.title, e.body])]);
     if (!force && sig === last && Date.now() - lastAt < 6 * 3600000) return;
-    const res = await fetch(`${PUSH_URL}/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), events }) });
+    // keepalive: the request still goes out when the app is being closed.
+    const res = await fetch(`${PUSH_URL}/sync`, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), events }) });
     if (res.ok) {
       last = sig;
       lastAt = Date.now();
@@ -77,8 +78,18 @@ export async function enablePush() {
   const sub = await subscription(true);
   if (!sub) throw new Error('unsupported');
   state.settings.notify.push = true;
+  state.settings.notify.on = true; // the reminders it sends are the ones switched on here
   save();
   await syncPush(true);
+}
+
+// A test reminder from the server about a minute from now: close the app and it should arrive.
+export async function testPush() {
+  const sub = await subscription(false);
+  if (!sub) throw new Error('unsupported');
+  await syncPush(true);
+  const res = await fetch(`${PUSH_URL}/test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+  if (!res.ok) throw new Error('server');
 }
 
 export async function disablePush() {
