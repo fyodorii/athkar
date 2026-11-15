@@ -146,6 +146,8 @@ export const dayKey = ({ y, m, d }) => `${y}-${String(m).padStart(2, '0')}-${Str
 
 // Full day of times for the app: every entry has `hours` (for display in the
 // location's time) and `at` (an exact moment, for countdowns and reminders).
+const ROUND_UP = new Set(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']);
+
 export function dayTimes(day, settings, isRamadan = false) {
   const { location, method, asr, offsets = {} } = settings;
   const m = METHODS[method] || METHODS.umm_al_qura;
@@ -161,8 +163,10 @@ export function dayTimes(day, settings, isRamadan = false) {
   const base = Date.UTC(day.y, day.m - 1, day.d);
   const out = {};
   for (const k of Object.keys(raw)) {
-    // Round to the nearest minute, after any manual correction.
-    const minutes = Math.round(raw[k] * 60 + (offsets[k] || 0));
+    // To the minute, after any manual correction, as the Umm al-Qura tables do: a prayer's time is
+    // never shown before it has come (rounded up), sunrise never after it (rounded down).
+    const exact = raw[k] * 60 + (offsets[k] || 0);
+    const minutes = ROUND_UP.has(k) ? Math.ceil(exact - 1e-6) : k === 'sunrise' ? Math.floor(exact + 1e-6) : Math.round(exact);
     out[k] = { key: k, name: PRAYER_NAMES[k], hours: minutes / 60, at: base + (minutes - tz * 60) * 60000 };
   }
   // Duha begins once the sun has risen about a spear's length, 20 minutes after sunrise, and
