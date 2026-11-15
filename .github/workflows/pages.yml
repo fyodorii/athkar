@@ -24,7 +24,7 @@ jobs:
       - name: Copy the app (without the server scripts and repository tooling)
         run: |
           mkdir dist
-          cp -r index.html manifest.webmanifest sw.js css fonts icons js dist/
+          cp -r index.html privacy.html manifest.webmanifest sw.js css fonts icons js dist/
 
       - name: Publish to the gh-pages branch
         working-directory: dist
