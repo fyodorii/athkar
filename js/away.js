@@ -3,7 +3,7 @@
 // On the iPhone this works for the app added to the home screen (iOS 16.4 and later).
 
 import { PUSH_URL, VAPID_PUBLIC } from './config.js';
-import { askPermission, reminders } from './notify.js';
+import { askPermission, primeReminders, reminders } from './notify.js';
 import { isIOS, isStandalone, registerServiceWorker } from './push.js';
 import { save, state } from './store.js';
 
@@ -78,7 +78,10 @@ export async function enablePush() {
   const sub = await subscription(true);
   if (!sub) throw new Error('unsupported');
   state.settings.notify.push = true;
-  state.settings.notify.on = true; // the reminders it sends are the ones switched on here
+  if (!state.settings.notify.on) {
+    state.settings.notify.on = true; // the reminders it sends are the ones switched on here
+    primeReminders(); // without replaying the ones already past today
+  }
   save();
   await syncPush(true);
 }
