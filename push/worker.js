@@ -29,6 +29,7 @@ async function schema(db) {
     db.prepare('CREATE TABLE IF NOT EXISTS events (sub TEXT NOT NULL, eid TEXT NOT NULL, at INTEGER NOT NULL, payload TEXT NOT NULL, PRIMARY KEY (sub, eid))'),
     db.prepare('CREATE INDEX IF NOT EXISTS events_at ON events (at)'),
     db.prepare('CREATE TABLE IF NOT EXISTS google (id TEXT PRIMARY KEY, refresh TEXT NOT NULL, updated INTEGER NOT NULL)'),
+    db.prepare('CREATE TABLE IF NOT EXISTS sent (sub TEXT NOT NULL, eid TEXT NOT NULL, at INTEGER NOT NULL, status INTEGER NOT NULL, reason TEXT)'),
   ]);
   ready = true;
 }
@@ -95,7 +96,8 @@ async function send(sub, payload, env) {
     },
     body: await encrypt(payload, sub.p256dh, sub.auth),
   });
-  return res.status;
+  if (res.ok) return { status: res.status, reason: '' };
+  return { status: res.status, reason: (await res.text().catch(() => '')).slice(0, 200) };
 }
 
 // ---- HTTP: the app sends its reminders ----
@@ -127,10 +129,24 @@ async function sync(req, env) {
   await schema(db);
   await db.batch([
     db.prepare('INSERT INTO subs (id, endpoint, p256dh, auth, updated) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET p256dh = ?3, auth = ?4, updated = ?5').bind(id, s.endpoint, s.keys.p256dh, s.keys.auth, now),
-    db.prepare('DELETE FROM events WHERE sub = ?1').bind(id),
+    db.prepare("DELETE FROM events WHERE sub = ?1 AND eid != 'test'").bind(id), // a test still on its way stays
     ...events.map((e) => db.prepare('INSERT OR REPLACE INTO events (sub, eid, at, payload) VALUES (?1, ?2, ?3, ?4)').bind(id, e.eid, e.at, e.payload)),
   ]);
   return reply(req, 200, { ok: true, events: events.length });
+}
+
+// A test reminder about a minute from now, for a phone the server already knows.
+async function test(req, env) {
+  const body = await req.json().catch(() => null);
+  if (!body?.endpoint) return reply(req, 400, { error: 'endpoint' });
+  const id = await sha256hex(body.endpoint);
+  await schema(env.DB);
+  const known = await env.DB.prepare('SELECT 1 FROM subs WHERE id = ?1').bind(id).first();
+  if (!known) return reply(req, 404, { error: 'subscription' });
+  const now = Date.now();
+  const payload = JSON.stringify({ title: 'مواقيت', body: 'تنبيه تجريبي: التنبيهات تصلك والتطبيق مغلق', url: '#/settings/notify', tag: 'test' });
+  await env.DB.prepare('INSERT OR REPLACE INTO events (sub, eid, at, payload) VALUES (?1, ?2, ?3, ?4)').bind(id, 'test', now + 45000, payload).run();
+  return reply(req, 200, { ok: true });
 }
 
 async function unsubscribe(req, env) {
@@ -215,13 +231,15 @@ async function sendDue(env) {
     .bind(now, now - LATE)
     .all();
   const gone = new Set();
+  const log = [];
   await Promise.all(
     results.map(async (r) => {
       try {
-        const status = await send(r, r.payload, env);
+        const { status, reason } = await send(r, r.payload, env);
+        log.push([r.sub, r.eid, status, reason]);
         if (status === 404 || status === 410) gone.add(r.sub); // the subscription has ended
       } catch (e) {
-        // A network error: this reminder is lost, the next ones are still tried.
+        log.push([r.sub, r.eid, 0, String(e).slice(0, 200)]); // a network error: this reminder is lost
       }
     })
   );
@@ -229,6 +247,9 @@ async function sendDue(env) {
     db.prepare('DELETE FROM events WHERE at <= ?1').bind(now),
     ...[...gone].flatMap((id) => [db.prepare('DELETE FROM events WHERE sub = ?1').bind(id), db.prepare('DELETE FROM subs WHERE id = ?1').bind(id)]),
     db.prepare('DELETE FROM subs WHERE updated < ?1').bind(now - 30 * 86400000), // not opened for a month
+    // What the push services answered, kept for two days to see why a reminder did not arrive.
+    ...log.map(([sub, eid, status, reason]) => db.prepare('INSERT INTO sent (sub, eid, at, status, reason) VALUES (?1, ?2, ?3, ?4, ?5)').bind(sub, eid, now, status, reason)),
+    db.prepare('DELETE FROM sent WHERE at < ?1').bind(now - 2 * 86400000),
   ]);
 }
 
@@ -238,6 +259,7 @@ export default {
     const path = new URL(req.url).pathname;
     try {
       if (req.method === 'POST' && path === '/sync') return await sync(req, env);
+      if (req.method === 'POST' && path === '/test') return await test(req, env);
       if (req.method === 'POST' && path === '/unsubscribe') return await unsubscribe(req, env);
       if (req.method === 'POST' && path === '/google/exchange') return await googleExchange(req, env);
       if (req.method === 'POST' && path === '/google/refresh') return await googleRefresh(req, env);

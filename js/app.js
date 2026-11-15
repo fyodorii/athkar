@@ -271,13 +271,18 @@ window.addEventListener('hashchange', route);
 // Reminders while the app is closed (away.js) are loaded on their own: if a content blocker or a
 // failed download keeps that file away, the rest of the app still opens.
 const syncPush = () => import('./away.js').then((m) => m.syncPush()).catch(() => {});
+let pushPending = false;
 
 let pushTimer;
 onChange(() => {
   applyTheme();
   // The reminders may have changed (times, switches, a khatma): send them again, a moment later.
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(syncPush, 8000);
+  pushPending = true;
+  pushTimer = setTimeout(() => {
+    pushPending = false;
+    syncPush();
+  }, 1500);
 });
 
 setInterval(() => {
@@ -291,8 +296,17 @@ setInterval(() => {
   if (current?.tick?.() === 'rerender') route();
 }, 1000);
 
+// Leaving the app: send a change not yet sent now, before the system stops the app.
+const flushPush = () => {
+  if (!pushPending) return;
+  clearTimeout(pushTimer);
+  pushPending = false;
+  syncPush();
+};
+window.addEventListener('pagehide', flushPush);
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible') return;
+  if (document.visibilityState !== 'visible') return flushPush();
   if (current?.tick) route();
   checkForUpdate();
   checkTimers();
