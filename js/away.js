@@ -3,7 +3,7 @@
 // On the iPhone this works for the app added to the home screen (iOS 16.4 and later).
 
 import { PUSH_URL, VAPID_PUBLIC } from './config.js';
-import { askPermission, reminders } from './notify.js';
+import { askPermission, primeReminders, reminders } from './notify.js';
 import { isIOS, isStandalone, registerServiceWorker } from './push.js';
 import { save, state } from './store.js';
 
@@ -55,7 +55,9 @@ let lastAt = 0;
 export async function syncPush(force = false) {
   if (!state.settings.notify.push || !pushConfigured()) return;
   try {
-    const sub = await subscription(false);
+    // The phone may have dropped the subscription (a reinstall, cleared site data): take it again,
+    // which needs no tap once notifications are allowed.
+    const sub = await subscription(window.Notification?.permission === 'granted');
     if (!sub) return;
     const events = upcoming();
     const sig = JSON.stringify([sub.endpoint, events.map((e) => [e.id, e.at, e.title, e.body])]);
@@ -78,7 +80,10 @@ export async function enablePush() {
   const sub = await subscription(true);
   if (!sub) throw new Error('unsupported');
   state.settings.notify.push = true;
-  state.settings.notify.on = true; // the reminders it sends are the ones switched on here
+  if (!state.settings.notify.on) {
+    state.settings.notify.on = true; // the reminders it sends are the ones switched on here
+    primeReminders(); // without replaying the ones already past today
+  }
   save();
   await syncPush(true);
 }
