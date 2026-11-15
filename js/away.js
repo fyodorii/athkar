@@ -55,7 +55,9 @@ let lastAt = 0;
 export async function syncPush(force = false) {
   if (!state.settings.notify.push || !pushConfigured()) return;
   try {
-    const sub = await subscription(false);
+    // The phone may have dropped the subscription (a reinstall, cleared site data): take it again,
+    // which needs no tap once notifications are allowed.
+    const sub = await subscription(window.Notification?.permission === 'granted');
     if (!sub) return;
     const events = upcoming();
     const sig = JSON.stringify([sub.endpoint, events.map((e) => [e.id, e.at, e.title, e.body])]);
