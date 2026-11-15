@@ -1,11 +1,12 @@
-// Deploys the push Worker to a Cloudflare account through the Cloudflare API:
+// Deploys the reminders Worker to a Cloudflare account through the Cloudflare API:
 //   node push/deploy.mjs <path to the VAPID private key JWK file>
 // Needs CF_API_TOKEN (Workers Scripts: Edit, D1: Edit, Account Settings: Read). Creates the D1
 // database if missing, uploads push/worker.js with its bindings, runs it every minute, turns on
 // its workers.dev address and prints it. The VAPID public key is taken from the private JWK.
 import { readFileSync } from 'node:fs';
 
-const NAME = 'mawaqit-push';
+const NAME = process.env.WORKER_NAME || 'mawaqit-reminders';
+const DB_NAME = 'mawaqit-push'; // the database keeps its first name
 const API = 'https://api.cloudflare.com/client/v4';
 const token = process.env.CF_API_TOKEN;
 if (!token) throw new Error('CF_API_TOKEN is missing');
@@ -24,8 +25,8 @@ const account = accounts[0];
 console.log('account:', account.name);
 const A = `/accounts/${account.id}`;
 
-const dbs = await cf(`${A}/d1/database?name=${NAME}`);
-const db = dbs.find((d) => d.name === NAME) || (await cf(`${A}/d1/database`, { method: 'POST', body: JSON.stringify({ name: NAME }) }));
+const dbs = await cf(`${A}/d1/database?name=${DB_NAME}`);
+const db = dbs.find((d) => d.name === DB_NAME) || (await cf(`${A}/d1/database`, { method: 'POST', body: JSON.stringify({ name: DB_NAME }) }));
 console.log('database:', db.uuid);
 
 const form = new FormData();
