@@ -18,6 +18,7 @@
 
 const ORIGINS = ['https://fyodorii.github.io', 'http://localhost:8765'];
 const MAX_EVENTS = 400; // per subscription: about a week of reminders
+const EARLY = 20000; // sent this much before its time, to reach the phone at its minute
 const LATE = 10 * 60000; // a reminder is still sent this long after its time (a missed cron run)
 const SUBJECT = 'https://fyodorii.github.io/athkar/';
 
@@ -228,7 +229,7 @@ async function sendDue(env) {
   const now = Date.now();
   const { results } = await db
     .prepare('SELECT e.sub, e.eid, e.payload, s.endpoint, s.p256dh, s.auth FROM events e JOIN subs s ON s.id = e.sub WHERE e.at <= ?1 AND e.at > ?2 ORDER BY e.at LIMIT 500')
-    .bind(now, now - LATE)
+    .bind(now + EARLY, now - LATE)
     .all();
   const gone = new Set();
   const log = [];
@@ -244,7 +245,7 @@ async function sendDue(env) {
     })
   );
   await db.batch([
-    db.prepare('DELETE FROM events WHERE at <= ?1').bind(now),
+    db.prepare('DELETE FROM events WHERE at <= ?1').bind(now + EARLY),
     ...[...gone].flatMap((id) => [db.prepare('DELETE FROM events WHERE sub = ?1').bind(id), db.prepare('DELETE FROM subs WHERE id = ?1').bind(id)]),
     db.prepare('DELETE FROM subs WHERE updated < ?1').bind(now - 30 * 86400000), // not opened for a month
     // What the push services answered, kept for two days to see why a reminder did not arrive.
