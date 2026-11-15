@@ -1,7 +1,7 @@
 // «حساب Google»: sign in, and keep a copy of the app's data in the user's Google Drive.
 
 import { icon } from '../icons.js';
-import { finishSignIn, googleAccount, googleReady, restoreFromDrive, saveToDrive, setAuto, signIn, signOut } from '../google.js';
+import { ensureToken, finishSignIn, googleAccount, googleReady, lastingReady, restoreFromDrive, saveToDrive, setAuto, signIn, signOut } from '../google.js';
 import { confirmSheet, esc, pageHeader, toast, toggle } from '../ui.js';
 
 const when = (ms) => {
@@ -11,9 +11,14 @@ const when = (ms) => {
 
 export function render(view) {
   let busy = '';
+  let lasting = null; // the server can keep the sign-in
+  lastingReady().then((r) => {
+    lasting = r;
+    draw();
+  });
   const draw = () => {
     const a = googleAccount();
-    const live = a.token && a.expires > Date.now() + 60000;
+    const live = (a.token && a.expires > Date.now() + 60000) || !!a.gkey;
     view.innerHTML = `
       ${pageHeader('حساب Google', { back: '#/settings' })}
       ${
@@ -34,8 +39,9 @@ export function render(view) {
                </section>
                <div class="group">
                  <div class="row"><span class="row-icon">${icon('upload', 20)}</span><span class="row-label">آخر حفظ في Drive<small>${a.savedAt ? when(a.savedAt) : 'لم يُحفظ بعد'}</small></span></div>
-                 <div class="row"><span class="row-icon">${icon('reset', 20)}</span><span class="row-label">حفظ تلقائي<small>بعد كل تغيير، ما دام الدخول سارياً (ساعة تقريباً)</small></span>${toggle('auto', a.auto !== false)}</div>
+                 <div class="row"><span class="row-icon">${icon('reset', 20)}</span><span class="row-label">حفظ تلقائي<small>${a.gkey ? 'بعد كل تغيير، دائماً' : 'بعد كل تغيير، ما دام الدخول سارياً (ساعة تقريباً)'}</small></span>${toggle('auto', a.auto !== false)}</div>
                  ${live ? '' : `<p class="hint">انتهت جلسة الدخول؛ الحفظ يطلب الدخول مرة أخرى.</p>`}
+                 ${!a.gkey && lasting ? `<button class="btn ghost wide" data-lasting>${icon('reset', 20)} اجعل الحفظ التلقائي دائماً</button><p class="hint">تدخل مرة واحدة بعدها، ويبقى الحفظ في Drive يعمل وحده دون أن يطلب الدخول كل ساعة.</p>` : ''}
                  <button class="btn primary wide" data-save ${busy ? 'disabled' : ''}>${icon('upload', 20)} ${busy === 'save' ? 'جارٍ الحفظ…' : 'احفظ الآن'}</button>
                  <button class="btn ghost wide" data-restore ${busy ? 'disabled' : ''}>${icon('download', 20)} ${busy === 'restore' ? 'جارٍ الاستعادة…' : 'استعد من حسابك'}</button>
                </div>
@@ -46,8 +52,7 @@ export function render(view) {
   // A step that needs Google: when the sign-in has run out, it goes to Google first and the
   // user taps again on return.
   const run = async (kind, fn, done) => {
-    const a = googleAccount();
-    if (!(a.token && a.expires > Date.now() + 60000)) return signIn('#/settings/account', true);
+    if (!(await ensureToken())) return signIn('#/settings/account', true);
     busy = kind;
     draw();
     try {
@@ -80,7 +85,7 @@ export function render(view) {
   }
 
   view.onclick = async (e) => {
-    if (e.target.closest('[data-in]')) return signIn('#/settings/account');
+    if (e.target.closest('[data-in]') || e.target.closest('[data-lasting]')) return signIn('#/settings/account');
     if (e.target.closest('[data-save]')) return run('save', saveToDrive, 'حُفظت بياناتك في حسابك');
     if (e.target.closest('[data-restore]')) {
       if (!(await confirmSheet('تستبدل بيانات هذا الجهاز بالنسخة المحفوظة في حسابك؟', { ok: 'استعد', danger: false }))) return;
