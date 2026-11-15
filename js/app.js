@@ -264,7 +264,7 @@ applyTheme();
 renderTabs();
 // Back from Google's sign-in: the token in the address is taken, and the app opens where it was.
 const signedIn = takeRedirect();
-if (signedIn) history.replaceState(null, '', location.pathname + location.search + signedIn.back);
+if (signedIn) history.replaceState(null, '', location.pathname + signedIn.back); // without Google's ?code=… or #access_token=…
 route();
 if (signedIn?.error) toast(signedIn.error);
 window.addEventListener('hashchange', route);

@@ -73,3 +73,15 @@
   Cloudflare فقط، وليس في المستودع.
 - النشر: `CF_API_TOKEN=… NODE_USE_ENV_PROXY=1 node push/deploy.mjs <ملف المفتاح الخاص JWK>`. إن
   أُنشئ مفتاح جديد فضع مفتاحه العام في `VAPID_PUBLIC`؛ يجدّد التطبيق اشتراك كل جهاز تلقائياً.
+
+
+### الحفظ التلقائي الدائم في Google Drive
+
+دخول Google للتطبيقات في المتصفح يعطي إذناً لساعة واحدة. ليبقى الحفظ في Drive تلقائياً دائماً، يحفظ
+خادم التطبيق (`push/worker.js`) «رمز التجديد» الذي يعطيه Google مع أول دخول، ويعطي التطبيق إذناً جديداً
+كلما احتاجه (`/google/exchange` و`/google/refresh` و`/google/forget`). يحتفظ الجهاز بمفتاح عشوائي فقط.
+
+يحتاج الخادم «سرّ العميل» من Google Cloud: يضعه صاحب التطبيق بنفسه في لوحة Cloudflare
+(Workers & Pages ← mawaqit-reminders ← Settings ← Variables and Secrets ← سرّ باسم
+`GOOGLE_CLIENT_SECRET`). بدونه يعمل الدخول كما كان (ساعة ثم يُطلب الدخول). ولئلا تنتهي الصلاحية كل سبعة
+أيام، تكون حالة شاشة الموافقة في Google Cloud «In production» لا «Testing».

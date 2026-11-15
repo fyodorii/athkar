@@ -6,6 +6,7 @@
 import { readFileSync } from 'node:fs';
 
 const NAME = process.env.WORKER_NAME || 'mawaqit-reminders';
+const GOOGLE_CLIENT_ID = (readFileSync(new URL('../js/config.js', import.meta.url), 'utf8').match(/GOOGLE_CLIENT_ID = '([^']+)'/) || [])[1] || '';
 const DB_NAME = 'mawaqit-push'; // the database keeps its first name
 const API = 'https://api.cloudflare.com/client/v4';
 const token = process.env.CF_API_TOKEN;
@@ -37,7 +38,10 @@ form.append('metadata', JSON.stringify({
     { type: 'd1', name: 'DB', id: db.uuid },
     { type: 'plain_text', name: 'VAPID_PUBLIC', text: pub },
     { type: 'secret_text', name: 'VAPID_PRIVATE_JWK', text: JSON.stringify(jwk) },
+    { type: 'plain_text', name: 'GOOGLE_CLIENT_ID', text: GOOGLE_CLIENT_ID },
   ],
+  // The owner's own secrets (GOOGLE_CLIENT_SECRET, set in the Cloudflare dashboard) stay as they are.
+  keep_bindings: ['secret_text'],
 }));
 form.append('worker.js', new Blob([readFileSync(new URL('./worker.js', import.meta.url))], { type: 'application/javascript+module' }), 'worker.js');
 await cf(`${A}/workers/scripts/${NAME}`, { method: 'PUT', body: form });
