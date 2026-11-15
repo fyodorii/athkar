@@ -1,8 +1,10 @@
 // Service worker: keeps the app on the device so it opens instantly and offline, and opens
 // the app at the right screen when a reminder is tapped.
 
-const VERSION = 'v48'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v49'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
+// Files the app opens without (it loads them on their own and copes when they are missing).
+const OPTIONAL = ['js/away.js'];
 const FILES = [
   './',
   'index.html',
@@ -17,7 +19,7 @@ const FILES = [
   'js/qailulah-data.js',
   'js/nahy-data.js',
   'js/sahw-data.js',
-  'js/webpush.js',
+  'js/away.js',
   'js/audio-data.js',
   'js/views/audio.js',
   'js/quran-data.js',
@@ -105,9 +107,14 @@ self.addEventListener('install', (event) => {
       const cache = await caches.open(CACHE);
       await Promise.all(
         FILES.map(async (f) => {
-          const res = await fetch(new Request(`${f}${f.includes('?') ? '&' : '?'}v=${VERSION}`, { cache: 'reload' }));
-          if (!res.ok) throw new Error(`${f}: ${res.status}`);
-          await cache.put(f, res);
+          try {
+            const res = await fetch(new Request(`${f}${f.includes('?') ? '&' : '?'}v=${VERSION}`, { cache: 'reload' }));
+            if (!res.ok) throw new Error(`${f}: ${res.status}`);
+            await cache.put(f, res);
+          } catch (e) {
+            // A file the app can live without (a content blocker may keep it away) does not stop the release.
+            if (!OPTIONAL.includes(f)) throw e;
+          }
         })
       );
       await self.skipWaiting();
@@ -149,7 +156,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// A reminder sent by the push server while the app is closed (js/webpush.js, push/worker.js).
+// A reminder sent by the push server while the app is closed (js/away.js, push/worker.js).
 self.addEventListener('push', (event) => {
   let d = {};
   try {

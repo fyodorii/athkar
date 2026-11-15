@@ -9,7 +9,6 @@ import { METHODS, PRAYER_NAMES } from '../prayer.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
-import { disablePush, enablePush, pushBlocker } from '../webpush.js';
 import { PRAYERS } from '../today.js';
 import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
 
@@ -490,7 +489,12 @@ export function renderFonts(view) {
 
 // ---- Reminders and the iqama ----
 
+// Loaded when the notifications page opens, so a blocked file does not stop the settings.
+let away = null;
+const loadAway = () => import('../away.js').then((m) => (away = m)).catch(() => null);
+
 export function renderNotify(view) {
+  if (!away) loadAway().then((m) => m && location.hash === '#/settings/notify' && renderNotify(view));
   const s = state.settings;
   const n = s.notify;
   const sw = (name, label, on, sub = '', ic = 'bell') =>
@@ -516,7 +520,7 @@ export function renderNotify(view) {
       </div>
       <div class="group">
         ${(() => {
-          const why = pushBlocker();
+          const why = away ? away.pushBlocker() : 'unsupported';
           const sub = why === 'setup' ? 'قيد الإعداد: يعمل بعد تشغيل خادم التنبيهات' : why === 'install' ? 'أضف التطبيق إلى الشاشة الرئيسية من Safari أولاً' : why === 'unsupported' ? 'هذا المتصفح لا يدعم إشعارات الدفع' : n.push ? 'مفعّل: تصلك التنبيهات والتطبيق مغلق' : 'تصلك التنبيهات المفعّلة هنا والتطبيق مغلق';
           return `<div class="row ${why ? 'off' : ''}"><span class="row-icon">${icon('bell', 20)}</span><span class="row-label">والتطبيق مغلق<small>${sub}</small></span>${toggle('push', !!n.push && !why, why ? 'disabled' : '')}</div>`;
         })()}
@@ -555,12 +559,12 @@ export function renderNotify(view) {
     if (t.name === 'push') {
       if (t.checked) {
         try {
-          await enablePush();
+          await away.enablePush();
           toast(`${icon('check', 18)} ستصلك التنبيهات والتطبيق مغلق`);
         } catch (err) {
           toast(err.message === 'permission' ? 'اسمح بالإشعارات لهذا التطبيق من إعدادات الجهاز' : 'تعذر تفعيل التنبيهات والتطبيق مغلق');
         }
-      } else await disablePush();
+      } else await away.disablePush();
       return draw();
     }
     if (t.name === 'on') {
