@@ -73,7 +73,7 @@ export function render(view) {
       <button class="hx-btn" data-nav aria-label="القائمة">${icon('rows', 22)}</button>
       <b class="hx-brand">${APP_NAME}</b>
       <span class="hx-top-end">
-        <button class="hx-btn" data-search aria-label="بحث">${icon('search', 21)}</button>
+        <a class="hx-btn" href="#/search" aria-label="بحث">${icon('search', 21)}</a>
         <a class="hx-btn" href="#/settings" aria-label="الإعدادات">${icon('gear', 21)}</a>
       </span>
     </div>
@@ -143,7 +143,6 @@ export function render(view) {
   };
 
   function onClick(e) {
-    if (e.target.closest('[data-search]')) return import('./search.js').then((m) => m.openSearch());
     const nav = e.target.closest('[data-pday]');
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);

@@ -11,6 +11,7 @@ import * as adhkar from './views/adhkar.js';
 import * as notebook from './views/notebook.js';
 import * as calendar from './views/calendar.js';
 import * as counter from './views/counter.js';
+import * as search from './views/search.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as radioView from './views/radio.js';
@@ -55,6 +56,7 @@ const ROUTES = [
   [/^#\/audio$/, 'audio', (v) => audioView.render(v)],
   [/^#\/calendar$/, 'calendar', (v) => calendar.render(v)],
   [/^#\/counter$/, 'counter', (v) => counter.render(v)],
+  [/^#\/search$/, 'search', (v) => search.render(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
