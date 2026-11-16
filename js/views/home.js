@@ -12,7 +12,6 @@ import { PRAYERS, today } from '../today.js';
 import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, ring, shareText } from '../ui.js';
 import { dayScore } from './worship.js';
-import { daysText, nextOccasion, rangeText } from './occasions.js';
 
 // Shortcuts, as a grid of eight.
 const QUICK = [
@@ -92,7 +91,6 @@ export function render(view) {
     </nav>
     <div class="h-stack">
       ${khatmaCard()}
-      ${occasionCard()}
     </div>
     ${momentsCard(info)}
   </div>
@@ -319,14 +317,4 @@ function moonPhase(hday) {
   const term = waxing ? (k > 0 ? 0 : 1) : k > 0 ? 1 : 0;
   const d = `M24 ${24 - r} A${r} ${r} 0 0 ${limb} 24 ${24 + r} A${rx.toFixed(2)} ${r} 0 0 ${term} 24 ${24 - r}Z`;
   return `<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><circle cx="24" cy="24" r="${r}" class="moon-dark"/><path d="${d}" class="moon-lit"/></svg>`;
-}
-
-// The next Islamic occasion and how long until it.
-function occasionCard() {
-  const o = nextOccasion(400);
-  if (!o) return '';
-  return `<a class="card occ-mini" href="#/occasions">
-    <span class="km-icon">${icon(o.icon, 24)}</span>
-    <span class="km-text"><small>${o.left <= 0 ? 'المناسبة الحالية' : 'المناسبة القادمة'}</small><b>${esc(o.name)}</b><small>${rangeText(o.start, o.end)}</small></span>
-    <span class="pill">${o.left < 0 ? 'الآن' : daysText(o.left)}</span></a>`;
 }
