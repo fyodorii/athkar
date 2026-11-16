@@ -13,7 +13,6 @@ import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as radioView from './views/radio.js';
 import * as audioView from './views/audio.js';
-import * as occasions from './views/occasions.js';
 import * as tools from './views/tools.js';
 import * as khatma from './views/khatma.js';
 import * as debts from './views/debts.js';
@@ -37,7 +36,6 @@ const TABS = [
   ['worship', 'متابعة', 'check', '#/worship'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['audio', 'الصوتيات', 'play', '#/audio'],
-  ['occasions', 'المناسبات', 'calendar', '#/occasions'],
   '',
   ['khatma', 'الختمات', 'quran', '#/khatma'],
   ['rawatib', 'السنن الرواتب', 'mosque', '#/rawatib'],
@@ -55,7 +53,6 @@ const ROUTES = [
   [/^#\/mine(?:\/([\w-]+))?$/, 'mine', (v, id) => adhkar.renderMine(v, id)],
   // A set of adhkar (morning, evening, sleep, or one of the day's occasions); an unknown one opens «أذكاري».
   [/^#\/adhkar(?:\/([\w-]+))?$/, 'mine', (v, id) => (CATEGORY_BY_ID[id] ? adhkar.renderWird(v, id) : adhkar.renderMine(v))],
-  [/^#\/occasions$/, 'occasions', (v) => occasions.renderOccasions(v)],
   [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
   [/^#\/audio$/, 'audio', (v) => audioView.render(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
