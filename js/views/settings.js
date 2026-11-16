@@ -34,6 +34,10 @@ export function render(view) {
       <p class="hint">على الآيفون يُحَسّ الاهتزاز بعد تفعيل «اللمس الاهتزازي للنظام» في إعدادات الجهاز ← الأصوات واللمس.</p>
     </div>
     <div class="group">
+      <h4>السبحة</h4>
+      <button class="row" data-tasbeeh><span class="row-icon">${icon('beads', 20)}</span><span class="row-label">إعدادات السبحة<small>الشكل والخط والألوان، الهدف، تنبيه الأعداد، المجموعات</small></span>${icon('chevron', 18, 'muted')}</button>
+    </div>
+    <div class="group">
       <h4>العرض</h4>
       <div class="row"><span class="row-icon">${icon('palette', 20)}</span><span class="row-label">المظهر</span>
         <div class="seg-mini" data-theme>
@@ -106,6 +110,7 @@ export function render(view) {
       save();
             return render(view);
     }
+    if (e.target.closest('[data-tasbeeh]')) import('./adhkar.js').then((m) => m.tasbeehSettings());
     if (e.target.closest('[data-export]')) exportBackup();
     if (e.target.closest('[data-share-app]')) shareApp();
   };

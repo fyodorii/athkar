@@ -1035,6 +1035,51 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
   );
 }
 
+// The tasbeeh's settings, opened from the app's settings: the same sheets the tasbeeh opens.
+export function tasbeehSettings() {
+  const t = state.tasbeeh;
+  tasbeehList();
+  const STYLES = { classic: 'كلاسيكي', beads: 'حبّات المسبحة', ring: 'الحلقة' };
+  openSheet(
+    `<div data-body></div>`,
+    (el, close) => {
+      const body = el.querySelector('[data-body]');
+      const draw = () => {
+        body.innerHTML = `
+          <p class="sheet-sub">الهدف</p>
+          <div class="chips">${T_TARGETS.map((n) => `<button class="chip-opt ${t.target === n ? 'on' : ''}" data-t="${n}">${n ? num(n) : 'مفتوح'}</button>`).join('')}</div>
+          <div class="menu">
+            <button data-a="phrases">${icon('beads', 20)} اختيار الذكر</button>
+            <button data-a="groups">${icon('layers', 20)} المجموعات</button>
+            <button data-a="alerts">${icon('bell', 20)} تنبيه الأعداد</button>
+            <button data-a="look">${icon('palette', 20)} الشكل والألوان والخط (${STYLES[t.style] || STYLES.classic})</button>
+            <button data-a="open">${icon('chevron', 20)} فتح السبحة</button>
+          </div>`;
+      };
+      draw();
+      body.addEventListener('click', (e) => {
+        const n = e.target.closest('[data-t]');
+        if (n) {
+          t.target = Number(n.dataset.t);
+          haptic();
+          save();
+          return draw();
+        }
+        const a = e.target.closest('[data-a]')?.dataset.a;
+        if (a === 'phrases') choosePhrase(draw);
+        if (a === 'groups') tasbeehGroups();
+        if (a === 'alerts') tasbeehAlerts(draw);
+        if (a === 'look') tasbeehLook(draw);
+        if (a === 'open') {
+          close();
+          location.hash = '#/tasbeeh';
+        }
+      });
+    },
+    { title: 'إعدادات السبحة' }
+  );
+}
+
 // The counts at which the tasbeeh tells the user, by sound or vibration: add to them or remove.
 function tasbeehAlerts(redraw) {
   const t = state.tasbeeh;
