@@ -2231,3 +2231,28 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 
 /* Version 52 */
 .hint.warn { color: var(--danger); }
+
+/* Version 55: the tasbeeh's «الحلقة» look — the dhikr in naskh over black, the count in a golden ring */
+.tsb-ring { --tr-gold: #d9b665; --tr-ink: #fff; --tr-soft: rgba(255, 255, 255, 0.62); --tr-track: rgba(255, 255, 255, 0.16); }
+.tsb-ring.light { --tr-gold: #b08a2e; --tr-ink: #1c1c1e; --tr-soft: rgba(0, 0, 0, 0.55); --tr-track: rgba(0, 0, 0, 0.12); }
+.tsb-ring .tsb-tap { padding: calc(var(--safe-top) + 78px) 22px calc(var(--safe-bottom) + 22px); gap: 10px; }
+.tsb-ring .tr-phrase, .tsb-ring .tr-phrase:not(.hafs) { font-family: 'Amiri', var(--font-text); font-weight: 400; line-height: 1.9; color: var(--tsb-ink, var(--tr-ink)); text-shadow: none; }
+.tr-ring { position: relative; flex-shrink: 0; width: calc(min(58vw, 30vh, 250px) * var(--tsb-scale, 1)); aspect-ratio: 1; }
+.tr-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.tr-track, .tr-arc { fill: none; stroke-width: 7; }
+.tr-track { stroke: var(--tr-track); }
+.tr-arc { stroke: var(--tr-gold); stroke-linecap: round; transition: stroke-dashoffset 0.25s ease; }
+.tr-mid { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center; pointer-events: none; }
+.tr-mid b { font-size: calc(clamp(52px, 17vw, 80px) * var(--tsb-scale, 1)); line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--tr-ink); }
+.tr-mid small { margin-top: 8px; font-size: 14px; color: var(--tr-soft); }
+.tr-mid.done small { color: var(--tr-gold); font-weight: 600; }
+.tr-mid.pop b { animation: pop 0.18s ease; }
+.tr-foot { min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; padding-top: 12px; text-align: center; }
+.tr-foot small { font-size: 13px; color: var(--tr-soft); }
+.tr-next { display: inline-flex; align-items: center; gap: 8px; max-width: 86vw; min-height: 48px; padding: 10px 22px; border-radius: 99px; background: var(--tr-gold); color: #2a1f08; font-weight: 700; font-size: 16px; }
+.tr-next span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-title { position: absolute; top: calc(var(--safe-top) + 12px); left: 80px; right: 80px; z-index: 6; height: 46px; display: grid; place-items: center; font-size: 14px; color: var(--tr-soft); pointer-events: none; }
+.tsb-ring.light::before { display: none; }
+@media (prefers-reduced-motion: reduce) { .tr-arc { transition: none; } }
+.tsb-ring .tsb-gear { top: calc(var(--safe-top) + 12px); bottom: auto; left: 16px; opacity: 1; }
+.tsb-ring .tr-phrase { transition: none; }

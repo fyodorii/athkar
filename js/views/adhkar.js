@@ -1,7 +1,7 @@
 // My adhkar (the user's own list, with counters, which can also be
 // filled from the authentic adhkar), and the full-screen tasbeeh.
 
-import { CATEGORIES, CATEGORY_BY_ID, MY_ADHKAR } from '../adhkar-data.js';
+import { CATEGORIES, CATEGORY_BY_ID, MY_ADHKAR, vocalised } from '../adhkar-data.js';
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
@@ -525,6 +525,31 @@ export function renderTasbeeh(view, mineId) {
       <circle class="tb-track" cx="150" cy="150" r="${R}"/><circle class="tb-core" cx="150" cy="150" r="96"/>${beads}</svg>
       <div class="tb-mid"><b data-count>${num(n ? inRound : c)}</b><small>ذكراً</small></div>`;
   };
+  // «الحلقة»: the dhikr in the naskh hand over black, the count inside a golden ring that fills
+  // with the round. A dhikr of a group waits, once its number is said, for «التالي».
+  const ringOn = () => t.style === 'ring';
+  const ARC = 2 * Math.PI * 132;
+  const arcHTML = () => {
+    const { c, n, inRound } = roundOf();
+    const done = !!n && c > 0 && inRound === n;
+    return `<svg class="tr-svg" viewBox="0 0 300 300" aria-hidden="true">
+      <circle class="tr-track" cx="150" cy="150" r="132"/>
+      <circle class="tr-arc" cx="150" cy="150" r="132" transform="rotate(-90 150 150)" stroke-dasharray="${ARC.toFixed(1)}" stroke-dashoffset="${(ARC * (1 - (n ? inRound / n : 0))).toFixed(1)}"/></svg>
+      <div class="tr-mid ${done ? 'done' : ''}"><b data-count>${num(n ? inRound : c)}</b><small>${done ? (mine ? 'تمّ العدد' : 'اكتملت الدورة') : n ? `من ${num(n)}` : 'عدّ مفتوح'}</small></div>`;
+  };
+  const arcFoot = () => {
+    const { c, n, inRound, rounds } = roundOf();
+    const done = !!n && c > 0 && inRound === n;
+    if (group && done) {
+      const last = group.i + 1 >= group.items.length;
+      const next = group.items[last ? 0 : group.i + 1].text;
+      return `<button class="tr-next" data-next><span>${last ? 'تمّت المجموعة — من أولها' : `التالي: ${esc(vocalised(next).slice(0, 80))}`}</span>${icon('chevron', 18)}</button>
+        <small>أو اضغط على الشاشة لبدء دورة جديدة</small>`;
+    }
+    if (!n) return `<small>المجموع ${num(src.total())}</small>`;
+    if (mine) return `<small>${roundText()}</small>`;
+    return `<small>الدورة ${num(done ? rounds : rounds + 1)}${done ? ' • اضغط لبدء دورة جديدة' : ''}</small>`;
+  };
   const footHTML = () => {
     const { c, n, inRound, rounds } = roundOf();
     if (!n) return `<span>عدّ مفتوح • المجموع ${num(c)}</span>`;
@@ -557,6 +582,21 @@ export function renderTasbeeh(view, mineId) {
       </section>`;
       return;
     }
+    if (ringOn()) {
+      view.innerHTML = `
+      <section class="tsb tsb-ring ${bg.light ? 'light' : ''}" data-area data-top="${shades[0]}" style="${[`background:${bg.css || '#000'}`, t.ink && `--tsb-ink:${t.ink}`, `--tsb-scale:${t.counterSize}`].filter(Boolean).join(';')}">
+        <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
+          <div class="tsb-phrase tr-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(mine?.quran ? src.phrase() : vocalised(src.phrase()))}</span></div>
+          <div class="tr-ring" data-ring>${arcHTML()}</div>
+          <div class="tr-foot" data-foot>${arcFoot()}</div>
+        </label>
+        <a class="icon-btn glass tsb-back" data-ui href="${backTo}" aria-label="خروج">${icon('back', 22)}</a>
+        ${group ? `<span class="tr-title">الذكر ${num(group.i + 1)} من ${num(group.items.length)}</span>` : ''}
+        <button class="icon-btn glass tsb-gear" data-ui data-settings aria-label="إعدادات السبحة">${icon('gear', 22)}</button>
+        <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
+      </section>`;
+      return;
+    }
     view.innerHTML = `
       <section class="tsb ${bg.light ? 'light' : ''}" data-area data-top="${shades[0]}" style="${style}">
         <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
@@ -582,8 +622,16 @@ export function renderTasbeeh(view, mineId) {
     const shades = $('[data-area]', view).dataset.top;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', shades);
     document.documentElement.style.setProperty('--tsb-page', ((tsbBg(t).css || '#070f2c').match(/#[0-9a-f]{3,6}/gi) || ['#070f2c']).at(-1));
-    if (!beadsOn() && mine && !mine.fontSize) fit();
-    if (!beadsOn() && group) fit(t.fontSize || 40); // a long dhikr of the group is shown whole
+    if (ringOn()) {
+      // A long dhikr shrinks to three lines where it can, and always until it is whole.
+      const el = $('[data-phrase]', view);
+      let size = box.fontSize || 40;
+      const lines = () => el.firstElementChild.offsetHeight / parseFloat(getComputedStyle(el).lineHeight);
+      while (size > 26 && lines() > 3.6) el.style.fontSize = `${(size -= 2)}px`;
+      fit(size);
+    }
+    else if (!beadsOn() && mine && !mine.fontSize) fit();
+    if (!beadsOn() && !ringOn() && group) fit(t.fontSize || 40); // a long dhikr of the group is shown whole
     if (beadsOn()) fit(Math.min(box.fontSize || 40, 34));
   };
   paint();
@@ -591,6 +639,7 @@ export function renderTasbeeh(view, mineId) {
   const tap = (x, y) => {
     if (wird && src.count() >= src.target()) return; // said its number: nothing more to count
     if (t.alertSound && (t.alerts.length || group)) unlockAudio(); // sound needs a touch to start
+    if (ringOn() && group && src.target() && src.count() >= src.target()) src.reset(); // a new round of the same dhikr
     src.add();
     if (isIstighfar(src.phrase())) {
       const r = (state.worship[dayNow] ??= {});
@@ -606,7 +655,11 @@ export function renderTasbeeh(view, mineId) {
       if (t.alertVibrate) haptic(200, true, true);
       if (!reached) toast(`${icon('bell', 18)} بلغت ${num(c)}`);
     } else if (navigator.vibrate) haptic(reached ? 40 : 10); // on the iPhone the tap on the label has already ticked
-    if (reached && group) {
+    if (reached && group && ringOn()) {
+      // The ring stays full and offers the next dhikr; a tap on the screen repeats this one.
+      if (t.alertSound) chime([0, 0.25], false);
+      haptic(200, true, t.alertVibrate);
+    } else if (reached && group) {
       // This dhikr is done: on to the next one, or the group is complete and starts over.
       const last = group.i + 1 >= group.items.length;
       if (t.alertSound) chime(last ? [0, 0.25, 0.5] : [0, 0.25], false);
@@ -620,15 +673,25 @@ export function renderTasbeeh(view, mineId) {
       // Done: back to the wird, at this dhikr's card.
       toast(`${icon('check', 18)} أتممت ${num(n)}، تقبّل الله منك`);
       setTimeout(() => location.hash === `#/tasbeeh/${mineId}` && (location.hash = backTo), 900);
-    } else if (reached) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
-    if (beadsOn()) {
+    } else if (reached && (mine || !ringOn())) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
+    if (ringOn()) {
+      const arc = $('.tr-arc', view);
+      const { n, inRound } = roundOf();
+      // The arc moves on (and empties at once for a new round) without being redrawn.
+      arc.style.transition = inRound === 1 ? 'none' : '';
+      arc.setAttribute('stroke-dashoffset', (ARC * (1 - (n ? inRound / n : 0))).toFixed(1));
+      const fresh = document.createElement('div');
+      fresh.innerHTML = arcHTML();
+      $('.tr-mid', view).replaceWith(fresh.querySelector('.tr-mid'));
+      $('[data-foot]', view).innerHTML = arcFoot();
+    } else if (beadsOn()) {
       $('[data-ring]', view).innerHTML = ringHTML();
       $('[data-foot]', view).innerHTML = footHTML();
     } else {
       $('[data-count]', view).textContent = num(c);
       $('[data-round]', view).textContent = roundText();
     }
-    const counter = $(beadsOn() ? '.tb-mid' : '.tsb-num', view);
+    const counter = $(ringOn() ? '.tr-mid' : beadsOn() ? '.tb-mid' : '.tsb-num', view);
     counter.classList.remove('pop');
     void counter.offsetWidth;
     counter.classList.add('pop');
@@ -731,7 +794,17 @@ export function renderTasbeeh(view, mineId) {
     );
   };
 
+  // «التالي» of the ring: on to the next dhikr of the group, or back to its first.
+  const next = () => {
+    const last = group.i + 1 >= group.items.length;
+    if (last) toast(`${icon('check', 18)} أتممت «${esc(group.name)}»، تقبّل الله منك`);
+    Object.assign(group, { i: last ? 0 : group.i + 1, count: 0 });
+    haptic();
+    save();
+    paint();
+  };
   const onClick = (e) => {
+    if (e.target.closest('[data-next]')) return next();
     if (e.target.closest('[data-reset]')) return reset();
     if (e.target.closest('[data-settings]')) return settings();
     if (e.target.closest('[data-ui], a, button')) return;
@@ -902,7 +975,7 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         body.innerHTML = `
           <h4 class="sheet-sub">شكل السبحة</h4>
           <div class="seg-mini wide" data-style>
-            ${[['classic', 'كلاسيكي'], ['beads', 'حبّات المسبحة']].map(([v, l]) => `<button class="${(t.style || 'classic') === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
+            ${[['classic', 'كلاسيكي'], ['beads', 'حبّات المسبحة'], ['ring', 'الحلقة']].map(([v, l]) => `<button class="${(t.style || 'classic') === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
           </div>
           <div class="row"><span class="row-label">تأثير اللمس<small>دائرة تظهر حيث تضغط</small></span>${toggle('ripple', !!t.ripple)}</div>
           <h4 class="sheet-sub">لون الخلفية</h4>
@@ -925,6 +998,7 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         if (st) {
           t.style = st.dataset.v;
           if (t.style === 'beads' && (t.bg || 'blue') === 'blue') t.bg = 'light';
+          if (t.style === 'ring' && ['blue', 'light'].includes(t.bg || 'blue')) t.bg = 'black';
         }
         else if (b) t.bg = b.dataset.bg;
         else if (k) t.ink = k.dataset.ink;
