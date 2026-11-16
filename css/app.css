@@ -2642,3 +2642,10 @@ body[data-tab='counter'] #tabs { display: none; }
   body.nav-open #tabs { touch-action: pan-y; }
   body.nav-open, body.nav-open #view { touch-action: none; overscroll-behavior: none; }
 }
+
+/* Version 76: the side menu does not scroll (no scroll bar); it fits the screen */
+@media (max-width: 899.98px) {
+  #tabs { overflow: hidden !important; scrollbar-width: none; touch-action: none !important; }
+  #tabs::-webkit-scrollbar { display: none; }
+  @media (max-height: 700px) { #tabs a { padding-block: 8px !important; font-size: 19px !important; } #tabs .nav-head b { font-size: 38px !important; } }
+}
