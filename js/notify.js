@@ -9,6 +9,7 @@ import { minutesText, num } from './dates.js';
 import { addDays, dayKey } from './prayer.js';
 import { registerServiceWorker } from './push.js';
 import { khatmaInfo } from './khatma.js';
+import { SURAHS } from './quran-data.js';
 import { save, state } from './store.js';
 import { chime, unlockAudio } from './timers.js';
 import { hoursAt, PRAYERS, today } from './today.js';
@@ -47,6 +48,15 @@ export function reminders(now = new Date()) {
     if (!r.on || !CLOCK.test(r.time)) continue;
     const [h, m] = r.time.split(':').map(Number);
     add(`mine-${r.id}-${r.time}`, atTime(h, m), 'تذكير', r.text, '#/reminders');
+  }
+
+  // The surahs the user wants to be reminded to recite, each at its time.
+  if (state.surahRem.on) {
+    for (const r of state.surahRem.list) {
+      if (!CLOCK.test(r.time) || !SURAHS[r.surah - 1]) continue;
+      const [h, m] = r.time.split(':').map(Number);
+      add(`surah-${r.id}-${r.time}`, atTime(h, m), 'تذكير بتلاوة سورة', `حان وقت تلاوة سورة ${SURAHS[r.surah - 1][0]}`, '#/reminders');
+    }
   }
 
   // Each khatma reminds of its wird on its own days, at its own time.
@@ -107,7 +117,7 @@ async function show(r) {
 
 // Called every second, and when the app comes back: shows what is due and not yet shown.
 export function checkReminders() {
-  if (!state.settings.notify.on && !state.reminders.some((r) => r.on) && !state.khatmas.some((k) => k.remind)) return;
+  if (!state.settings.notify.on && !state.reminders.some((r) => r.on) && !state.khatmas.some((k) => k.remind) && !(state.surahRem.on && state.surahRem.list.length)) return;
   const now = Date.now();
   const log = state.notifyLog;
   const due = reminders().filter((r) => r.at <= now && now - r.at < LATE && !log[r.id]);

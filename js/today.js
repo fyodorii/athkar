@@ -55,6 +55,8 @@ export function today(now = new Date()) {
     prev,
     nextPrayer,
     lastPrayer,
+    yesterday,
+    tomorrow,
     adhan: adhanNow(lastPrayer, t),
     weekday,
     isFriday: weekday === 5,

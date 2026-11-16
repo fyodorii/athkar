@@ -9,11 +9,6 @@ import { today } from '../today.js';
 import { chime, tick, unlockAudio } from '../timers.js';
 import { $, $$, confirmSheet, esc, FONT_NAMES, FONTS, WEIGHTS, haptic, hapticSwitch, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
 
-export const MINE_TABS = [
-  ['#/mine', 'أذكاري'],
-  ['#/notebook', 'أدعيتي'],
-];
-const TABS = MINE_TABS;
 
 // ---- Morning, evening, sleep and waking: tap a card to count it down ----
 
@@ -175,7 +170,6 @@ export function renderMine(view, focusId) {
         sub: 'أذكارك الخاصة بعدّادها وتذكيرها',
         actions: `<button class="icon-btn ghost" data-pick aria-label="من الأذكار المأثورة">${icon('book', 22)}</button><button class="icon-btn primary" data-add aria-label="إضافة ذكر">${icon('plus', 22)}</button>`,
       })}
-      ${segmented(TABS, '#/mine')}
       ${wirdCards()}
       <h3 class="section-title small">${icon('heart', 16)} أذكاري الخاصة</h3>
       ${
