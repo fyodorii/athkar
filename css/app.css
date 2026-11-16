@@ -2633,3 +2633,12 @@ body[data-tab='counter'] #tabs { display: none; }
 @font-face { font-family: 'Calligraphy'; src: url('../fonts/calligraphy.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 .hx-day h1, .hx-dates b { font-family: 'Calligraphy', 'Noto Naskh', 'Amiri', serif; font-weight: 400; }
 .hx-day h1 { line-height: 1.7; } .hx-day a { margin-top: 0; }
+
+/* Version 75: the side menu and the page beside it appear at once and hold still (no sliding, no bounce) */
+@media (max-width: 899.98px) {
+  #tabs, #view, #nav-backdrop { transition: none !important; }
+  #tabs { transform: none !important; overscroll-behavior: none; }
+  body:not(.nav-open) #tabs { visibility: hidden; opacity: 0; }
+  body.nav-open #tabs { touch-action: pan-y; }
+  body.nav-open, body.nav-open #view { touch-action: none; overscroll-behavior: none; }
+}
