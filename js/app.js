@@ -103,7 +103,7 @@ function route() {
   view.className = `view view-${tab}`;
   if (hash !== currentHash) window.scrollTo(0, 0);
   currentHash = hash;
-  closeNav();
+  closeNav(false);
   try {
     current = fn(view, ...m.slice(1)) || null;
   } catch (err) {
@@ -165,11 +165,24 @@ function renderTabs() {
 
 // ---- Side menu (phones): opened by the menu button of each screen ----
 
-const closeNav = () => document.body.classList.remove('nav-open');
+// The page keeps its place while the menu is open over it, and when the menu closes without a
+// move to another screen.
+let navY = 0;
+const openNav = () => {
+  navY = window.scrollY;
+  document.body.classList.add('nav-open');
+  $('#view').scrollTop = navY;
+};
+const closeNav = (keep = true) => {
+  if (!document.body.classList.contains('nav-open')) return;
+  document.body.classList.remove('nav-open');
+  if (keep) window.scrollTo(0, navY);
+};
 document.addEventListener('click', (e) => {
-  if (e.target.closest('[data-nav]')) return document.body.classList.toggle('nav-open');
+  if (e.target.closest('[data-nav]')) return document.body.classList.contains('nav-open') ? closeNav() : openNav();
   // A tap on the dimmed page, or on a section (also the one already open), closes the menu.
-  if (e.target.closest('#nav-backdrop, #tabs a')) closeNav();
+  if (e.target.closest('#nav-backdrop')) closeNav();
+  else if (e.target.closest('#tabs a')) closeNav(e.target.closest('#tabs a').getAttribute('href') === location.hash);
 });
 document.addEventListener('keydown', (e) => e.key === 'Escape' && closeNav());
 
