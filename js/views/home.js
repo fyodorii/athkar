@@ -24,12 +24,17 @@ const QUICK = [
   ['#/notebook', 'أدعيتي', 'hand'],
   ['#/khatma', 'الختمات', 'quran'],
   ['#/calendar', 'التقويم', 'calendar'],
-  ['#/rawatib', 'الرواتب', 'mosque'],
+  ['#/rawatib', 'النوافل', 'mosque'],
   ['#/reminders', 'تذكيراتي', 'bell'],
   ['#/audio', 'الصوتيات', 'play'],
   ['#/tools', 'الأدوات', 'widget'],
   ['#/debts', 'الديون', 'wallet'],
 ];
+
+// The day and the months as a calligrapher writes them: vowelled, the day drawn out.
+const DAY_HAND = ['الأَحَـــد', 'الإِثْنَـــيْن', 'الثُّلَاثَـــاء', 'الأَرْبِعَـــاء', 'الخَمِيـــس', 'الجُمُعَـــة', 'السَّبْـــت'];
+const HIJRI_HAND = ['مُحَرَّم', 'صَفَر', 'رَبِيعٌ ٱلْأَوَّل', 'رَبِيعٌ ٱلْآخِر', 'جُمَادَىٰ ٱلْأُولَىٰ', 'جُمَادَىٰ ٱلْآخِرَة', 'رَجَب', 'شَعْبَان', 'رَمَضَان', 'شَوَّال', 'ذُو ٱلْقَعْدَة', 'ذُو ٱلْحِجَّة'];
+const GREG_HAND = ['يَنَايِر', 'فِبْرَايِر', 'مَارِس', 'أَبْرِيل', 'مَايُو', 'يُونْيُو', 'يُولْيُو', 'أَغُسْطُس', 'سِبْتَمْبِر', 'أُكْتُوبَر', 'نُوفَمْبِر', 'دِيسَمْبِر'];
 
 let dayOffset = 0; // the day shown in the times card: 0 today, -1 yesterday, 1 tomorrow…
 
@@ -68,17 +73,17 @@ export function render(view) {
       <button class="hx-btn" data-nav aria-label="القائمة">${icon('rows', 22)}</button>
       <b class="hx-brand">${APP_NAME}</b>
       <span class="hx-top-end">
-        <a class="hx-btn" href="#/settings/notify" aria-label="التنبيهات">${icon(s.notify.on ? 'bell' : 'bellOff', 21)}</a>
+        <button class="hx-btn" data-search aria-label="بحث">${icon('search', 21)}</button>
         <a class="hx-btn" href="#/settings" aria-label="الإعدادات">${icon('gear', 21)}</a>
       </span>
     </div>
     <div class="hx-day">
-      <div><h1>${weekday(info.day)}</h1><a href="#/settings/location">${esc(s.location.name)}</a></div>
+      <div><h1>${DAY_HAND[new Date(Date.UTC(info.day.y, info.day.m - 1, info.day.d)).getUTCDay()]}</h1><a href="#/settings/location">${esc(s.location.name)}</a></div>
       <span class="hx-moon" title="القمر الليلة">${moonPhase(h.day)}</span>
     </div>
     <a class="hx-dates" href="#/calendar">
-      <span><b>${num(h.day)} ${HIJRI_MONTHS[h.month - 1]}</b><small>${num(h.year)} هـ</small></span>
-      <span><b>${num(info.day.d)} ${GREG_MONTHS[info.day.m - 1]}</b><small>${num(info.day.y)} م</small></span>
+      <span><b><em>${num(h.day)}</em> ${HIJRI_HAND[h.month - 1]}</b><small>${num(h.year)} هـ</small></span>
+      <span><b><em>${num(info.day.d)}</em> ${GREG_HAND[info.day.m - 1]}</b><small>${num(info.day.y)} م</small></span>
     </a>
     <div class="hx-pill"><span><b data-next-name>${esc(info.nextPrayer.name)}</b> بعد</span><strong data-countdown>${countdown(info.nextPrayer.at - Date.now())}</strong></div>
     <div class="h-leave hx-leave" data-leave>${leaveText(info)}</div>
@@ -138,6 +143,7 @@ export function render(view) {
   };
 
   function onClick(e) {
+    if (e.target.closest('[data-search]')) return import('./search.js').then((m) => m.openSearch());
     const nav = e.target.closest('[data-pday]');
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);

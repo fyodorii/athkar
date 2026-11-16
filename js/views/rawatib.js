@@ -13,7 +13,7 @@ export function render(view) {
   // The prayer of this time; before sunrise and after Isha's it is the one coming.
   const now = Date.now() < info.times.fajr.at ? 'fajr' : info.lastPrayer.key;
   view.innerHTML = `
-    ${pageHeader('السنن الرواتب', { back: '#/home' })}
+    ${pageHeader('النوافل', { back: '#/home' })}
     <section class="card rw-hadith">
       <p class="amiri">«مَنْ صَلَّى فِي يَوْمٍ وَلَيْلَةٍ ثِنْتَيْ عَشْرَةَ رَكْعَةً بُنِيَ لَهُ بَيْتٌ فِي الْجَنَّةِ»</p>
       <small>رواه الترمذي، وأصله في صحيح مسلم</small>

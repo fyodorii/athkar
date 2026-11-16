@@ -24,7 +24,6 @@ export const DEFAULTS = {
     textWeight: 500, // 200…900
     fontTsb: 'tajawal', // the dhikr on the tasbeeh
     tsbWeight: 700,
-    calMode: 'hijri', // the calendar tab: 'hijri' or 'greg'
     uiWeight: 400,
     headScale: 1, // size of the headings, 0.8…1.3
     flat: true, // flat design (the default since release 31) instead of liquid glass
@@ -45,6 +44,7 @@ export const DEFAULTS = {
       morning: true, // morning adhkar, after Fajr
       evening: true, // evening adhkar, after Asr
       debts: true,
+      fastMonThu: true, // the evening before Monday and Thursday, at ten: tomorrow's fast
       sound: true,
     },
   },
@@ -68,6 +68,7 @@ export const DEFAULTS = {
   // `count` are where the group has reached.
   groups: [{ id: 'daily', name: 'برنامج يومي', i: 0, count: 0, items: [0, 6, 3, 7].map((n) => ({ text: MY_ADHKAR[n], target: 1000 })) }],
   surahRem: { on: true, list: [] }, // reminders to recite a surah: { id, surah: 1…114, time: "HH:MM" }, every day
+  appts: {}, // the calendar's «مواعيدي»: { 'YYYY-MM-DD': [{ id, text }] }
   reminders: [], // «تذكيراتي»: { id, text, time: "HH:MM", on }, every day
   notifyLog: {}, // reminders already shown: { "<day>:<event>": time }
   sync: { hash: '', at: 0 },
@@ -224,9 +225,9 @@ if (!state.migrated.tsbBgs) {
 }
 
 // Release 64: the new look comes with its olive colour (still the user's to change).
-if (!state.migrated.sage64) {
+if (!state.migrated.sage65) {
   state.settings.accent = 'sage';
-  state.migrated.sage64 = true;
+  state.migrated.sage65 = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {
