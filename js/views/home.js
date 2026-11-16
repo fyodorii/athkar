@@ -11,7 +11,7 @@ import { weekStrip } from './calendar.js';
 import { firstKhatma, state } from '../store.js';
 import { PRAYERS, today } from '../today.js';
 import { juzOf, khatmaInfo } from '../khatma.js';
-import { $, copyText, esc, ring, shareText } from '../ui.js';
+import { $, copyText, esc, openSheet, ring, shareText } from '../ui.js';
 import { APP_NAME } from '../config.js';
 import { dayScore } from './worship.js';
 
@@ -70,16 +70,12 @@ export function render(view) {
   view.innerHTML = `
   <section class="hx-hero">
     <div class="hx-top">
-      <button class="hx-btn" data-nav aria-label="القائمة">${icon('rows', 22)}</button>
-      <b class="hx-brand">${APP_NAME}</b>
-      <span class="hx-top-end">
-        <a class="hx-btn" href="#/search" aria-label="بحث">${icon('search', 21)}</a>
-        <a class="hx-btn" href="#/settings" aria-label="الإعدادات">${icon('gear', 21)}</a>
-      </span>
+      <button class="hx-btn" data-nav aria-label="القائمة">${icon('rows', 19)}</button>
+      <a class="hx-btn" href="#/settings" aria-label="الإعدادات">${icon('gear', 19)}</a>
     </div>
     <div class="hx-day">
       <div><h1>${DAY_HAND[new Date(Date.UTC(info.day.y, info.day.m - 1, info.day.d)).getUTCDay()]}</h1><a href="#/settings/location">${esc(s.location.name)}</a></div>
-      <span class="hx-moon" title="القمر الليلة">${moonPhase(h.day)}</span>
+      <button class="hx-moon" data-moon aria-label="القمر الليلة">${moonPhase(h.day)}</button>
     </div>
     <div class="hx-dates">
       <span><b><em>${num(h.day)}</em> ${HIJRI_HAND[h.month - 1]}</b><small>${num(h.year)} هـ</small></span>
@@ -92,7 +88,6 @@ export function render(view) {
   ${info.isFriday ? `<div class="banner gold">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>الإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></div>` : ''}
 
   <div class="hx-body">
-    ${wirdNow(info)}
     <div data-period-tile>${nowTile(info)}</div>
 
     <nav class="hx-grid" aria-label="اختصارات">
@@ -143,6 +138,7 @@ export function render(view) {
   };
 
   function onClick(e) {
+    if (e.target.closest('[data-moon]')) return moonSheet(info);
     const nav = e.target.closest('[data-pday]');
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);
@@ -170,8 +166,20 @@ function endsText(info) {
   return `<span>${icon(PRAYER_ICONS[info.next.key] || 'clock', 15)} ${esc(MOMENT_NOTE[info.next.key] || '')}</span>`;
 }
 
-// The adhkar for this time of the day, as the first card under the dates.
-function wirdNow(info) {
+// The time now (wide: its name, or around a prayer its adhan and iqama), then two squares: the
+// adhkar of this time, and the moment coming.
+function nowTile(info) {
+  const a = info.adhan;
+  let wide;
+  if (a) {
+    const since = a.since === 0 ? `حان الآن أذان ${esc(a.name)}` : `مضى على أذان ${esc(a.name)} ${minutesText(a.since)}`;
+    const iq = a.iqamaIn === null ? '' : a.iqamaIn > 0 ? `الإقامة بعد ${minutesText(a.iqamaIn)}` : a.iqamaIn === 0 ? 'حان وقت الإقامة' : `أُقيمت الصلاة منذ ${minutesText(-a.iqamaIn)}`;
+    wide = `<div class="hx-now"><span class="hx-now-ic">${icon('mosque', 24)}</span><span class="hx-now-text"><b>${since}</b>${iq ? `<small>${iq}</small>` : ''}</span></div>`;
+  } else {
+    const p = info.period;
+    wide = `<div class="hx-now"><span class="hx-now-ic">${icon(PERIOD_ICONS[p.key] || 'stars', 24)}</span>
+      <span class="hx-now-text"><b>${esc(p.title)} <em>· الآن</em></b><small>${esc(p.sub)}</small></span></div>`;
+  }
   const now = Date.now();
   const t = info.times;
   const id = now >= t.fajr.at && now < t.asr.at ? 'morning' : now >= t.asr.at && now < t.isha.at ? 'evening' : 'sleep';
@@ -179,24 +187,52 @@ function wirdNow(info) {
   const done = wirdDone(cat);
   const all = cat.items.length;
   const fin = done === all;
-  return `<a class="hx-now" href="#/adhkar/${id}">
-    <span class="hx-now-ic">${icon(fin ? 'check' : cat.icon, 24)}</span>
-    <span class="hx-now-text"><b>${esc(cat.title)} <em>· ${fin ? 'تمّت' : 'الآن'}</em></b><small>${fin ? 'تقبّل الله منك' : done ? `قرأت ${num(done)} من ${num(all)}` : esc(cat.subtitle)}</small></span>
-    ${icon('back', 20, 'hx-go')}</a>`;
+  const n = info.next;
+  return `${wide}
+    <div class="hx-sq2">
+      <a class="hx-sq" href="#/adhkar/${id}">
+        <span class="hx-sq-top">${icon(fin ? 'check' : cat.icon, 24)}<small>${fin ? 'تمّت' : 'الآن'}</small></span>
+        <b>${esc(cat.title)}</b><small>${fin ? 'تقبّل الله منك' : done ? `قرأت ${num(done)} من ${num(all)}` : esc(cat.subtitle)}</small></a>
+      <div class="hx-sq">
+        <span class="hx-sq-top">${icon(PRAYER_ICONS[n.key] || 'clock', 24)}<small><b>${clockText(n.hours, state.settings.clock24)}</b> قريباً</small></span>
+        <b>${esc(n.name)}</b><small>${esc(MOMENT_NOTE[n.key] || '')}</small></div>
+    </div>`;
 }
 
-// The moment coming (or, around a prayer, its adhan and iqama), as the second card.
-function nowTile(info) {
-  const a = info.adhan;
-  if (a) {
-    const since = a.since === 0 ? `حان الآن أذان ${esc(a.name)}` : `مضى على أذان ${esc(a.name)} ${minutesText(a.since)}`;
-    const iq = a.iqamaIn === null ? '' : a.iqamaIn > 0 ? `الإقامة بعد ${minutesText(a.iqamaIn)}` : a.iqamaIn === 0 ? 'حان وقت الإقامة' : `أُقيمت الصلاة منذ ${minutesText(-a.iqamaIn)}`;
-    return `<div class="hx-now"><span class="hx-now-ic">${icon('mosque', 24)}</span><span class="hx-now-text"><b>${since}</b>${iq ? `<small>${iq}</small>` : ''}</span></div>`;
-  }
-  const n = info.next;
-  return `<div class="hx-now"><span class="hx-now-ic">${icon(PRAYER_ICONS[n.key] || 'clock', 24)}</span>
-    <span class="hx-now-text"><b>${esc(n.name)} <em>· قريباً</em></b><small>${esc(MOMENT_NOTE[n.key] || '')}</small></span>
-    <span class="hx-now-time">${clockText(n.hours, state.settings.clock24)}</span></div>`;
+// The moon of tonight and its phases through the Hijri month.
+const PHASES = [
+  ['الهلال المتزايد', 1, 6, 4, 'يولد الهلال رقيقاً بعد الغروب في الغرب، ثم يكبر ليلة بعد ليلة.'],
+  ['التربيع الأول', 7, 9, 8, 'نحو نهاية الأسبوع الأول يبدو نصف قرص القمر مضيئاً، ويستمر الضوء في الازدياد.'],
+  ['الأحدب المتزايد', 10, 13, 11, 'يضيء أكثر من نصف القرص، ويقترب القمر من الاكتمال.'],
+  ['البدر', 14, 15, 14, 'يكتمل القرص مضيئاً، وهي الليالي البيض التي يُستحب صيام أيامها (١٣–١٥).'],
+  ['الأحدب المتناقص', 16, 20, 18, 'يبدأ الضوء في النقصان من الجهة الأخرى، ويطلع القمر متأخراً كل ليلة.'],
+  ['التربيع الأخير', 21, 23, 22, 'يبدو النصف الآخر من القرص مضيئاً، ويطلع القمر في آخر الليل.'],
+  ['الهلال المتناقص', 24, 28, 26, 'يرق الهلال ويُرى قبيل الفجر في الشرق.'],
+  ['المحاق', 29, 30, 30, 'يختفي القمر عن الأعين قرب نهاية الشهر، ثم يولد هلال الشهر الجديد.'],
+];
+function moonSheet(info) {
+  const s = state.settings;
+  const h = hijri(info.day, s.hijriAdjust);
+  const cur = PHASES.find(([, a, b]) => h.day >= a && h.day <= b) || PHASES[0];
+  openSheet(
+    `<section class="mn-card">
+       <h3>${DAY_HAND[new Date(Date.UTC(info.day.y, info.day.m - 1, info.day.d)).getUTCDay()]}</h3>
+       <span class="mn-moon">${moonPhase(h.day)}</span>
+       <b class="mn-name">${cur[0]}</b>
+       <div class="mn-dates">
+         <span><b>${num(h.day)} ${HIJRI_MONTHS[h.month - 1]}</b><small>${num(h.year)}</small></span>
+         <span><b>${num(info.day.d)} ${GREG_MONTHS[info.day.m - 1]}</b><small>${num(info.day.y)}</small></span>
+       </div>
+     </section>
+     <h4 class="mn-h">اليوم ${num(h.day)} من الشهر الهجري</h4>
+     <p class="mn-p">${cur[4]}</p>
+     <h4 class="mn-h">أطوار القمر خلال الشهر</h4>
+     <p class="hint">أيام تقريبية من الشهر الهجري</p>
+     <div class="mn-grid">${PHASES.map(([name, a, b, d]) => `<div class="mn-ph ${name === cur[0] ? 'on' : ''}">${moonPhase(d)}<b>${name}</b><small>الأيام ${num(a)}–${num(b)}</small></div>`).join('')}</div>
+     <p class="hint">عرض تقريبي بحسب التاريخ الهجري في التطبيق؛ يوم الشهر ليس العمر الفلكي الدقيق للقمر، وقد يختلف توقيت الطور وإمكان رؤية الهلال.</p>`,
+    () => {},
+    { title: 'القمر والتقويم الهجري' }
+  );
 }
 
 // When the time of the prayer now in its time runs out: Fajr at sunrise, Dhuhr at Asr, Asr at
