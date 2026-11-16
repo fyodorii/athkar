@@ -514,21 +514,38 @@ export function renderTasbeeh(view, mineId) {
     const inRound = c > 0 && c % size === 0 ? size : c % size;
     return { c, n, size, inRound, rounds: Math.floor(c / size) };
   };
-  const ringHTML = () => {
+  // The ring turns one bead with every count, like beads drawn under the thumb: the bead being
+  // said is always at the top, the ones said trail behind it.
+  const beadState = () => {
     const { c, n, size, inRound } = roundOf();
     const filled = Math.round((inRound / size) * BEADS);
+    const top = c > 0 ? (c - 1) % BEADS : 0; // the bead now at the top
+    return { c, n, inRound, filled, top, turn: c > 0 ? c - 1 : 0 };
+  };
+  const beadClass = (i, { filled, top }) => {
+    const back = (top - i + BEADS) % BEADS; // how far behind the top bead
+    return `tb-bead ${back < filled ? 'on' : ''} ${filled > 0 && back === 0 ? 'cur' : ''}`;
+  };
+  const ringHTML = () => {
+    const st = beadState();
     const R = 128;
     const beads = Array.from({ length: BEADS }, (_, i) => {
       const a = (-90 + (i * 360) / BEADS) * (Math.PI / 180); // from the top, clockwise
-      const x = (150 + R * Math.cos(a)).toFixed(1);
-      const y = (150 + R * Math.sin(a)).toFixed(1);
-      const on = i < filled;
-      const cur = filled > 0 && i === (filled === BEADS ? 0 : filled - 1);
-      return `${cur ? `<circle class="tb-halo" cx="${x}" cy="${y}" r="17"/>` : ''}<circle class="tb-bead ${on ? 'on' : ''}" cx="${x}" cy="${y}" r="${cur ? 11.5 : 7.5}"/>`;
+      return `<circle class="${beadClass(i, st)}" cx="${(150 + R * Math.cos(a)).toFixed(1)}" cy="${(150 + R * Math.sin(a)).toFixed(1)}" r="7.5"/>`;
     }).join('');
     return `<svg class="tb-svg" viewBox="0 0 300 300" aria-hidden="true"><defs><linearGradient id="tbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--tb-1)"/><stop offset="1" stop-color="var(--tb-2)"/></linearGradient></defs>
-      <circle class="tb-track" cx="150" cy="150" r="${R}"/><circle class="tb-core" cx="150" cy="150" r="96"/>${beads}</svg>
-      <div class="tb-mid"><b data-count>${num(n ? inRound : c)}</b><small>ذكراً</small></div>`;
+      <circle class="tb-track" cx="150" cy="150" r="${R}"/><circle class="tb-core" cx="150" cy="150" r="96"/>
+      <circle class="tb-halo ${st.filled ? 'on' : ''}" cx="150" cy="${150 - R}" r="17"/>
+      <g class="tb-rot" style="transform:rotate(${((-st.turn * 360) / BEADS).toFixed(2)}deg)">${beads}</g></svg>
+      <div class="tb-mid"><b data-count>${num(st.n ? st.inRound : st.c)}</b><small>ذكراً</small></div>`;
+  };
+  // After a count the same beads turn on (no redraw), so the turn is seen.
+  const turnBeads = () => {
+    const st = beadState();
+    $('.tb-rot', view).style.transform = `rotate(${((-st.turn * 360) / BEADS).toFixed(2)}deg)`;
+    $$('.tb-bead', view).forEach((b, i) => b.setAttribute('class', beadClass(i, st)));
+    $('.tb-halo', view).classList.toggle('on', st.filled > 0);
+    $('[data-count]', view).textContent = num(st.n ? st.inRound : st.c);
   };
   // «الحلقة»: the dhikr in the naskh hand over black, the count inside a golden ring that fills
   // with the round. A dhikr of a group waits, once its number is said, for «التالي».
@@ -739,7 +756,7 @@ export function renderTasbeeh(view, mineId) {
       $('.tr-mid', view).replaceWith(fresh.querySelector('.tr-mid'));
       $('[data-foot]', view).innerHTML = arcFoot();
     } else if (beadsOn()) {
-      $('[data-ring]', view).innerHTML = ringHTML();
+      turnBeads();
       $('[data-foot]', view).innerHTML = footHTML();
     } else {
       $('[data-count]', view).textContent = num(c);
@@ -872,6 +889,10 @@ export function renderTasbeeh(view, mineId) {
   let from = null;
   let swiped = 0;
   const onTouchStart = (e) => (from = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null);
+  // The screen holds still under the finger: no dragging or bouncing of the page while counting.
+  const onTouchMove = (e) => {
+    if (!e.target.closest('.sheet-wrap')) e.preventDefault();
+  };
   const onTouchEnd = (e) => {
     if (!from) return;
     const [dx, dy] = [e.changedTouches[0].clientX - from[0], e.changedTouches[0].clientY - from[1]];
@@ -932,6 +953,7 @@ export function renderTasbeeh(view, mineId) {
   view.addEventListener('click', guardClick, true);
   view.addEventListener('click', onClick);
   view.addEventListener('touchstart', onTouchStart, { passive: true });
+  view.addEventListener('touchmove', onTouchMove, { passive: false });
   view.addEventListener('touchend', onTouchEnd);
   view.addEventListener('gesturestart', onGestureStart);
   view.addEventListener('gesturechange', onGestureChange);
@@ -944,6 +966,7 @@ export function renderTasbeeh(view, mineId) {
       view.removeEventListener('click', guardClick, true);
       view.removeEventListener('click', onClick);
       view.removeEventListener('touchstart', onTouchStart);
+      view.removeEventListener('touchmove', onTouchMove);
       view.removeEventListener('touchend', onTouchEnd);
       view.removeEventListener('gesturestart', onGestureStart);
       view.removeEventListener('gesturechange', onGestureChange);
