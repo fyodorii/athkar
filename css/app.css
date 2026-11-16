@@ -2694,3 +2694,7 @@ body[data-tab='search'] .page-head { display: none; }
 .mn-ph b { font-size: 15.5px; font-weight: 600; }
 .mn-ph small { font-size: 13.5px; color: var(--ink-3); }
 .mn-ph.on { box-shadow: 0 0 0 1.5px var(--primary); }
+
+/* Version 80: one button at the top; the day a little lower, clear of it */
+.hx-top { justify-content: flex-start; }
+.hx-day { margin-top: 14px; }

@@ -71,11 +71,9 @@ export function render(view) {
   <section class="hx-hero">
     <div class="hx-top">
       <button class="hx-btn" data-nav aria-label="القائمة">${icon('rows', 19)}</button>
-      <a class="hx-btn" href="#/settings" aria-label="الإعدادات">${icon('gear', 19)}</a>
     </div>
     <div class="hx-day">
       <div><h1>${DAY_HAND[new Date(Date.UTC(info.day.y, info.day.m - 1, info.day.d)).getUTCDay()]}</h1><a href="#/settings/location">${esc(s.location.name)}</a></div>
-      <button class="hx-moon" data-moon aria-label="القمر الليلة">${moonPhase(h.day)}</button>
     </div>
     <div class="hx-dates">
       <span><b><em>${num(h.day)}</em> ${HIJRI_HAND[h.month - 1]}</b><small>${num(h.year)} هـ</small></span>
@@ -138,7 +136,6 @@ export function render(view) {
   };
 
   function onClick(e) {
-    if (e.target.closest('[data-moon]')) return moonSheet(info);
     const nav = e.target.closest('[data-pday]');
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);

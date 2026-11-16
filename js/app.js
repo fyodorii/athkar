@@ -305,6 +305,16 @@ const flushPush = () => {
 };
 window.addEventListener('pagehide', flushPush);
 
+// Moving between screens replaces the page in the history instead of adding to it, so the
+// iPhone's swipe from the edge does not go back to the screen before; the back buttons of each
+// screen lead where they should.
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href^="#/"]');
+  if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || a.target) return;
+  e.preventDefault();
+  if (a.getAttribute('href') !== location.hash) location.replace(a.getAttribute('href'));
+});
+
 // Back to the app after a long sleep (iOS may resume it without a visibility change, or from its
 // page cache): a new day, or a new moment, draws the screen again at once.
 const wake = () => {

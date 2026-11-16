@@ -104,7 +104,7 @@ function openNote(kind, n, redraw) {
         if (a === 'copy') return copyText(n.text);
         if (a === 'share') return shareText(n.text);
         close();
-        if (a === 'dhikr') editCustom(null, () => (location.hash = '#/mine'), { text: n.text });
+        if (a === 'dhikr') editCustom(null, () => location.replace('#/mine'), { text: n.text });
         if (a === 'pin') {
           n.pinned = !n.pinned;
           save();
