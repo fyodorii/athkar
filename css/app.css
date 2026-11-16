@@ -2590,3 +2590,8 @@ body[data-tab='counter'] #tabs { display: none; }
 .ct-group { margin: 0 0 6px; }
 .ct-group select { height: 40px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-2); color: var(--ink); font: inherit; }
 .ct-sum { margin: 12px 4px 0; font-size: 15px; color: var(--ink-2); }
+
+/* Version 68: the day and dates in the phone's own calligraphic hand (Apple's Mishafi / Thuluth), the Uthmani one elsewhere */
+@font-face { font-family: 'Hand'; src: local('DiwanMishafi'), local('Diwan Mishafi'), local('Mishafi'), local('DiwanThuluth'), local('Diwan Thuluth'); }
+.hx-day h1, .hx-dates b { font-family: 'Hand', 'KFGQPC Hafs', 'Amiri', serif; }
+.hx-dates b { white-space: nowrap; }

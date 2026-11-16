@@ -81,10 +81,10 @@ export function render(view) {
       <div><h1>${DAY_HAND[new Date(Date.UTC(info.day.y, info.day.m - 1, info.day.d)).getUTCDay()]}</h1><a href="#/settings/location">${esc(s.location.name)}</a></div>
       <span class="hx-moon" title="القمر الليلة">${moonPhase(h.day)}</span>
     </div>
-    <a class="hx-dates" href="#/calendar">
+    <div class="hx-dates">
       <span><b><em>${num(h.day)}</em> ${HIJRI_HAND[h.month - 1]}</b><small>${num(h.year)} هـ</small></span>
       <span><b><em>${num(info.day.d)}</em> ${GREG_HAND[info.day.m - 1]}</b><small>${num(info.day.y)} م</small></span>
-    </a>
+    </div>
     <div class="hx-pill"><span><b data-next-name>${esc(info.nextPrayer.name)}</b> بعد</span><strong data-countdown>${countdown(info.nextPrayer.at - Date.now())}</strong></div>
     <div class="h-leave hx-leave" data-leave>${leaveText(info)}</div>
   </section>
