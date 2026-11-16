@@ -2704,3 +2704,4 @@ body[data-tab='search'] .page-head { display: none; }
 .ptr.ready { background: var(--primary); color: #fff; }
 .ptr.spin { opacity: 1 !important; animation: ptr-spin 0.7s linear infinite; }
 @keyframes ptr-spin { from { transform: translate(-50%, 56px) rotate(0); } to { transform: translate(-50%, 56px) rotate(360deg); } }
+.ptr { display: none !important; } /* Version 82: pull to refresh without the round indicator */
