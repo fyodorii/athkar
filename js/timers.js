@@ -45,6 +45,26 @@ export function chime(pattern = [0, 0.3, 0.6], buzz = true) {
   if (buzz) haptic(300);
 }
 
+// A short soft click, for each count of the tasbeeh.
+export function tick() {
+  try {
+    if (!audio) return;
+    const t0 = audio.currentTime;
+    const o = audio.createOscillator();
+    const g = audio.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(1500, t0);
+    o.frequency.exponentialRampToValueAtTime(700, t0 + 0.04);
+    g.gain.setValueAtTime(0.25, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+    o.connect(g).connect(audio.destination);
+    o.start(t0);
+    o.stop(t0 + 0.07);
+  } catch (e) {
+    // No sound.
+  }
+}
+
 // Keeps the screen on while a timer runs (iOS 16.4+), so it can sound on time.
 let lock;
 export async function keepAwake(on) {

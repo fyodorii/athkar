@@ -6,7 +6,8 @@ import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
 import { today } from '../today.js';
-import { chime, unlockAudio } from '../timers.js';
+import { chime, tick, unlockAudio } from '../timers.js';
+import { APP_NAME } from '../config.js';
 import { $, $$, confirmSheet, esc, FONT_NAMES, FONTS, haptic, hapticSwitch, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
 
 export const MINE_TABS = [
@@ -563,7 +564,7 @@ export function renderTasbeeh(view, mineId) {
   const drawerHTML = () => `
         <button class="tsb-handle" data-ui data-drawer aria-label="أدوات السبحة">${icon('chevron', 20)}</button>
         <div class="tsb-drawer ${drawer ? 'open' : ''}" data-ui data-panel>
-          <button data-d="sound" class="${t.alertSound ? '' : 'off'}"><i>${icon('sound', 24)}</i>الصوت</button>
+          <button data-d="sound" class="${t.tapSound ? '' : 'off'}"><i>${icon('sound', 24)}</i>الصوت</button>
           <button data-d="vibrate" class="${state.settings.haptics ? '' : 'off'}"><i>${icon('vibrate', 24)}</i>الاهتزاز</button>
           <button data-d="reset"><i>${icon('reset', 24)}</i>تصفير</button>
           <button data-d="share"><i>${icon('share', 24)}</i>مشاركة</button>
@@ -576,16 +577,17 @@ export function renderTasbeeh(view, mineId) {
   };
   const drawerAct = (d) => {
     if (d === 'sound') {
-      t.alertSound = !t.alertSound;
-      if (t.alertSound) {
+      t.tapSound = !t.tapSound; // a click with every count
+      if (t.tapSound) {
         unlockAudio();
-        chime([0], false);
+        tick();
+        toast('صوت العدّ مفعّل — لا يُسمع والجوال على الصامت');
       }
     } else if (d === 'vibrate') {
       state.settings.haptics = !state.settings.haptics;
       if (state.settings.haptics) haptic(30, true);
-    } else if (d === 'reset') return reset();
-    else if (d === 'share') return shareText(`${src.phrase()}\n${num(src.count())} مرة`);
+    } else if (d === 'reset') return reset(true);
+    else if (d === 'share') return shareSheet();
     else if (d === 'settings') {
       setDrawer(false);
       return settings();
@@ -612,7 +614,7 @@ export function renderTasbeeh(view, mineId) {
           <div class="tb-ring" data-ring>${ringHTML()}</div>
           <div class="tb-foot" data-foot>${footHTML()}</div>
         </label>
-        <a class="tb-round tb-close" data-ui href="${backTo}" aria-label="خروج">${icon('close', 22)}</a>
+        <a class="tsb-x" data-ui href="${backTo}" aria-label="إغلاق">${icon('close', 20)}</a>
         ${drawerHTML()}
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
@@ -626,7 +628,7 @@ export function renderTasbeeh(view, mineId) {
           <div class="tr-ring" data-ring>${arcHTML()}</div>
           <div class="tr-foot" data-foot>${arcFoot()}</div>
         </label>
-        <a class="icon-btn glass tsb-back" data-ui href="${backTo}" aria-label="خروج">${icon('back', 22)}</a>
+        <a class="tsb-x" data-ui href="${backTo}" aria-label="إغلاق">${icon('close', 20)}</a>
         ${group ? `<span class="tr-title">الذكر ${num(group.i + 1)} من ${num(group.items.length)}</span>` : ''}
         ${drawerHTML()}
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
@@ -641,7 +643,7 @@ export function renderTasbeeh(view, mineId) {
             <span class="tsb-num"><b data-count>${num(src.count())}</b><small data-round>${roundText()}</small></span>
           </div>
         </label>
-        <a class="icon-btn glass tsb-back" data-ui href="${backTo}" aria-label="خروج">${icon('back', 22)}</a>
+        <a class="tsb-x" data-ui href="${backTo}" aria-label="إغلاق">${icon('close', 20)}</a>
         ${drawerHTML()}
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
@@ -674,7 +676,8 @@ export function renderTasbeeh(view, mineId) {
 
   const tap = (x, y) => {
     if (wird && src.count() >= src.target()) return; // said its number: nothing more to count
-    if (t.alertSound && (t.alerts.length || group)) unlockAudio(); // sound needs a touch to start
+    if (t.tapSound || (t.alertSound && (t.alerts.length || group))) unlockAudio(); // sound needs a touch to start
+    if (t.tapSound) tick();
     if (ringOn() && group && src.target() && src.count() >= src.target()) src.reset(); // a new round of the same dhikr
     src.add();
     if (isIstighfar(src.phrase())) {
@@ -731,14 +734,6 @@ export function renderTasbeeh(view, mineId) {
     counter.classList.remove('pop');
     void counter.offsetWidth;
     counter.classList.add('pop');
-    if (x !== undefined && t.ripple) {
-      const r = document.createElement('i');
-      r.className = 'tsb-ripple';
-      r.style.left = `${x}px`;
-      r.style.top = `${y}px`;
-      $('[data-area]', view).appendChild(r);
-      setTimeout(() => r.remove(), 600);
-    }
   };
 
   const shownSize = () => parseFloat($('[data-phrase]', view).style.fontSize) || 40;
@@ -747,12 +742,31 @@ export function renderTasbeeh(view, mineId) {
     $('[data-phrase]', view).style.fontSize = `${box.fontSize}px`;
   };
 
-  const reset = async () => {
-    if (!(await confirmSheet(group ? 'البدء من أول المجموعة؟' : wird ? 'تصفير عدد هذا الذكر في الورد؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false }))) return;
+  const reset = async (now = false) => {
+    if (!now && !(await confirmSheet(group ? 'البدء من أول المجموعة؟' : wird ? 'تصفير عدد هذا الذكر في الورد؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false }))) return;
     if (group) group.i = 0;
     src.reset();
     save();
     paint();
+    if (now) haptic(30);
+  };
+  // Share the dhikr and its count, as text or as a picture.
+  const shareSheet = () => {
+    setDrawer(false);
+    openSheet(
+      `<div class="menu"><button data-s="text">${icon('share', 20)} مشاركة كنص</button><button data-s="image">${icon('download', 20)} مشاركة كصورة</button></div>`,
+      (el, close) => {
+        el.addEventListener('click', (e) => {
+          const k = e.target.closest('[data-s]')?.dataset.s;
+          if (!k) return;
+          close();
+          const text = mine?.quran ? src.phrase() : vocalised(src.phrase());
+          if (k === 'text') shareText(`${src.phrase()}\n${num(src.count())} مرة`);
+          else shareImage(text, `${num(src.count())} مرة`).catch(() => toast('تعذر إنشاء الصورة'));
+        });
+      },
+      { title: 'مشاركة' }
+    );
   };
 
   // Everything that is not counting: the dhikr, its target, groups, alerts, the look.
@@ -849,7 +863,7 @@ export function renderTasbeeh(view, mineId) {
     from = null;
     if (Math.abs(dx) < 45 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
     swiped = Date.now();
-    setDrawer(dx < 0);
+    setDrawer(!drawer); // either way: it comes when away and goes when shown
   };
   const onClick = (e) => {
     if (Date.now() - swiped < 400) return e.preventDefault();
@@ -1037,7 +1051,6 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
           <div class="seg-mini wide" data-style>
             ${[['classic', 'كلاسيكي'], ['beads', 'حبّات المسبحة'], ['ring', 'الحلقة']].map(([v, l]) => `<button class="${(t.style || 'classic') === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
           </div>
-          <div class="row"><span class="row-label">تأثير اللمس<small>دائرة تظهر حيث تضغط</small></span>${toggle('ripple', !!t.ripple)}</div>
           <h4 class="sheet-sub">خط الذكر</h4>
           <div class="chips tsb-fonts" data-font>${Object.keys(FONTS).map((v) => `<button class="chip-opt ${(state.settings.fontTsb || 'tajawal') === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v]}">${FONT_NAMES[v]}</button>`).join('')}</div>
           <h4 class="sheet-sub">لون الخلفية</h4>
@@ -1076,11 +1089,6 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         redraw();
         draw();
       });
-      body.addEventListener('change', (e) => {
-        if (e.target.name !== 'ripple') return;
-        t.ripple = e.target.checked;
-        save();
-      });
       body.addEventListener('input', (e) => {
         const r = e.target.closest('[data-range]');
         if (!r) return;
@@ -1093,6 +1101,64 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
     },
     { title: 'ألوان السبحة وحجمها' }
   );
+}
+
+// The dhikr and its count drawn as a picture, then handed to the phone's share sheet (or saved).
+async function shareImage(text, sub) {
+  const [W, H] = [1080, 1350];
+  const c = document.createElement('canvas');
+  [c.width, c.height] = [W, H];
+  const x = c.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const font = css.getPropertyValue('--font-tsb').trim() || 'sans-serif';
+  const weight = css.getPropertyValue('--tsb-weight').trim() || 700;
+  x.fillStyle = '#000';
+  x.fillRect(0, 0, W, H);
+  x.direction = 'rtl';
+  x.textAlign = 'center';
+  x.textBaseline = 'middle';
+  // The largest size that keeps the dhikr within seven lines.
+  let size = 96;
+  let lines = [];
+  for (; size >= 36; size -= 6) {
+    x.font = `${weight} ${size}px ${font}`;
+    await document.fonts.load(x.font, text).catch(() => {});
+    lines = [];
+    let line = '';
+    for (const w of text.split(/\s+/)) {
+      const next = line ? `${line} ${w}` : w;
+      if (line && x.measureText(next).width > W - 160) {
+        lines.push(line);
+        line = w;
+      } else line = next;
+    }
+    lines.push(line);
+    if (lines.length <= 7) break;
+  }
+  const lh = size * 1.75;
+  const top = H * 0.44 - ((lines.length - 1) * lh) / 2;
+  x.fillStyle = '#fff';
+  lines.forEach((l, i) => x.fillText(l, W / 2, top + i * lh));
+  x.fillStyle = '#d9b665';
+  x.font = `700 64px ${font}`;
+  x.fillText(sub, W / 2, H - 250);
+  x.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  x.font = `500 34px ${font}`;
+  x.fillText(APP_NAME, W / 2, H - 110);
+  const blob = await new Promise((ok) => c.toBlob(ok, 'image/png'));
+  const file = new File([blob], 'dhikr.png', { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      return await navigator.share({ files: [file] });
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dhikr.png';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 
 // The tasbeeh's settings, opened from the app's settings: the same sheets the tasbeeh opens.
