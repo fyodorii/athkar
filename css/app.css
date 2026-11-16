@@ -2649,3 +2649,13 @@ body[data-tab='counter'] #tabs { display: none; }
   #tabs::-webkit-scrollbar { display: none; }
   @media (max-height: 700px) { #tabs a { padding-block: 8px !important; font-size: 19px !important; } #tabs .nav-head b { font-size: 38px !important; } }
 }
+
+/* Version 77: the search as a page */
+.sr-head { position: relative; display: grid; place-items: center; height: 56px; margin: calc(var(--safe-top) + 6px) 0 26px; }
+.sr-head h1 { margin: 0; font-size: 22px; color: var(--ink); }
+.sr-back { position: absolute; right: 0; top: 4px; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: var(--card); box-shadow: 0 0 0 1px var(--line), 0 6px 14px -10px rgba(20, 40, 35, 0.35); }
+.sr-field { display: flex; align-items: center; gap: 10px; height: 54px; padding: 0 18px; border-radius: 99px; background: var(--card); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent); color: var(--ink-3); }
+.sr-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 18px; color: var(--ink); }
+.sr-field input::-webkit-search-cancel-button { display: none; }
+.sr-res { margin-top: 18px; }
+body[data-tab='search'] .page-head { display: none; }
