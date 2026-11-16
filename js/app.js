@@ -315,6 +315,41 @@ document.addEventListener('click', (e) => {
   if (a.getAttribute('href') !== location.hash) location.replace(a.getAttribute('href'));
 });
 
+// Pull down from the top of the home screen to refresh it (and take a new release, if any).
+{
+  const PULL = 80;
+  let y0 = null;
+  let pulled = 0;
+  const ring = document.createElement('div');
+  ring.className = 'ptr';
+  ring.innerHTML = icon('reset', 22);
+  document.body.appendChild(ring);
+  const show = (d) => {
+    ring.style.opacity = String(Math.min(1, d / PULL));
+    ring.style.transform = `translate(-50%, ${Math.min(d, PULL + 20) * 0.7}px) rotate(${d * 3}deg)`;
+    ring.classList.toggle('ready', d >= PULL);
+  };
+  document.addEventListener('touchstart', (e) => {
+    y0 = document.body.dataset.tab === 'home' && !document.body.classList.contains('nav-open') && window.scrollY <= 0 && e.touches.length === 1 && !document.querySelector('.sheet-wrap.open') ? e.touches[0].clientY : null;
+    pulled = 0;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (y0 === null) return;
+    pulled = e.touches[0].clientY - y0;
+    if (pulled < 0 || window.scrollY > 0) return show(0);
+    show(pulled);
+  }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (y0 === null) return;
+    y0 = null;
+    if (pulled >= PULL) {
+      ring.classList.add('spin');
+      checkForUpdate();
+      setTimeout(() => location.reload(), 450);
+    } else show(0);
+  });
+}
+
 // Back to the app after a long sleep (iOS may resume it without a visibility change, or from its
 // page cache): a new day, or a new moment, draws the screen again at once.
 const wake = () => {
