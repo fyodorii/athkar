@@ -305,6 +305,15 @@ const flushPush = () => {
 };
 window.addEventListener('pagehide', flushPush);
 
+// Back to the app after a long sleep (iOS may resume it without a visibility change, or from its
+// page cache): a new day, or a new moment, draws the screen again at once.
+const wake = () => {
+  if (document.visibilityState !== 'visible') return;
+  if (current?.tick?.() === 'rerender') route();
+};
+window.addEventListener('pageshow', wake);
+window.addEventListener('focus', wake);
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return flushPush();
   if (current?.tick) route();
