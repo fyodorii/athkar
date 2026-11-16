@@ -2283,3 +2283,12 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 @media (max-height: 560px) { .tsb-drawer { gap: 8px; padding: 12px 10px; } .tsb-drawer button i { width: 46px; height: 46px; border-radius: 14px; } }
 /* Without the bottom bar the bead ring's screen needs less room below. */
 .tsb-beads .tsb-tap { padding-bottom: calc(var(--safe-bottom) + 28px); }
+
+/* Version 59: one small close button for every look; the classic dhikr a little below the top; the bead ring smaller and lower */
+.tsb-x { position: absolute; top: calc(var(--safe-top) + 10px); left: 16px; z-index: 6; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(128, 128, 128, 0.24); color: inherit; }
+.tsb:not(.tsb-beads):not(.tsb-ring) .tsb-phrase { padding-top: 11vh; }
+.tsb-beads .tb-phrase { margin-top: 5vh; }
+.tb-ring { width: min(54vw, 31vh, 235px); }
+.tb-mid b { font-size: clamp(40px, 13vw, 58px); }
+.tsb-ring .tsb-gear { display: none; }
+.tb-ring, .tb-foot { top: 5vh; } .tb-foot { position: relative; }
