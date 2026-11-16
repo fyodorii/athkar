@@ -2292,3 +2292,9 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .tb-mid b { font-size: clamp(40px, 13vw, 58px); }
 .tsb-ring .tsb-gear { display: none; }
 .tb-ring, .tb-foot { top: 5vh; } .tb-foot { position: relative; }
+
+/* Version 60: small previous/next for a group, at the top of the tasbeeh */
+.tsb-steps { position: absolute; top: calc(var(--safe-top) + 14px); left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; font-size: 13px; opacity: 0.8; color: inherit; }
+.tsb-steps button { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgba(128, 128, 128, 0.24); color: inherit; }
+.tsb-steps button:disabled { opacity: 0.3; }
+.tsb-steps span { min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
