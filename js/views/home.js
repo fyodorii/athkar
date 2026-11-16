@@ -4,25 +4,31 @@
 import { CATEGORY_BY_ID, DAILY } from '../adhkar-data.js';
 import { wirdDone } from './adhkar.js';
 import { dailyFor } from '../daily-data.js';
-import { clock, clockText, countdown, GREG_MONTHS, gregText, hijri, hijriText, minutesText, num, weekday } from '../dates.js';
+import { clock, clockText, countdown, GREG_MONTHS, HIJRI_MONTHS, gregText, hijri, hijriText, minutesText, num, weekday } from '../dates.js';
 import { icon, PRAYER_ICONS } from '../icons.js';
-import { addDays, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
+import { addDays, dayKey, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
+import { weekStrip } from './calendar.js';
 import { firstKhatma, state } from '../store.js';
 import { PRAYERS, today } from '../today.js';
 import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, ring, shareText } from '../ui.js';
+import { APP_NAME } from '../config.js';
 import { dayScore } from './worship.js';
 
-// Shortcuts, as a grid of eight.
+// Shortcuts: two columns of pills, each with its round icon.
 const QUICK = [
-  ['#/tasbeeh', 'السبحة', 'beads', 'indigo'],
-  ['#/mine', 'أذكاري', 'heart', 'rose'],
-  ['#/notebook', 'أدعيتي', 'hand', 'teal'],
-  ['#/khatma', 'ختمتي', 'quran', 'emerald'],
-  ['#/rawatib', 'الرواتب', 'mosque', 'amber'],
-  ['#/reminders', 'تذكيراتي', 'bell', 'violet'],
-  ['#/debts', 'الديون', 'wallet', 'sky'],
-  ['#/tools', 'الأدوات', 'widget', 'slate'],
+  ['#/adhkar/morning', 'أذكار الصباح', 'sun'],
+  ['#/adhkar/evening', 'أذكار المساء', 'moonStar'],
+  ['#/tasbeeh', 'السبحة', 'beads'],
+  ['#/mine', 'أذكاري', 'heart'],
+  ['#/notebook', 'أدعيتي', 'hand'],
+  ['#/khatma', 'الختمات', 'quran'],
+  ['#/calendar', 'التقويم', 'calendar'],
+  ['#/rawatib', 'الرواتب', 'mosque'],
+  ['#/reminders', 'تذكيراتي', 'bell'],
+  ['#/audio', 'الصوتيات', 'play'],
+  ['#/tools', 'الأدوات', 'widget'],
+  ['#/debts', 'الديون', 'wallet'],
 ];
 
 let dayOffset = 0; // the day shown in the times card: 0 today, -1 yesterday, 1 tomorrow…
@@ -55,43 +61,46 @@ export function render(view) {
     dhikr: `${daily.text} — ${daily.note}`,
   };
 
+  const h = hijri(info.day, s.hijriAdjust);
   view.innerHTML = `
-  <section class="h-hero">
-    <div class="h-top">
-      <button class="icon-btn glass nav-btn" data-nav aria-label="القائمة">${icon('rows', 20)}</button>
-      <a class="chip glass" href="#/settings/location">${icon('pin', 16)}<span>${esc(s.location.name)}</span></a>
-      <span class="h-top-btns">
-        <a class="icon-btn glass" href="#/settings/notify" aria-label="التنبيهات">${icon(s.notify.on ? 'bell' : 'bellOff', 20)}</a>
+  <section class="hx-hero">
+    <div class="hx-top">
+      <button class="hx-btn" data-nav aria-label="القائمة">${icon('rows', 22)}</button>
+      <b class="hx-brand">${APP_NAME}</b>
+      <span class="hx-top-end">
+        <a class="hx-btn" href="#/settings/notify" aria-label="التنبيهات">${icon(s.notify.on ? 'bell' : 'bellOff', 21)}</a>
+        <a class="hx-btn" href="#/settings" aria-label="الإعدادات">${icon('gear', 21)}</a>
       </span>
     </div>
-    <div class="h-dates">
-      <span class="h-moon" title="القمر الليلة">${moonPhase(hijri(info.day, s.hijriAdjust).day)}</span>
-      <span><b>${weekday(info.day)}</b><span>${hijriText(info.day, s.hijriAdjust)}</span><small>${gregText(info.day)}</small></span>
+    <div class="hx-day">
+      <div><h1>${weekday(info.day)}</h1><a href="#/settings/location">${esc(s.location.name)}</a></div>
+      <span class="hx-moon" title="القمر الليلة">${moonPhase(h.day)}</span>
     </div>
-    <div class="h-count">
-      <small>القادم · <b data-next-name>${esc(info.next.name)}</b> <span data-next-at>${clockText(info.next.hours, s.clock24)}</span></small>
-      <strong class="countdown" data-countdown>${countdown(info.next.at - Date.now())}</strong>
-      <div class="h-bar"><i data-progress style="width:${progress(info)}%"></i></div>
-      <p class="h-ends" data-ends>${endsText(info)}</p>
-    </div>
-    <div class="h-leave" data-leave>${leaveText(info)}</div>
-    <div class="h-now tp-${info.period.key}" data-period-tile>${periodTile(info)}</div>
+    <a class="hx-dates" href="#/calendar">
+      <span><b>${num(h.day)} ${HIJRI_MONTHS[h.month - 1]}</b><small>${num(h.year)} هـ</small></span>
+      <span><b>${num(info.day.d)} ${GREG_MONTHS[info.day.m - 1]}</b><small>${num(info.day.y)} م</small></span>
+    </a>
+    <div class="hx-pill"><span><b data-next-name>${esc(info.nextPrayer.name)}</b> بعد</span><strong data-countdown>${countdown(info.nextPrayer.at - Date.now())}</strong></div>
+    <div class="h-leave hx-leave" data-leave>${leaveText(info)}</div>
   </section>
 
   ${info.isFriday ? `<div class="banner gold">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>الإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></div>` : ''}
 
-  <div class="h-body">
-    ${prayersCard(info)}
-    <section class="h-pair">
-      ${wirdSuggestion(info)}
-      ${worshipCard(info)}
-    </section>
-    <nav class="h-grid" aria-label="اختصارات">
-      ${QUICK.map(([href, label, ic, tone]) => `<a class="tone-${tone}" href="${href}"><span>${icon(ic, 22)}</span><b>${label}</b></a>`).join('')}
+  <div class="hx-body">
+    ${wirdNow(info)}
+    <div data-period-tile>${nowTile(info)}</div>
+
+    <nav class="hx-grid" aria-label="اختصارات">
+      ${QUICK.map(([href, label, ic]) => `<a href="${href}"><span>${icon(ic, 21)}</span><b>${label}</b></a>`).join('')}
     </nav>
-    <div class="h-stack">
-      ${khatmaCard()}
-    </div>
+
+    ${khatmaCard()}
+    ${prayersCard(info)}
+    ${worshipCard(info)}
+    <a class="card hx-week" href="#/calendar">
+      <div class="hx-head"><h2>التقويم</h2><small>${GREG_MONTHS[info.day.m - 1]} ${num(info.day.y)} · ${HIJRI_MONTHS[h.month - 1]}</small></div>
+      <ul>${weekStrip(info)}</ul>
+    </a>
     ${momentsCard(info)}
   </div>
 
@@ -104,7 +113,7 @@ export function render(view) {
   </section>
   <div class="dots" data-dots>${[0, 1, 2, 3].map((i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
 
-  let lastTile = periodTile(info);
+  let lastTile = nowTile(info);
   view.addEventListener('click', onClick);
   const cards = $('[data-cards]', view);
   cards.addEventListener('scroll', () => {
@@ -115,13 +124,12 @@ export function render(view) {
     tick() {
       const info2 = today();
       // Redraw when the day, the next moment, or the kind of time changes.
-      if (info2.key !== info.key || info2.next.at !== info.next.at || info2.period.key !== info.period.key) {
+      if (info2.key !== info.key || info2.next.at !== info.next.at || info2.nextPrayer.at !== info.nextPrayer.at || info2.period.key !== info.period.key) {
         return 'rerender';
       }
-      $('[data-countdown]', view).textContent = countdown(info2.next.at - Date.now());
-      $('[data-progress]', view).style.width = `${progress(info2)}%`;
+      $('[data-countdown]', view).textContent = countdown(info2.nextPrayer.at - Date.now());
       $('[data-leave]', view).innerHTML = leaveText(info2);
-      const p2 = periodTile(info2);
+      const p2 = nowTile(info2);
       if (p2 !== lastTile) $('[data-period-tile]', view).innerHTML = lastTile = p2;
     },
     destroy() {
@@ -155,6 +163,35 @@ function progress(info) {
 // The sentence under the countdown: what the coming moment is.
 function endsText(info) {
   return `<span>${icon(PRAYER_ICONS[info.next.key] || 'clock', 15)} ${esc(MOMENT_NOTE[info.next.key] || '')}</span>`;
+}
+
+// The adhkar for this time of the day, as the first card under the dates.
+function wirdNow(info) {
+  const now = Date.now();
+  const t = info.times;
+  const id = now >= t.fajr.at && now < t.asr.at ? 'morning' : now >= t.asr.at && now < t.isha.at ? 'evening' : 'sleep';
+  const cat = CATEGORY_BY_ID[id];
+  const done = wirdDone(cat);
+  const all = cat.items.length;
+  const fin = done === all;
+  return `<a class="hx-now" href="#/adhkar/${id}">
+    <span class="hx-now-ic">${icon(fin ? 'check' : cat.icon, 24)}</span>
+    <span class="hx-now-text"><b>${esc(cat.title)} <em>· ${fin ? 'تمّت' : 'الآن'}</em></b><small>${fin ? 'تقبّل الله منك' : done ? `قرأت ${num(done)} من ${num(all)}` : esc(cat.subtitle)}</small></span>
+    ${icon('back', 20, 'hx-go')}</a>`;
+}
+
+// The moment coming (or, around a prayer, its adhan and iqama), as the second card.
+function nowTile(info) {
+  const a = info.adhan;
+  if (a) {
+    const since = a.since === 0 ? `حان الآن أذان ${esc(a.name)}` : `مضى على أذان ${esc(a.name)} ${minutesText(a.since)}`;
+    const iq = a.iqamaIn === null ? '' : a.iqamaIn > 0 ? `الإقامة بعد ${minutesText(a.iqamaIn)}` : a.iqamaIn === 0 ? 'حان وقت الإقامة' : `أُقيمت الصلاة منذ ${minutesText(-a.iqamaIn)}`;
+    return `<div class="hx-now"><span class="hx-now-ic">${icon('mosque', 24)}</span><span class="hx-now-text"><b>${since}</b>${iq ? `<small>${iq}</small>` : ''}</span></div>`;
+  }
+  const n = info.next;
+  return `<div class="hx-now"><span class="hx-now-ic">${icon(PRAYER_ICONS[n.key] || 'clock', 24)}</span>
+    <span class="hx-now-text"><b>${esc(n.name)} <em>· قريباً</em></b><small>${esc(MOMENT_NOTE[n.key] || '')}</small></span>
+    <span class="hx-now-time">${clockText(n.hours, state.settings.clock24)}</span></div>`;
 }
 
 // When the time of the prayer now in its time runs out: Fajr at sunrise, Dhuhr at Asr, Asr at
@@ -194,33 +231,31 @@ function shownDay(info) {
   return { day, times: dayTimes(day, s, hijri(day, s.hijriAdjust).month === 9), next: {}, other: true };
 }
 
-// The five prayers of the day, with the arrows that move both time cards to another day.
+// The prayers of the day (and sunrise), each with its iqama; the arrows move to another day.
 function prayersCard(info) {
   const s = state.settings;
   const shown = shownDay(info);
   const d = shown.day;
   const now = Date.now();
   const label = dayOffset === 0 ? 'اليوم' : dayOffset === 1 ? 'غداً' : dayOffset === -1 ? 'أمس' : weekday(d);
-  const prayers = PRAYERS.map((key) => {
+  const tiles = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'].map((key) => {
     const t = shown.times[key];
     const c = clock(t.hours, s.clock24);
-    const isNow = !shown.other && info.lastPrayer.at === t.at;
     const isNext = !shown.other && info.nextPrayer.at === t.at;
-    const passed = !shown.other && t.at <= now && !isNow;
-    return `<li class="h-pr ${isNow ? 'now' : ''} ${isNext ? 'next' : ''} ${passed ? 'passed' : ''}">
-      <b>${t.name}</b>${icon(PRAYER_ICONS[key], 22)}<span>${c.time}</span><small>${c.period}</small></li>`;
+    const isNow = !shown.other && info.lastPrayer.at === t.at;
+    const wait = s.iqama?.[key];
+    const sub = key === 'sunrise' ? `الإشراق: ${clockText(shown.times.duha.hours, s.clock24)}` : wait ? `الإقامة: ${clockText(t.hours + wait / 60, s.clock24)}` : '';
+    return `<li class="hx-pr ${isNext ? 'next' : ''} ${isNow ? 'now' : ''} ${!shown.other && t.at <= now && !isNow ? 'passed' : ''}">
+      ${icon(PRAYER_ICONS[key], 20)}<b>${t.name}</b><strong>${c.time}<small>${c.period}</small></strong>${sub ? `<span>${sub}</span>` : ''}</li>`;
   }).join('');
-  return `<section class="card h-times" data-prayers>
-    <div class="card-head">
-      <h2>${icon('mosque', 18)} الصلوات</h2>
-      <a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a>
-    </div>
+  return `<section class="card hx-times" data-prayers>
+    <div class="hx-head"><h2>مواقيت الصلاة</h2><a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a></div>
     <div class="pday">
       <button class="icon-btn ghost sm flip" data-pday="-1" aria-label="اليوم السابق">${icon('chevron', 20)}</button>
       <button class="pday-label ${dayOffset ? 'other' : ''}" data-pday="0"><b>${label}</b><small>${weekday(d)}، ${num(d.d)} ${GREG_MONTHS[d.m - 1]} • ${hijriText(d, s.hijriAdjust)}</small></button>
       <button class="icon-btn ghost sm" data-pday="1" aria-label="اليوم التالي">${icon('chevron', 20)}</button>
     </div>
-    <ul class="h-prayers">${prayers}</ul>
+    <ul class="hx-prayers">${tiles}</ul>
   </section>`;
 }
 
@@ -248,30 +283,36 @@ function momentsCard(info) {
   </section>`;
 }
 
-// Where the khatma has reached, and the way back into it.
+// Where the khatma has reached, as a dark card.
 function khatmaCard() {
   const k = firstKhatma();
   if (!k) {
-    return `<a class="card occ-mini kh-mini" href="#/khatma" style="--kc:#3f8ef0">
-      <span class="km-icon">${icon('quran', 24)}</span>
-      <span class="km-text"><small>الختمات</small><b>ابدأ ختمة جديدة</b><small>ورد يومي من القرآن الكريم بخطة تختارها</small></span>
-      <span class="pill">${icon('plus', 16)}</span></a>`;
+    return `<a class="hx-dark" href="#/khatma">
+      <div class="hx-dark-head">${icon('quran', 22)}<h2>الختمة</h2></div>
+      <div class="hx-dark-tile"><small>ورد يومي من القرآن</small><b>ابدأ ختمة جديدة</b></div></a>`;
   }
   const i = khatmaInfo(k);
-  return `<a class="card occ-mini kh-mini" href="#/khatma" style="--kc:${i.color}">
-    <span class="km-icon">${icon('quran', 24)}</span>
-    <span class="km-text"><small>${esc(k.name)}</small><b>${i.done ? 'أتممت الختمة' : `ورد اليوم: ${i.pos === i.wirdTo ? `صفحة ${num(i.pos)}` : `من ${num(i.pos)} إلى ${num(i.wirdTo)}`}`}</b><small>${i.done ? 'تقبّل الله منك' : `الجزء ${num(juzOf(i.pos))} • قرأت ${num(i.read)} من ${num(i.total)}`}</small></span>
-    <span class="pill">${num(Math.round((i.read / i.total) * 100))}%</span></a>`;
+  const pct = Math.round((i.read / i.total) * 100);
+  return `<a class="hx-dark" href="#/khatma">
+    <div class="hx-dark-head">${icon('quran', 22)}<h2>${esc(k.name)}</h2></div>
+    <div class="hx-dark-tile"><small>${i.done ? 'أتممت الختمة' : `ورد اليوم · الجزء ${num(juzOf(i.pos))}`}</small><b>${i.done ? 'تقبّل الله منك' : i.pos === i.wirdTo ? `صفحة ${num(i.pos)}` : `من صفحة ${num(i.pos)} إلى ${num(i.wirdTo)}`}</b></div>
+    <div class="hx-dark-bar"><span>${num(i.read)} / ${num(i.total)}</span><i style="--p:${pct}%"></i></div></a>`;
 }
 
-// Today's follow-up at a glance: the share done and the link to the full list.
+// Today's follow-up and the average of the last seven days, as a dark card.
 function worshipCard(info) {
   const sc = dayScore(info.key);
-  return `<a class="card h-mini tone-indigo" href="#/worship">
-    <span class="h-mini-ring">${ring(sc.fraction, 48, 5)}<b>${num(Math.round(sc.fraction * 100))}٪</b></span>
-    <b>متابعتي اليوم</b>
-    <small>${num(sc.done)} من ${num(sc.total)}</small>
-  </a>`;
+  let sum = 0;
+  for (let i = 0; i < 7; i++) sum += dayScore(dayKey(addDays(info.day, -i))).fraction;
+  const pct = (f) => `${num(Math.round(f * 100))}٪`;
+  return `<a class="hx-dark hx-score" href="#/worship">
+    <div class="hx-score-row">
+      <span><small>إنجاز اليوم</small><b>${pct(sc.fraction)}</b></span>
+      <span><small>معدل آخر سبعة أيام</small><b>${pct(sum / 7)}</b></span>
+      <i class="hx-score-go">${icon('arrowUp', 20)}</i>
+    </div>
+    <small class="hx-score-sub">متابعة · ${num(sc.done)} من ${num(sc.total)} اليوم</small>
+    <div class="hx-dark-bar"><i style="--p:${Math.round(sc.fraction * 100)}%"></i></div></a>`;
 }
 
 function todayCard(kind, label, ic, html, ref) {
