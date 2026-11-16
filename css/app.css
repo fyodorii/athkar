@@ -2604,3 +2604,20 @@ body[data-tab='counter'] #tabs { display: none; }
 .hx-dates span { gap: 0; }
 .hx-dates b { line-height: 1.35; }
 .hx-dates small { font-size: 18px; }
+
+/* Version 70: the side menu as in the reference — it fills most of the screen, and the page slides
+   aside (rounded, shadowed) instead of being dimmed under it */
+@media (max-width: 899.98px) {
+  #tabs { width: 84vw !important; max-width: none; border-radius: 0 !important; box-shadow: none !important; padding: calc(var(--safe-top) + 34px) 22px calc(var(--safe-bottom) + 20px) 18px !important; gap: 4px; transform: translateX(25%); opacity: 0; transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.25s, visibility 0.35s; }
+  body.nav-open #tabs { transform: none; opacity: 1; }
+  #tabs .nav-head { padding: 0 6px 22px !important; justify-content: flex-start; }
+  #tabs .nav-head b { font-size: 46px !important; line-height: 1.2; }
+  #tabs a { padding: 12px 6px !important; gap: 20px !important; font-size: 21px !important; }
+  #tabs a .ic { width: 27px !important; height: 27px !important; }
+  #tabs hr { margin: 10px 6px !important; }
+  #view { transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), border-radius 0.35s, box-shadow 0.35s; }
+  body.nav-open #view { position: relative; z-index: 71; transform: translateX(-84vw); height: 100vh; overflow: hidden; border-radius: 0 44px 44px 0; background: var(--bg); box-shadow: 10px 0 40px -8px rgba(20, 30, 40, 0.3); pointer-events: none; }
+  body.nav-open #nav-backdrop { inset: 0 auto 0 0; width: 16vw; z-index: 72; background: transparent; }
+}
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) { #tabs, #view { transition: none; } }
+@media (max-width: 899.98px) { html:has(body.nav-open), body.nav-open { overflow: clip; } }
