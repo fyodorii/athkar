@@ -39,7 +39,6 @@ const TABS = [
   ['worship', 'متابعة', 'check', '#/worship'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['audio', 'الصوتيات', 'play', '#/audio'],
-  ['calendar', 'التقويم', 'calendar', '#/calendar'],
   '',
   ['tools', 'الأدوات', 'widget', '#/tools'], // also the khatmas, nawafil, reminders, debts and the date calculator
   '',
