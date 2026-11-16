@@ -2269,3 +2269,17 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .tsb:not(.tsb-beads):not(.tsb-ring) .tsb-phrase { align-items: flex-start; }
 .tsb:not(.tsb-beads):not(.tsb-ring) .tsb-phrase > span { margin: 0; }
 .tsb-fonts { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Version 58: the tasbeeh's controls in a drawer that slides in from the left */
+.tsb-handle { position: absolute; right: 0; top: 50%; z-index: 7; width: 26px; height: 92px; margin-top: -46px; display: grid; place-items: center; border-radius: 16px 0 0 16px; background: rgba(128, 128, 128, 0.22); color: inherit; opacity: 0.7; }
+.tsb-drawer { position: absolute; left: 10px; top: 50%; z-index: 8; display: grid; gap: 14px; padding: 18px 14px; border-radius: 34px; background: rgba(8, 8, 20, 0.88); color: #fff; box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6); transform: translate(calc(-100% - 24px), -50%); transition: transform 0.25s ease; max-height: calc(100% - var(--safe-top) - var(--safe-bottom) - 40px); overflow-y: auto; }
+.tsb-drawer.open { transform: translate(0, -50%); }
+.tsb-drawer button { display: grid; justify-items: center; gap: 6px; color: #fff; font-size: 13px; font-weight: 500; }
+.tsb-drawer button i { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 18px; border: 1.5px solid rgba(255, 255, 255, 0.85); position: relative; }
+.tsb-drawer button.off i { opacity: 0.55; }
+.tsb-drawer button.off i::after { content: ''; position: absolute; width: 38px; height: 2px; border-radius: 2px; background: #fff; transform: rotate(-45deg); box-shadow: 0 0 0 1.5px rgba(8, 8, 20, 0.9); }
+.tsb.drawer-open .tsb-handle { opacity: 0.35; }
+@media (prefers-reduced-motion: reduce) { .tsb-drawer { transition: none; } }
+@media (max-height: 560px) { .tsb-drawer { gap: 8px; padding: 12px 10px; } .tsb-drawer button i { width: 46px; height: 46px; border-radius: 14px; } }
+/* Without the bottom bar the bead ring's screen needs less room below. */
+.tsb-beads .tsb-tap { padding-bottom: calc(var(--safe-bottom) + 28px); }

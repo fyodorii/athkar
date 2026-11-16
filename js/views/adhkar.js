@@ -557,6 +557,43 @@ export function renderTasbeeh(view, mineId) {
     return `<span class="tb-done ${done ? 'on' : ''}">${done ? icon('check', 13) : ''}</span><span>${num(inRound)} / ${num(n)}${rounds ? ` • دورات: ${num(rounds)}` : ''}</span>`;
   };
 
+  // The controls wait off the screen, so the dhikr has all of it: a swipe to the left (or the
+  // tab at the edge) slides them in, a swipe back or a tap outside sends them away.
+  let drawer = false;
+  const drawerHTML = () => `
+        <button class="tsb-handle" data-ui data-drawer aria-label="أدوات السبحة">${icon('chevron', 20)}</button>
+        <div class="tsb-drawer ${drawer ? 'open' : ''}" data-ui data-panel>
+          <button data-d="sound" class="${t.alertSound ? '' : 'off'}"><i>${icon('sound', 24)}</i>الصوت</button>
+          <button data-d="vibrate" class="${state.settings.haptics ? '' : 'off'}"><i>${icon('vibrate', 24)}</i>الاهتزاز</button>
+          <button data-d="reset"><i>${icon('reset', 24)}</i>تصفير</button>
+          <button data-d="share"><i>${icon('share', 24)}</i>مشاركة</button>
+          <button data-d="settings"><i>${icon('more', 24)}</i>الإعدادات</button>
+        </div>`;
+  const setDrawer = (on) => {
+    drawer = on;
+    $('[data-panel]', view)?.classList.toggle('open', on);
+    $('[data-area]', view)?.classList.toggle('drawer-open', on);
+  };
+  const drawerAct = (d) => {
+    if (d === 'sound') {
+      t.alertSound = !t.alertSound;
+      if (t.alertSound) {
+        unlockAudio();
+        chime([0], false);
+      }
+    } else if (d === 'vibrate') {
+      state.settings.haptics = !state.settings.haptics;
+      if (state.settings.haptics) haptic(30, true);
+    } else if (d === 'reset') return reset();
+    else if (d === 'share') return shareText(`${src.phrase()}\n${num(src.count())} مرة`);
+    else if (d === 'settings') {
+      setDrawer(false);
+      return settings();
+    }
+    save();
+    paint(); // the tap area ticks on the iPhone only while vibration is on
+  };
+
   // Only the dhikr and its count are on the screen. The whole of it is a label of the hidden
   // switch that gives the iPhone its tick (ui.js), so every count is felt; the way out is at
   // the top, and the settings float on the left.
@@ -576,8 +613,7 @@ export function renderTasbeeh(view, mineId) {
           <div class="tb-foot" data-foot>${footHTML()}</div>
         </label>
         <a class="tb-round tb-close" data-ui href="${backTo}" aria-label="خروج">${icon('close', 22)}</a>
-        <button class="tb-round tb-menu" data-ui data-settings aria-label="إعدادات السبحة">${icon('beads', 22)}</button>
-        <div class="tb-bar"><button class="tb-reset" data-ui data-reset aria-label="تصفير">${icon('reset', 22)}</button></div>
+        ${drawerHTML()}
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
       return;
@@ -592,7 +628,7 @@ export function renderTasbeeh(view, mineId) {
         </label>
         <a class="icon-btn glass tsb-back" data-ui href="${backTo}" aria-label="خروج">${icon('back', 22)}</a>
         ${group ? `<span class="tr-title">الذكر ${num(group.i + 1)} من ${num(group.items.length)}</span>` : ''}
-        <button class="icon-btn glass tsb-gear" data-ui data-settings aria-label="إعدادات السبحة">${icon('gear', 22)}</button>
+        ${drawerHTML()}
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
       return;
@@ -606,7 +642,7 @@ export function renderTasbeeh(view, mineId) {
           </div>
         </label>
         <a class="icon-btn glass tsb-back" data-ui href="${backTo}" aria-label="خروج">${icon('back', 22)}</a>
-        <button class="icon-btn glass tsb-gear" data-ui data-settings aria-label="إعدادات السبحة">${icon('gear', 22)}</button>
+        ${drawerHTML()}
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
   };
@@ -803,7 +839,27 @@ export function renderTasbeeh(view, mineId) {
     save();
     paint();
   };
+  // A sideways swipe moves the drawer and is not a count.
+  let from = null;
+  let swiped = 0;
+  const onTouchStart = (e) => (from = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null);
+  const onTouchEnd = (e) => {
+    if (!from) return;
+    const [dx, dy] = [e.changedTouches[0].clientX - from[0], e.changedTouches[0].clientY - from[1]];
+    from = null;
+    if (Math.abs(dx) < 45 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
+    swiped = Date.now();
+    setDrawer(dx < 0);
+  };
   const onClick = (e) => {
+    if (Date.now() - swiped < 400) return e.preventDefault();
+    if (e.target.closest('[data-drawer]')) return setDrawer(!drawer);
+    const d = e.target.closest('[data-d]');
+    if (d) return drawerAct(d.dataset.d);
+    if (drawer) {
+      e.preventDefault(); // a tap outside closes it, without counting
+      return setDrawer(false);
+    }
     if (e.target.closest('[data-next]')) return next();
     if (e.target.closest('[data-reset]')) return reset();
     if (e.target.closest('[data-settings]')) return settings();
@@ -839,6 +895,8 @@ export function renderTasbeeh(view, mineId) {
   };
   view.addEventListener('click', guardClick, true);
   view.addEventListener('click', onClick);
+  view.addEventListener('touchstart', onTouchStart, { passive: true });
+  view.addEventListener('touchend', onTouchEnd);
   view.addEventListener('gesturestart', onGestureStart);
   view.addEventListener('gesturechange', onGestureChange);
   view.addEventListener('gestureend', onGestureEnd);
@@ -849,6 +907,8 @@ export function renderTasbeeh(view, mineId) {
     destroy() {
       view.removeEventListener('click', guardClick, true);
       view.removeEventListener('click', onClick);
+      view.removeEventListener('touchstart', onTouchStart);
+      view.removeEventListener('touchend', onTouchEnd);
       view.removeEventListener('gesturestart', onGestureStart);
       view.removeEventListener('gesturechange', onGestureChange);
       view.removeEventListener('gestureend', onGestureEnd);
