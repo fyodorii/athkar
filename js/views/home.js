@@ -28,7 +28,7 @@ const QUICK = [
   ['#/reminders', 'تذكيراتي', 'bell'],
   ['#/audio', 'الصوتيات', 'play'],
   ['#/tools', 'الأدوات', 'widget'],
-  ['#/debts', 'الديون', 'wallet'],
+  ['#/counter', 'العداد', 'hash'],
 ];
 
 // The day and the months as a calligrapher writes them: vowelled, the day drawn out.

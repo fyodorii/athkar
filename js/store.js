@@ -68,6 +68,7 @@ export const DEFAULTS = {
   // `count` are where the group has reached.
   groups: [{ id: 'daily', name: 'برنامج يومي', i: 0, count: 0, items: [0, 6, 3, 7].map((n) => ({ text: MY_ADHKAR[n], target: 1000 })) }],
   surahRem: { on: true, list: [] }, // reminders to recite a surah: { id, surah: 1…114, time: "HH:MM" }, every day
+  counter: { i: 0, counts: {}, vib: true, alertEvery: 33, opacity: 100, size: 'auto', mode: 'pages', mute: true }, // «العداد»
   appts: {}, // the calendar's «مواعيدي»: { 'YYYY-MM-DD': [{ id, text }] }
   reminders: [], // «تذكيراتي»: { id, text, time: "HH:MM", on }, every day
   notifyLog: {}, // reminders already shown: { "<day>:<event>": time }

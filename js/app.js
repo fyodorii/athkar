@@ -10,6 +10,7 @@ import * as home from './views/home.js';
 import * as adhkar from './views/adhkar.js';
 import * as notebook from './views/notebook.js';
 import * as calendar from './views/calendar.js';
+import * as counter from './views/counter.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as radioView from './views/radio.js';
@@ -34,6 +35,7 @@ const TABS = [
   ['mine', 'أذكاري', 'heart', '#/mine'],
   ['duas', 'أدعيتي', 'hand', '#/notebook'],
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
+  ['counter', 'العداد', 'hash', '#/counter'],
   ['worship', 'متابعة', 'check', '#/worship'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['audio', 'الصوتيات', 'play', '#/audio'],
@@ -58,6 +60,7 @@ const ROUTES = [
   [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
   [/^#\/audio$/, 'audio', (v) => audioView.render(v)],
   [/^#\/calendar$/, 'calendar', (v) => calendar.render(v)],
+  [/^#\/counter$/, 'counter', (v) => counter.render(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
