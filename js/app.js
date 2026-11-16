@@ -9,6 +9,7 @@ import { $, esc, toast } from './ui.js';
 import * as home from './views/home.js';
 import * as adhkar from './views/adhkar.js';
 import * as notebook from './views/notebook.js';
+import * as calendar from './views/calendar.js';
 import * as settings from './views/settings.js';
 import * as worship from './views/worship.js';
 import * as radioView from './views/radio.js';
@@ -36,6 +37,7 @@ const TABS = [
   ['worship', 'متابعة', 'check', '#/worship'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
   ['audio', 'الصوتيات', 'play', '#/audio'],
+  ['calendar', 'التقويم', 'calendar', '#/calendar'],
   '',
   ['khatma', 'الختمات', 'quran', '#/khatma'],
   ['rawatib', 'السنن الرواتب', 'mosque', '#/rawatib'],
@@ -55,6 +57,7 @@ const ROUTES = [
   [/^#\/adhkar(?:\/([\w-]+))?$/, 'mine', (v, id) => (CATEGORY_BY_ID[id] ? adhkar.renderWird(v, id) : adhkar.renderMine(v))],
   [/^#\/radio$/, 'radio', (v) => radioView.renderRadio(v)],
   [/^#\/audio$/, 'audio', (v) => audioView.render(v)],
+  [/^#\/calendar$/, 'calendar', (v) => calendar.render(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
   [/^#\/tools$/, 'tools', (v) => tools.renderTools(v)],
@@ -86,7 +89,7 @@ let currentHash = '';
 function route() {
   const hash = location.hash || '#/home';
   // Links to what the app no longer has (memorization, ruqyah, widget) open the home screen.
-  if (/^#\/(quran|hifz|ruqyah|calendar(\/[\d-]+)?|surah\/\w+|qibla|settings\/widget)$/.test(hash)) {
+  if (/^#\/(quran|hifz|ruqyah|calendar\/[\d-]+|surah\/\w+|qibla|settings\/widget)$/.test(hash)) {
     location.replace('#/home');
     return;
   }

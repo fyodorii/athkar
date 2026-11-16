@@ -24,6 +24,7 @@ export const DEFAULTS = {
     textWeight: 500, // 200…900
     fontTsb: 'tajawal', // the dhikr on the tasbeeh
     tsbWeight: 700,
+    calMode: 'hijri', // the calendar tab: 'hijri' or 'greg'
     uiWeight: 400,
     headScale: 1, // size of the headings, 0.8…1.3
     flat: true, // flat design (the default since release 31) instead of liquid glass
@@ -215,6 +216,17 @@ if (!state.migrated.tsbBlack) {
 if (!state.migrated.tsbBgs) {
   state.tasbeeh.bgs = {};
   state.migrated.tsbBgs = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
+// Release 64: the new look comes with its olive colour (still the user's to change).
+if (!state.migrated.sage64) {
+  state.settings.accent = 'sage';
+  state.migrated.sage64 = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {

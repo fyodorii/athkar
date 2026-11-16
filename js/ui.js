@@ -10,6 +10,7 @@ const SYS = "-apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif";
 // The app colours, chosen in the settings: [id, name, the light theme's main colour].
 // Their full palettes (light and dark) are in css/app.css under [data-accent].
 export const ACCENTS = [
+  ['sage', 'زيتي', '#2f6b5c'],
   ['blue', 'أزرق', '#2c6fcc'],
   ['green', 'أخضر', '#1f8a6e'],
   ['teal', 'فيروزي', '#12819a'],
