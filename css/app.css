@@ -2628,3 +2628,8 @@ body[data-tab='counter'] #tabs { display: none; }
 .hx-day h1 { font-family: 'Noto Naskh', 'Amiri', serif; font-weight: 700; line-height: 1.4; }
 .hx-dates b { font-family: 'Noto Naskh', 'Amiri', serif; font-weight: 400; }
 .hx-dates b { font-size: 23px; } .hx-dates b em { font-size: 19px; }
+
+/* Version 74: the day and dates in «Calligraphy» (Naz Moj, 2013), the font the user chose */
+@font-face { font-family: 'Calligraphy'; src: url('../fonts/calligraphy.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+.hx-day h1, .hx-dates b { font-family: 'Calligraphy', 'Noto Naskh', 'Amiri', serif; font-weight: 400; }
+.hx-day h1 { line-height: 1.7; } .hx-day a { margin-top: 0; }
