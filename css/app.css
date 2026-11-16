@@ -2298,3 +2298,12 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 .tsb-steps button { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgba(128, 128, 128, 0.24); color: inherit; }
 .tsb-steps button:disabled { opacity: 0.3; }
 .tsb-steps span { min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* Version 61: the bead ring turns one bead with every count; the page does not bounce under the finger */
+.tsb { touch-action: none; overscroll-behavior: none; }
+.tb-rot { transform-origin: 150px 150px; transition: transform 0.28s cubic-bezier(0.3, 0.8, 0.3, 1); }
+.tb-bead { transition: r 0.2s, fill 0.2s; }
+.tb-bead.cur { r: 11.5px; }
+.tb-halo { opacity: 0; transition: opacity 0.2s; }
+.tb-halo.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .tb-rot { transition: none; } }
