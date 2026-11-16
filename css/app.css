@@ -2256,3 +2256,16 @@ body[data-tab='home']::after { content: ''; position: fixed; inset: 0 0 auto; he
 @media (prefers-reduced-motion: reduce) { .tr-arc { transition: none; } }
 .tsb-ring .tsb-gear { top: calc(var(--safe-top) + 12px); bottom: auto; left: 16px; opacity: 1; }
 .tsb-ring .tr-phrase { transition: none; }
+
+/* Version 56: smaller rings, the tasbeeh's font in every look, the classic dhikr from the top */
+.tb-ring { width: min(62vw, 36vh, 270px); }
+.tb-mid b { font-size: clamp(44px, 15vw, 66px); }
+.tb-mid small { margin-top: 6px; font-size: 14px; }
+.tr-ring { width: calc(min(48vw, 25vh, 205px) * var(--tsb-scale, 1)); }
+.tr-mid b { font-size: calc(clamp(42px, 14vw, 64px) * var(--tsb-scale, 1)); }
+.tr-mid small { margin-top: 6px; font-size: 13px; }
+.tsb-ring .tr-phrase, .tsb-ring .tr-phrase:not(.hafs) { font-family: var(--font-tsb); font-weight: var(--tsb-weight); }
+.tsb:not(.tsb-beads):not(.tsb-ring) .tsb-tap { padding-top: calc(var(--safe-top) + 60px); }
+.tsb:not(.tsb-beads):not(.tsb-ring) .tsb-phrase { align-items: flex-start; }
+.tsb:not(.tsb-beads):not(.tsb-ring) .tsb-phrase > span { margin: 0; }
+.tsb-fonts { display: flex; flex-wrap: wrap; gap: 8px; }

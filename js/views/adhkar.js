@@ -7,7 +7,7 @@ import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
 import { today } from '../today.js';
 import { chime, unlockAudio } from '../timers.js';
-import { $, $$, confirmSheet, esc, haptic, hapticSwitch, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
+import { $, $$, confirmSheet, esc, FONT_NAMES, FONTS, haptic, hapticSwitch, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
 
 export const MINE_TABS = [
   ['#/mine', 'أذكاري'],
@@ -978,6 +978,8 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
             ${[['classic', 'كلاسيكي'], ['beads', 'حبّات المسبحة'], ['ring', 'الحلقة']].map(([v, l]) => `<button class="${(t.style || 'classic') === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
           </div>
           <div class="row"><span class="row-label">تأثير اللمس<small>دائرة تظهر حيث تضغط</small></span>${toggle('ripple', !!t.ripple)}</div>
+          <h4 class="sheet-sub">خط الذكر</h4>
+          <div class="chips tsb-fonts" data-font>${Object.keys(FONTS).map((v) => `<button class="chip-opt ${(state.settings.fontTsb || 'tajawal') === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v]}">${FONT_NAMES[v]}</button>`).join('')}</div>
           <h4 class="sheet-sub">لون الخلفية</h4>
           <div class="swatches">${T_BGS.map((b) => `<button class="swatch ${b.id === bg.id ? 'on' : ''}" data-bg="${b.id}" style="background:${b.css || 'linear-gradient(170deg, #2a5cc4, #070f2c)'}" aria-label="${b.name}" title="${b.name}"></button>`).join('')}</div>
           <h4 class="sheet-sub">لون الذكر</h4>
@@ -995,15 +997,16 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
         const b = e.target.closest('[data-bg]');
         const k = e.target.closest('[data-ink]');
         const st = e.target.closest('[data-style] [data-v]');
+        const fo = e.target.closest('[data-font] [data-v]');
         if (st) {
           t.style = st.dataset.v;
-          if (t.style === 'beads' && (t.bg || 'blue') === 'blue') t.bg = 'light';
-          if (t.style === 'ring' && ['blue', 'light'].includes(t.bg || 'blue')) t.bg = 'black';
+          if (t.style === 'ring') Object.assign(state.settings, { fontTsb: 'amiri', tsbWeight: 400 }); // its own hand, to start with
         }
+        else if (fo) state.settings.fontTsb = fo.dataset.v;
         else if (b) t.bg = b.dataset.bg;
         else if (k) t.ink = k.dataset.ink;
         else if (e.target.closest('[data-look-reset]')) {
-          Object.assign(t, { bg: 'blue', ink: '', counterSize: 1, dim: 0 });
+          Object.assign(t, { bg: 'black', ink: '', counterSize: 1, dim: 0 });
           if (box === t) t.fontSize = 40;
           else delete box.fontSize;
         }
