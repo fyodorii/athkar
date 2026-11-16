@@ -219,7 +219,7 @@ export function renderLocation(view) {
       const city = CITIES[Number(c.dataset.city)];
       pick({ name: city.name, lat: city.lat, lng: city.lng, tz: city.tz, source: 'city' }, city.method);
       toast(`${icon('check', 18)} ${esc(city.name)} — ${esc(METHODS[city.method].name.split(' — ')[0])}`);
-      location.hash = '#/home';
+      location.replace('#/home');
       return;
     }
     if (e.target.closest('[data-gps]')) locate(pick);
@@ -255,7 +255,7 @@ function locate(pick) {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
       pick({ name: name || 'موقعي الحالي', lat, lng, tz, source: 'gps' }, near.km < 600 ? near.city.method : null);
       toast(`${icon('check', 18)} ${esc(name || 'موقعك الحالي')}`);
-      location.hash = '#/home';
+      location.replace('#/home');
     },
     (err) => {
       toast(err.code === 1 ? 'لم يُسمح بالوصول إلى الموقع. فعّله من الإعدادات ← الخصوصية ← خدمات الموقع ← Safari' : 'تعذر تحديد الموقع، اختر مدينتك من القائمة');

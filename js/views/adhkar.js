@@ -101,7 +101,7 @@ export function renderWird(view, id) {
     if (e.target.closest('summary, details')) return;
     if (item.count >= TSB_FROM && (counts()[item.id] || 0) < item.count) {
       returnTo = item.id;
-      location.hash = `#/tasbeeh/w-${item.id}`;
+      location.replace(`#/tasbeeh/w-${item.id}`);
       return;
     }
     count(card, item);
@@ -204,7 +204,7 @@ export function renderMine(view, focusId) {
     if (e.target.closest('[data-more]')) return customMenu(item, draw);
     // Counting happens on the full-screen counter, so scrolling the list never adds a count.
     haptic();
-    location.hash = `#/tasbeeh/${item.id}`;
+    location.replace(`#/tasbeeh/${item.id}`);
   };
   view.addEventListener('click', onClick);
   return { destroy: () => view.removeEventListener('click', onClick) };
@@ -737,7 +737,7 @@ export function renderTasbeeh(view, mineId) {
     if (reached && wird) {
       // Done: back to the wird, at this dhikr's card.
       toast(`${icon('check', 18)} أتممت ${num(n)}، تقبّل الله منك`);
-      setTimeout(() => location.hash === `#/tasbeeh/${mineId}` && (location.hash = backTo), 900);
+      setTimeout(() => location.hash === `#/tasbeeh/${mineId}` && location.replace(backTo), 900);
     } else if (reached && (mine || !ringOn())) toast(`${icon('check', 18)} ${mine ? 'أتممت وردك اليومي من هذا الذكر' : `أتممت ${num(n)} — ${esc(src.phrase())}`}`);
     if (ringOn()) {
       const arc = $('.tr-arc', view);
@@ -1245,7 +1245,7 @@ export function tasbeehSettings() {
         if (a === 'look') tasbeehLook(draw);
         if (a === 'open') {
           close();
-          location.hash = '#/tasbeeh';
+          location.replace('#/tasbeeh');
         }
       });
     },
@@ -1355,7 +1355,7 @@ function tasbeehGroups() {
         const run = e.target.closest('[data-run]');
         if (run) {
           close();
-          location.hash = `#/tasbeeh/g-${run.dataset.run}`;
+          location.replace(`#/tasbeeh/g-${run.dataset.run}`);
           return;
         }
         const ed = e.target.closest('[data-edit]');
@@ -1374,7 +1374,7 @@ function tasbeehGroups() {
           if (!del || !(await confirmSheet('حذف هذه المجموعة؟'))) return;
           state.groups = state.groups.filter((g) => g.id !== del.dataset.del);
           save();
-          if (location.hash === `#/tasbeeh/g-${del.dataset.del}`) location.hash = '#/tasbeeh';
+          if (location.hash === `#/tasbeeh/g-${del.dataset.del}`) location.replace('#/tasbeeh');
         }
         draw();
       });
