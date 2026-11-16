@@ -7,8 +7,7 @@ import { icon } from '../icons.js';
 import { newDay, save, state, uid } from '../store.js';
 import { today } from '../today.js';
 import { chime, tick, unlockAudio } from '../timers.js';
-import { APP_NAME } from '../config.js';
-import { $, $$, confirmSheet, esc, FONT_NAMES, FONTS, haptic, hapticSwitch, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
+import { $, $$, confirmSheet, esc, FONT_NAMES, FONTS, WEIGHTS, haptic, hapticSwitch, openSheet, pageHeader, ring, segmented, shareText, toast, toggle } from '../ui.js';
 
 export const MINE_TABS = [
   ['#/mine', 'أذكاري'],
@@ -388,7 +387,12 @@ const T_BGS = [
 const T_INKS = ['#ffffff', '#e3c27a', '#a7f3d0', '#bae6fd', '#fbcfe8', '#fde68a', '#0f5c4d', '#7a4b12', '#1e293b', '#000000'];
 const DIM_STEPS = [0, 30, 50, 70];
 const DIM_MAX = 85;
-const tsbBg = (t) => T_BGS.find((b) => b.id === t.bg) || T_BGS[0];
+// Each look keeps its own background: black for the classic, white for the beads, green for the ring.
+// Fonts whose vowel marks push the words off their line in Safari: the dhikr is shown bare in them.
+const NO_MARKS = ['plex', 'cairo', 'ruqaa'];
+const BG_OF = { classic: 'black', beads: 'white', ring: 'emerald' };
+const tsbLook = (t) => (BG_OF[t.style] ? t.style : 'classic');
+const tsbBg = (t) => T_BGS.find((b) => b.id === (t.bgs?.[tsbLook(t)] || BG_OF[tsbLook(t)])) || T_BGS[0];
 
 // Istighfar has no fixed number: it is counted openly, and each one also goes to «متابعتي».
 export const isIstighfar = (text) => /[أا]ستغفر/.test(text || '');
@@ -529,6 +533,8 @@ export function renderTasbeeh(view, mineId) {
   // «الحلقة»: the dhikr in the naskh hand over black, the count inside a golden ring that fills
   // with the round. A dhikr of a group waits, once its number is said, for «التالي».
   const ringOn = () => t.style === 'ring';
+  // The ring shows the usual adhkar lightly vocalised, in the fonts that place the marks well.
+  const shown = (text) => (ringOn() && !mine?.quran && !NO_MARKS.includes(state.settings.fontTsb) ? vocalised(text) : text);
   const ARC = 2 * Math.PI * 132;
   const arcHTML = () => {
     const { c, n, inRound } = roundOf();
@@ -544,7 +550,7 @@ export function renderTasbeeh(view, mineId) {
     if (group && done) {
       const last = group.i + 1 >= group.items.length;
       const next = group.items[last ? 0 : group.i + 1].text;
-      return `<button class="tr-next" data-next><span>${last ? 'تمّت المجموعة — من أولها' : `التالي: ${esc(vocalised(next).slice(0, 80))}`}</span>${icon('chevron', 18)}</button>
+      return `<button class="tr-next" data-next><span>${last ? 'تمّت المجموعة — من أولها' : `التالي: ${esc(shown(next).slice(0, 80))}`}</span>${icon('chevron', 18)}</button>
         <small>أو اضغط على الشاشة لبدء دورة جديدة</small>`;
     }
     if (!n) return `<small>المجموع ${num(src.total())}</small>`;
@@ -561,7 +567,16 @@ export function renderTasbeeh(view, mineId) {
   // The controls wait off the screen, so the dhikr has all of it: a swipe to the left (or the
   // tab at the edge) slides them in, a swipe back or a tap outside sends them away.
   let drawer = false;
-  const drawerHTML = () => `
+  const drawerHTML = () => `${
+    group
+      ? `
+        <div class="tsb-steps" data-ui>
+          <button data-go="-1" ${group.i ? '' : 'disabled'} aria-label="الذكر السابق">${icon('back', 16)}</button>
+          <span>${num(group.i + 1)} / ${num(group.items.length)}</span>
+          <button data-go="1" ${group.i + 1 < group.items.length ? '' : 'disabled'} aria-label="الذكر التالي">${icon('chevron', 16)}</button>
+        </div>`
+      : ''
+  }
         <button class="tsb-handle" data-ui data-drawer aria-label="أدوات السبحة">${icon('chevron', 20)}</button>
         <div class="tsb-drawer ${drawer ? 'open' : ''}" data-ui data-panel>
           <button data-d="sound" class="${t.tapSound ? '' : 'off'}"><i>${icon('sound', 24)}</i>الصوت</button>
@@ -624,12 +639,12 @@ export function renderTasbeeh(view, mineId) {
       view.innerHTML = `
       <section class="tsb tsb-ring ${bg.light ? 'light' : ''}" data-area data-top="${shades[0]}" style="${[`background:${bg.css || '#000'}`, t.ink && `--tsb-ink:${t.ink}`, `--tsb-scale:${t.counterSize}`].filter(Boolean).join(';')}">
         <label class="tsb-tap" ${state.settings.haptics ? `for="${hapticSwitch()}"` : ''}>
-          <div class="tsb-phrase tr-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(mine?.quran ? src.phrase() : vocalised(src.phrase()))}</span></div>
+          <div class="tsb-phrase tr-phrase ${mine?.quran ? 'hafs' : ''}" data-phrase style="font-size:${box.fontSize || 40}px"><span>${esc(shown(src.phrase()))}</span></div>
           <div class="tr-ring" data-ring>${arcHTML()}</div>
           <div class="tr-foot" data-foot>${arcFoot()}</div>
         </label>
         <a class="tsb-x" data-ui href="${backTo}" aria-label="إغلاق">${icon('close', 20)}</a>
-        ${group ? `<span class="tr-title">الذكر ${num(group.i + 1)} من ${num(group.items.length)}</span>` : ''}
+
         ${drawerHTML()}
         <i class="tsb-dim" data-dim-layer style="opacity:${t.dim / 100}"></i>
       </section>`;
@@ -760,9 +775,9 @@ export function renderTasbeeh(view, mineId) {
           const k = e.target.closest('[data-s]')?.dataset.s;
           if (!k) return;
           close();
-          const text = mine?.quran ? src.phrase() : vocalised(src.phrase());
-          if (k === 'text') shareText(`${src.phrase()}\n${num(src.count())} مرة`);
-          else shareImage(text, `${num(src.count())} مرة`).catch(() => toast('تعذر إنشاء الصورة'));
+          const text = shown(src.phrase()); // as the screen shows it
+          if (k === 'text') shareText(src.phrase());
+          else shareImage(NO_MARKS.includes(state.settings.fontTsb) ? text.replace(/[\u064B-\u0652\u0670]/g, '') : text).catch(() => toast('تعذر إنشاء الصورة'));
         });
       },
       { title: 'مشاركة' }
@@ -868,6 +883,13 @@ export function renderTasbeeh(view, mineId) {
   const onClick = (e) => {
     if (Date.now() - swiped < 400) return e.preventDefault();
     if (e.target.closest('[data-drawer]')) return setDrawer(!drawer);
+    const go = e.target.closest('[data-go]');
+    if (go) {
+      Object.assign(group, { i: Math.max(0, Math.min(group.items.length - 1, group.i + Number(go.dataset.go))), count: 0 });
+      haptic();
+      save();
+      return paint();
+    }
     const d = e.target.closest('[data-d]');
     if (d) return drawerAct(d.dataset.d);
     if (drawer) {
@@ -1053,6 +1075,7 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
           </div>
           <h4 class="sheet-sub">خط الذكر</h4>
           <div class="chips tsb-fonts" data-font>${Object.keys(FONTS).map((v) => `<button class="chip-opt ${(state.settings.fontTsb || 'tajawal') === v ? 'on' : ''}" data-v="${v}" style="font-family:${FONTS[v]}">${FONT_NAMES[v]}</button>`).join('')}</div>
+          <div class="chips tsb-fonts" data-weight>${WEIGHTS.filter(([w]) => [400, 700, 800].includes(w)).map(([w, l]) => `<button class="chip-opt ${Number(state.settings.tsbWeight || 700) === w ? 'on' : ''}" data-v="${w}" style="font-family:${FONTS[state.settings.fontTsb] || FONTS.tajawal};font-weight:${w}">${l}</button>`).join('')}</div>
           <h4 class="sheet-sub">لون الخلفية</h4>
           <div class="swatches">${T_BGS.map((b) => `<button class="swatch ${b.id === bg.id ? 'on' : ''}" data-bg="${b.id}" style="background:${b.css || 'linear-gradient(170deg, #2a5cc4, #070f2c)'}" aria-label="${b.name}" title="${b.name}"></button>`).join('')}</div>
           <h4 class="sheet-sub">لون الذكر</h4>
@@ -1076,10 +1099,11 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
           if (t.style === 'ring') Object.assign(state.settings, { fontTsb: 'amiri', tsbWeight: 400 }); // its own hand, to start with
         }
         else if (fo) state.settings.fontTsb = fo.dataset.v;
-        else if (b) t.bg = b.dataset.bg;
+        else if (e.target.closest('[data-weight] [data-v]')) state.settings.tsbWeight = Number(e.target.closest('[data-weight] [data-v]').dataset.v);
+        else if (b) (t.bgs ??= {})[tsbLook(t)] = b.dataset.bg;
         else if (k) t.ink = k.dataset.ink;
         else if (e.target.closest('[data-look-reset]')) {
-          Object.assign(t, { bg: 'black', ink: '', counterSize: 1, dim: 0 });
+          Object.assign(t, { bgs: {}, ink: '', counterSize: 1, dim: 0 });
           if (box === t) t.fontSize = 40;
           else delete box.fontSize;
         }
@@ -1104,7 +1128,7 @@ function tasbeehLook(redraw, box = state.tasbeeh) {
 }
 
 // The dhikr and its count drawn as a picture, then handed to the phone's share sheet (or saved).
-async function shareImage(text, sub) {
+async function shareImage(text) {
   const [W, H] = [1080, 1350];
   const c = document.createElement('canvas');
   [c.width, c.height] = [W, H];
@@ -1136,15 +1160,21 @@ async function shareImage(text, sub) {
     if (lines.length <= 7) break;
   }
   const lh = size * 1.75;
-  const top = H * 0.44 - ((lines.length - 1) * lh) / 2;
+  const top = H / 2 - ((lines.length - 1) * lh) / 2 + size * 0.3;
+  x.textBaseline = 'alphabetic'; // one line for every word, whichever font draws it
   x.fillStyle = '#fff';
-  lines.forEach((l, i) => x.fillText(l, W / 2, top + i * lh));
-  x.fillStyle = '#d9b665';
-  x.font = `700 64px ${font}`;
-  x.fillText(sub, W / 2, H - 250);
-  x.fillStyle = 'rgba(255, 255, 255, 0.55)';
-  x.font = `500 34px ${font}`;
-  x.fillText(APP_NAME, W / 2, H - 110);
+  // Word by word from the right: some fonts lose their line when Safari draws a whole line at once.
+  x.textAlign = 'right';
+  const gap = x.measureText(' ').width;
+  lines.forEach((l, i) => {
+    const words = l.split(' ');
+    const widths = words.map((w) => x.measureText(w).width);
+    let right = W / 2 + (widths.reduce((a, b) => a + b, 0) + gap * (words.length - 1)) / 2;
+    words.forEach((w, k) => {
+      x.fillText(w, right, top + i * lh);
+      right -= widths[k] + gap;
+    });
+  });
   const blob = await new Promise((ok) => c.toBlob(ok, 'image/png'));
   const file = new File([blob], 'dhikr.png', { type: 'image/png' });
   if (navigator.canShare?.({ files: [file] })) {
