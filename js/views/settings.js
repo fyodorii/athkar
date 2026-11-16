@@ -556,6 +556,7 @@ export function renderNotify(view) {
         ${sw('morning', 'أذكار الصباح', n.morning, 'بعد الفجر بنصف ساعة', 'sunrise')}
         ${sw('evening', 'أذكار المساء', n.evening, 'بعد العصر بنصف ساعة', 'sunset')}
         <p class="hint">تذكير ورد القرآن يُضبط لكل ختمة من «ختماتي».</p>
+        ${sw('fastMonThu', 'صيام الاثنين والخميس', n.fastMonThu, 'ليلة الأحد والأربعاء الساعة ١٠ مساءً', 'moon')}
         ${sw('debts', 'الديون المستحقة', n.debts, 'قبل الاستحقاق بثلاثة أيام وفي يومه', 'wallet')}
         ${sw('sound', 'صوت التنبيه', n.sound, '', 'radio')}
       </div>`;

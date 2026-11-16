@@ -86,6 +86,10 @@ export function reminders(now = new Date()) {
     if (n.morning) add('morning', t.fajr.at + 30 * 60000, 'أذكار الصباح', 'ابدأ يومك بذكر الله', '#/adhkar/morning');
     if (n.evening) add('evening', t.asr.at + 30 * 60000, 'أذكار المساء', 'اختم نهارك بذكر الله', '#/adhkar/evening');
 
+    if (n.fastMonThu && (info.weekday === 0 || info.weekday === 3)) {
+      add('fast-mon-thu', atTime(22, 0), 'تذكير بالصيام', `غداً ${info.weekday === 0 ? 'الاثنين' : 'الخميس'} — يُستحب صيامه، فانوِ الصيام وتسحّر`, '#/calendar');
+    }
+
     if (n.debts) {
       const soon = dayKey(addDays(info.day, 3));
       const c = hoursAt(now);

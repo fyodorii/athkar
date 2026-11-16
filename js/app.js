@@ -40,7 +40,7 @@ const TABS = [
   ['calendar', 'التقويم', 'calendar', '#/calendar'],
   '',
   ['khatma', 'الختمات', 'quran', '#/khatma'],
-  ['rawatib', 'السنن الرواتب', 'mosque', '#/rawatib'],
+  ['rawatib', 'النوافل', 'mosque', '#/rawatib'],
   ['reminders', 'تذكيراتي', 'bell', '#/reminders'],
   ['debts', 'الديون', 'wallet', '#/debts'],
   ['datecalc', 'حاسبة التاريخ', 'grid', '#/datecalc'],
@@ -189,7 +189,7 @@ const STATUS = { dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' }
 function paintStatusBar() {
   // In the light theme the top of every screen is the app colour.
   const main = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#2c6fcc';
-  const shade = document.documentElement.dataset.theme === 'dark' ? STATUS.dark : { home: main, other: main };
+  const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: '#232a4a' } : { home: '#9ea6cc', other: main };
   const tab = document.body.dataset.tab;
   const own = tab === 'tasbeeh' && document.querySelector('.tsb')?.dataset.top;
   document.querySelector('meta[name="theme-color"]').setAttribute('content', own || shade[tab] || shade.other);
