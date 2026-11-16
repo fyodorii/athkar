@@ -41,12 +41,7 @@ const TABS = [
   ['audio', 'الصوتيات', 'play', '#/audio'],
   ['calendar', 'التقويم', 'calendar', '#/calendar'],
   '',
-  ['khatma', 'الختمات', 'quran', '#/khatma'],
-  ['rawatib', 'النوافل', 'mosque', '#/rawatib'],
-  ['reminders', 'تذكيراتي', 'bell', '#/reminders'],
-  ['debts', 'الديون', 'wallet', '#/debts'],
-  ['datecalc', 'حاسبة التاريخ', 'grid', '#/datecalc'],
-  ['tools', 'الأدوات', 'widget', '#/tools'],
+  ['tools', 'الأدوات', 'widget', '#/tools'], // also the khatmas, nawafil, reminders, debts and the date calculator
   '',
   ['settings', 'الإعدادات', 'gear', '#/settings'],
 ];
