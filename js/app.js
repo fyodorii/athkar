@@ -162,7 +162,7 @@ window.addEventListener('unhandledrejection', (e) => {
 
 function renderTabs() {
   $('#tabs').innerHTML =
-    `<div class="nav-head"><b>${APP_NAME}</b><button class="icon-btn ghost" data-nav aria-label="إغلاق القائمة">${icon('close', 22)}</button></div>` +
+    `<div class="nav-head"><b>${APP_NAME}</b></div>` +
     TABS.map((t) => (t ? `<a href="${t[3]}" data-tab="${t[0]}">${icon(t[2], 22)}<span>${t[1]}</span></a>` : '<hr>')).join('') +
     `<p class="nav-foot">تصميم ${DESIGNER}</p>`;
 }
