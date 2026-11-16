@@ -17,13 +17,13 @@ import { daysText, nextOccasion, rangeText } from './occasions.js';
 // Shortcuts, as a grid of eight.
 const QUICK = [
   ['#/tasbeeh', 'السبحة', 'beads', 'indigo'],
-  ['#/khatma', 'ختمتي', 'quran', 'teal'],
-  ['#/rawatib', 'الرواتب', 'mosque', 'emerald'],
-  ['#/reminders', 'تذكيراتي', 'bell', 'rose'],
+  ['#/mine', 'أذكاري', 'heart', 'rose'],
   ['#/notebook', 'أدعيتي', 'hand', 'teal'],
-  ['#/debts', 'الديون', 'wallet', 'amber'],
-  ['#/datecalc', 'التاريخ', 'calendar', 'indigo'],
-  ['#/tools', 'الأدوات', 'widget', 'rose'],
+  ['#/khatma', 'ختمتي', 'quran', 'emerald'],
+  ['#/rawatib', 'الرواتب', 'mosque', 'amber'],
+  ['#/reminders', 'تذكيراتي', 'bell', 'violet'],
+  ['#/debts', 'الديون', 'wallet', 'sky'],
+  ['#/tools', 'الأدوات', 'widget', 'slate'],
 ];
 
 let dayOffset = 0; // the day shown in the times card: 0 today, -1 yesterday, 1 tomorrow…
@@ -75,6 +75,7 @@ export function render(view) {
       <div class="h-bar"><i data-progress style="width:${progress(info)}%"></i></div>
       <p class="h-ends" data-ends>${endsText(info)}</p>
     </div>
+    <div class="h-leave" data-leave>${leaveText(info)}</div>
     <div class="h-now tp-${info.period.key}" data-period-tile>${periodTile(info)}</div>
   </section>
 
@@ -121,6 +122,7 @@ export function render(view) {
       }
       $('[data-countdown]', view).textContent = countdown(info2.next.at - Date.now());
       $('[data-progress]', view).style.width = `${progress(info2)}%`;
+      $('[data-leave]', view).innerHTML = leaveText(info2);
       const p2 = periodTile(info2);
       if (p2 !== lastTile) $('[data-period-tile]', view).innerHTML = lastTile = p2;
     },
@@ -155,6 +157,20 @@ function progress(info) {
 // The sentence under the countdown: what the coming moment is.
 function endsText(info) {
   return `<span>${icon(PRAYER_ICONS[info.next.key] || 'clock', 15)} ${esc(MOMENT_NOTE[info.next.key] || '')}</span>`;
+}
+
+// When the time of the prayer now in its time runs out: Fajr at sunrise, Dhuhr at Asr, Asr at
+// sunset, Maghrib at Isha, and Isha at the middle of the night (its chosen time).
+const LEAVES = { fajr: 'sunrise', dhuhr: 'asr', asr: 'maghrib', maghrib: 'isha', isha: 'midnight' };
+function leaveText(info) {
+  const p = info.lastPrayer;
+  const now = Date.now();
+  const end = [info.yesterday, info.times, info.tomorrow]
+    .map((d) => d?.[LEAVES[p.key]]?.at)
+    .filter((at) => at > p.at)
+    .sort((a, b) => a - b)[0];
+  if (!end || end <= now) return '';
+  return `<span>${icon('clock', 15)} باقي على خروج وقت ${esc(p.name)}</span><b>${countdown(end - now)}</b>`;
 }
 
 // The kind of time it is now (Duha, the afternoon, the last third…); around a prayer, the

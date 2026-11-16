@@ -32,6 +32,7 @@ import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from '
 const TABS = [
   ['home', 'الرئيسية', 'home', '#/home'],
   ['mine', 'أذكاري', 'heart', '#/mine'],
+  ['duas', 'أدعيتي', 'hand', '#/notebook'],
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
   ['worship', 'متابعة', 'check', '#/worship'],
   ['radio', 'الإذاعة', 'radio', '#/radio'],
@@ -71,7 +72,7 @@ const ROUTES = [
   [/^#\/datecalc$/, 'datecalc', (v) => datecalc.render(v)],
   [/^#\/rawatib$/, 'rawatib', (v) => rawatib.render(v)],
   [/^#\/reminders$/, 'reminders', (v) => reminders.render(v)],
-  [/^#\/notebook(?:\/\w+)?$/, 'mine', (v) => notebook.render(v)], // «saved» and «notes» are old links
+  [/^#\/notebook(?:\/\w+)?$/, 'duas', (v) => notebook.render(v)], // «saved» and «notes» are old links
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],

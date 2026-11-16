@@ -66,6 +66,7 @@ export const DEFAULTS = {
   // Groups of the tasbeeh: adhkar counted one after another, each to its number; `i` and
   // `count` are where the group has reached.
   groups: [{ id: 'daily', name: 'برنامج يومي', i: 0, count: 0, items: [0, 6, 3, 7].map((n) => ({ text: MY_ADHKAR[n], target: 1000 })) }],
+  surahRem: { on: true, list: [] }, // reminders to recite a surah: { id, surah: 1…114, time: "HH:MM" }, every day
   reminders: [], // «تذكيراتي»: { id, text, time: "HH:MM", on }, every day
   notifyLog: {}, // reminders already shown: { "<day>:<event>": time }
   sync: { hash: '', at: 0 },
