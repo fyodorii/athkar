@@ -50,7 +50,7 @@ export const DEFAULTS = {
   progress: { day: '', counts: {} },
   custom: [],
   notebook: [],
-  tasbeeh: { phrase: 'سبحان الله وبحمده', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'blue', ink: '', dim: 0, ripple: false, style: 'classic', alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
+  tasbeeh: { phrase: 'سبحان الله وبحمده', target: 33, count: 0, total: 0, day: '', today: 0, list: null, fontSize: 40, counterSize: 1, bg: 'black', ink: '', dim: 0, ripple: false, style: 'classic', alerts: [33, 100, 150], alertSound: true, alertVibrate: true },
   radio: { station: 'saudi', custom: '' },
   seeded: 0,
   worship: {},
@@ -192,6 +192,17 @@ if (!state.migrated.r22) {
 if (!state.migrated.flat31) {
   state.settings.flat = true;
   state.migrated.flat31 = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
+// Release 56: one background for every look of the tasbeeh, black (still the user's to change).
+if (!state.migrated.tsbBlack) {
+  state.tasbeeh.bg = 'black';
+  state.migrated.tsbBlack = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {
