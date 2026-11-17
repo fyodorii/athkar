@@ -30,6 +30,8 @@ export const PRAYER_NAMES = {
   isha: 'العشاء',
   midnight: 'منتصف الليل',
   lastThird: 'الثلث الأخير',
+  yellow: 'اصفرار الشمس',
+  shafaq: 'غياب الشفق',
 };
 
 // Duha: minutes after sunrise, and minutes before Dhuhr.
@@ -89,6 +91,10 @@ export function solarTimes(year, month, day, lat, lng, tz, opts) {
     asr: asrTime(opts.asr || 1, 13 / 24),
     maghrib: angleTime(0.833, 18 / 24),
     isha: opts.ishaMinutes ? 0 : angleTime(opts.isha, 18 / 24),
+    // The ends of Asr's chosen time and of Maghrib's: the shadow twice the thing's length (the
+    // second day of Jibril's prayers), and the red twilight gone (the sun about 17° down).
+    yellow: asrTime(2, 14 / 24),
+    shafaq: angleTime(17, 18 / 24),
   };
   for (const k in t) t[k] += tz - lng / 15;
   if (opts.ishaMinutes) t.isha = t.maghrib + opts.ishaMinutes / 60;
@@ -102,6 +108,7 @@ export function solarTimes(year, month, day, lat, lng, tz, opts) {
     const ishaPart = (opts.isha / 60) * night;
     if (isNaN(t.isha) || diff(t.maghrib, t.isha) > ishaPart) t.isha = t.maghrib + ishaPart;
   }
+  if (isNaN(t.shafaq) || diff(t.maghrib, t.shafaq) > (17 / 60) * night) t.shafaq = t.maghrib + (17 / 60) * night;
 
   // The night runs from Maghrib to the next Fajr.
   const nightLen = diff(t.maghrib, t.fajr);
@@ -164,9 +171,9 @@ export function dayTimes(day, settings, isRamadan = false) {
   const out = {};
   for (const k of Object.keys(raw)) {
     // To the minute, after any manual correction, as the Umm al-Qura tables do: a prayer's time is
-    // never shown before it has come (rounded up), sunrise never after it (rounded down).
+    // never shown before it has come (rounded up), sunrise and the end of a time never after it (rounded down).
     const exact = raw[k] * 60 + (offsets[k] || 0);
-    const minutes = ROUND_UP.has(k) ? Math.ceil(exact - 1e-6) : k === 'sunrise' ? Math.floor(exact + 1e-6) : Math.round(exact);
+    const minutes = ROUND_UP.has(k) ? Math.ceil(exact - 1e-6) : k === 'sunrise' || k === 'yellow' || k === 'shafaq' ? Math.floor(exact + 1e-6) : Math.round(exact);
     out[k] = { key: k, name: PRAYER_NAMES[k], hours: minutes / 60, at: base + (minutes - tz * 60) * 60000 };
   }
   // Duha begins once the sun has risen about a spear's length, 20 minutes after sunrise, and

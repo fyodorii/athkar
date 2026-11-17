@@ -23,6 +23,9 @@ import * as datecalc from './views/datecalc.js';
 import * as rawatib from './views/rawatib.js';
 import * as reminders from './views/reminders.js';
 import * as account from './views/account.js';
+import * as ayat from './views/ayat.js';
+import * as prayersView from './views/prayers.js';
+import * as appts from './views/appts.js';
 import { takeRedirect } from './google.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
 import { APP_NAME, APP_VERSION, DESIGNER } from './config.js';
@@ -56,6 +59,10 @@ const ROUTES = [
   [/^#\/audio$/, 'audio', (v) => audioView.render(v)],
   [/^#\/calendar$/, 'calendar', (v) => calendar.render(v)],
   [/^#\/counter$/, 'counter', (v) => counter.render(v)],
+  [/^#\/ayat$/, 'ayat', (v) => ayat.render(v)],
+  [/^#\/prayers$/, 'prayers', (v) => prayersView.render(v)],
+  [/^#\/ends$/, 'prayers', (v) => prayersView.renderEnds(v)],
+  [/^#\/appts$/, 'appts', (v) => appts.render(v)],
   [/^#\/search$/, 'search', (v) => search.render(v)],
   [/^#\/tasbeeh(?:\/([\w-]+))?$/, 'tasbeeh', (v, id) => adhkar.renderTasbeeh(v, id)],
   [/^#\/worship$/, 'worship', (v) => worship.render(v)],
@@ -197,11 +204,11 @@ document.addEventListener('touchmove', (e) => e.touches.length > 1 && e.preventD
 // The phone's status bar (the clock and battery) takes the colour of the top of the page under
 // it, so it reads as part of the page: the light header on the home screen, the page's own
 // background elsewhere, the tasbeeh's colour on the tasbeeh.
-const STATUS = { dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' } };
+const STATUS = { dark: { home: '#101b30', tasbeeh: '#070f2c', ayat: '#0b0f17', other: '#0a1220' } };
 function paintStatusBar() {
   // In the light theme the top of every screen is the app colour.
   const main = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#2c6fcc';
-  const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: '#232a4a' } : { home: '#9ea6cc', other: main };
+  const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: '#232a4a' } : { home: '#9ea6cc', ayat: '#ffffff', other: main };
   const tab = document.body.dataset.tab;
   const own = tab === 'tasbeeh' && document.querySelector('.tsb')?.dataset.top;
   document.querySelector('meta[name="theme-color"]').setAttribute('content', own || shade[tab] || shade.other);
