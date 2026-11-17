@@ -2711,20 +2711,6 @@ body[data-tab='search'] .page-head { display: none; }
 .hx-head h2 a svg { color: var(--ink-3); }
 .h-leave a { display: inline-flex; align-items: center; gap: 7px; color: inherit; opacity: 0.95; }
 
-/* آيات: one verse on a white page */
-body[data-tab='ayat'] { background: #fff; }
-html:has(body[data-tab='ayat']) { background: #fff; }
-body[data-tab='ayat']::before { display: none; }
-[data-theme='dark'] body[data-tab='ayat'], html[data-theme='dark']:has(body[data-tab='ayat']) { background: #0b0f17; }
-.ay-page { min-height: calc(100dvh - var(--safe-top) - 24px); display: flex; flex-direction: column; }
-.ay-top { display: flex; justify-content: space-between; align-items: center; padding-top: 4px; }
-.ay-actions { display: flex; gap: 4px; }
-.ay-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 30px 14px; background: none; border: 0; color: var(--ink); text-align: center; -webkit-tap-highlight-color: transparent; }
-.ay-text { margin: 0; font-size: clamp(26px, 7.4vw, 36px); line-height: 2.05; color: #111; }
-[data-theme='dark'] .ay-text { color: #f1f1ee; }
-.ay-ref { font-size: 15px; color: var(--ink-3); }
-.ay-more { align-self: center; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; padding: 9px 18px; border-radius: 99px; border: 0; background: var(--bg-2); color: var(--ink-2); font: inherit; font-size: 14px; }
-
 /* مواقيت الصلاة */
 .pt-hero { display: grid; justify-items: center; gap: 4px; margin: 4px 0 14px; padding: 20px 16px; border-radius: var(--radius); background: linear-gradient(150deg, var(--hero-2), var(--hero-1)); color: #fff; text-align: center; }
 .pt-hero small { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; opacity: 0.85; }
@@ -2773,23 +2759,6 @@ body[data-tab='ayat']::before { display: none; }
 .en-ev p { margin: 0 0 8px; font-size: 15px; line-height: 1.95; }
 .en-ev small { font-size: 12.5px; line-height: 1.8; }
 
-/* مواعيدي */
-.ap { display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 10px; padding: 14px; border: 0; text-align: start; font: inherit; color: var(--ink); }
-.ap-ic { width: 42px; height: 42px; flex-shrink: 0; border-radius: 14px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); }
-.ap-text { flex: 1; min-width: 0; display: grid; gap: 3px; }
-.ap-text b { font-size: 16px; }
-.ap-text small { font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
-.ap-left { flex-shrink: 0; max-width: 42%; font-style: normal; font-size: 13px; font-weight: 700; text-align: center; padding: 6px 10px; border-radius: 12px; background: var(--bg-2); color: var(--ink-2); }
-.ap.soon .ap-left { background: var(--gold-soft); color: var(--gold); }
-.ap.today .ap-left { background: var(--primary); color: var(--primary-ink); }
-.ap.past { opacity: 0.6; }
-.ap-empty { min-height: 55vh; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; color: var(--ink-3); border-radius: var(--radius);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23889' stroke-opacity='.16'%3E%3Cpath d='M28 4l7 17 17 7-17 7-7 17-7-17-17-7 17-7z'/%3E%3Crect x='18' y='18' width='20' height='20' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E"); }
-.ap-empty span { width: 78px; height: 78px; border-radius: 50%; display: grid; place-items: center; background: var(--card-solid); color: var(--primary); box-shadow: 0 0 0 1px var(--line); }
-.ap-empty p { margin: 0; font-size: 16px; color: var(--ink-2); }
-.ap-add { position: fixed; left: 18px; bottom: calc(env(safe-area-inset-bottom) + 22px); z-index: 30; display: inline-flex; align-items: center; gap: 6px; padding: 14px 20px; border: 0; border-radius: 99px; background: #2f9e6b; color: #fff; font: inherit; font-size: 16px; font-weight: 700; box-shadow: 0 12px 24px -12px rgba(20, 90, 60, 0.8); }
-body[data-tab='appts'] #view { padding-bottom: 96px; }
-.ap-form .field input { width: 100%; }
 .hx-sq2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .hx-sq { min-width: 0; padding: 16px 14px; }
 .hx-sq-top { gap: 6px; }
@@ -2797,5 +2766,3 @@ body[data-tab='appts'] #view { padding-bottom: 96px; }
 .hx-body { grid-template-columns: minmax(0, 1fr); }
 .hx-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .hx-grid a { min-width: 0; }
 .pt-hero { background: linear-gradient(150deg, var(--primary), color-mix(in srgb, var(--primary) 70%, #000)); color: #fff; }
-html body[data-tab='ayat'] { background: #fff; }
-html[data-theme='dark'] body[data-tab='ayat'] { background: #0b0f17; }

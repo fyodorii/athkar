@@ -15,8 +15,6 @@ const SECTIONS = [
   ['#/radio', 'الإذاعة', 'radio'],
   ['#/audio', 'الصوتيات', 'play'],
   ['#/calendar', 'التقويم', 'calendar'],
-  ['#/ayat', 'آيات', 'quote'],
-  ['#/appts', 'مواعيدي', 'calendar'],
   ['#/prayers', 'مواقيت الصلاة', 'mosque'],
   ['#/ends', 'خروج الصلوات', 'clock'],
   ['#/khatma', 'الختمات', 'quran'],

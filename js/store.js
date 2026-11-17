@@ -72,8 +72,7 @@ export const DEFAULTS = {
   groups: [{ id: 'daily', name: 'برنامج يومي', i: 0, count: 0, items: [0, 6, 3, 7].map((n) => ({ text: MY_ADHKAR[n], target: 1000 })) }],
   surahRem: { on: true, list: [] }, // reminders to recite a surah: { id, surah: 1…114, time: "HH:MM" }, every day
   counter: { i: 0, counts: {}, vib: true, alertEvery: 33, opacity: 100, size: 'auto', mode: 'pages', mute: true }, // «العداد»
-  appts: {}, // the old calendar's «مواعيدي»: { 'YYYY-MM-DD': [{ id, text }] } (moved to appointments)
-  appointments: [], // «مواعيدي»: [{ id, title, date: 'YYYY-MM-DD', time: 'HH:MM' | '', note }]
+  appts: {}, // the old calendar's «مواعيدي»: { 'YYYY-MM-DD': [{ id, text }] } (no longer used)
   reminders: [], // «تذكيراتي»: { id, text, time: "HH:MM", on }, every day
   notifyLog: {}, // reminders already shown: { "<day>:<event>": time }
   sync: { hash: '', at: 0 },
@@ -97,7 +96,7 @@ function merge(base, value) {
 // Data of features the app no longer has (memorization, the qibla, al-Mulk) is dropped when
 // loading, so old saves and backups stay light.
 function prune(data) {
-  for (const k of ['hifz', 'surahs', 'saved', 'notes']) delete data[k];
+  for (const k of ['hifz', 'surahs', 'saved', 'notes', 'appointments']) delete data[k];
   const s = data.settings;
   if (s) for (const k of ['tajweed', 'prayerLayout', 'mushafMode', 'mushafInk', 'quranScale', 'textBold', 'uiBold']) delete s[k];
   return data;
@@ -222,21 +221,6 @@ if (!state.migrated.tsbBlack) {
 if (!state.migrated.tsbBgs) {
   state.tasbeeh.bgs = {};
   state.migrated.tsbBgs = true;
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (e) {
-    /* private mode: nothing kept */
-  }
-}
-
-// Release 86: the calendar's appointments become «مواعيدي».
-if (!state.migrated.appts86) {
-  for (const [date, list] of Object.entries(state.appts || {})) {
-    if (!/^\d{4}-\d\d-\d\d$/.test(date) || !Array.isArray(list)) continue;
-    for (const x of list) if (x?.text) state.appointments.push({ id: x.id || Math.random().toString(36).slice(2, 9), title: String(x.text), date, time: '', note: '' });
-  }
-  state.appts = {};
-  state.migrated.appts86 = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {
