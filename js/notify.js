@@ -43,7 +43,7 @@ export function reminders(now = new Date()) {
 
   // The user's own daily reminders stand on their own switch.
   const clockNow = hoursAt(now);
-  const atTime = (h, m) => now.getTime() + ((h - clockNow.h) * 60 + (m - clockNow.m)) * 60000 - clockNow.s * 1000;
+  const atTime = (h, m) => now.getTime() + ((h - clockNow.h) * 60 + (m - clockNow.m)) * 60000 - clockNow.s * 1000 - (now.getTime() % 1000);
   for (const r of state.reminders) {
     if (!r.on || !CLOCK.test(r.time)) continue;
     const [h, m] = r.time.split(':').map(Number);
@@ -100,7 +100,7 @@ export function reminders(now = new Date()) {
     if (n.debts) {
       const soon = dayKey(addDays(info.day, 3));
       const c = hoursAt(now);
-      const nine = now.getTime() + ((9 - c.h) * 60 - c.m) * 60000 - c.s * 1000;
+      const nine = now.getTime() + ((9 - c.h) * 60 - c.m) * 60000 - c.s * 1000 - (now.getTime() % 1000);
       for (const d of state.debts) {
         if (d.paid || !d.due || !d.remind) continue;
         const who = d.dir === 'owe' ? `عليك لـ${d.person}` : `لك عند ${d.person}`;

@@ -19,7 +19,7 @@
 const ORIGINS = ['https://fyodorii.github.io', 'http://localhost:8765'];
 const MAX_EVENTS = 400; // per subscription: about a week of reminders
 const EARLY = 20000; // sent this much before its time, to reach the phone at its minute
-const LATE = 10 * 60000; // a reminder is still sent this long after its time (a missed cron run)
+const LATE = 10 * 60000; // a reminder sent from the app this late is still taken (and cleaned up)
 const SUBJECT = 'https://fyodorii.github.io/athkar/';
 
 let ready = false;
@@ -128,12 +128,23 @@ async function sync(req, env) {
     .map((e) => ({ eid: text(e.id, 120), at: Math.round(e.at), payload: JSON.stringify({ title: text(e.title, 120), body: text(e.body, 300), url: text(e.url, 60), tag: text(e.id, 120) }) }));
   const db = env.DB;
   await schema(db);
-  await db.batch([
-    db.prepare('INSERT INTO subs (id, endpoint, p256dh, auth, updated) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET p256dh = ?3, auth = ?4, updated = ?5').bind(id, s.endpoint, s.keys.p256dh, s.keys.auth, now),
-    db.prepare("DELETE FROM events WHERE sub = ?1 AND eid != 'test'").bind(id), // a test still on its way stays
-    ...events.map((e) => db.prepare('INSERT OR REPLACE INTO events (sub, eid, at, payload) VALUES (?1, ?2, ?3, ?4)').bind(id, e.eid, e.at, e.payload)),
-  ]);
-  return reply(req, 200, { ok: true, events: events.length });
+  // Only what changed is written (the free plan counts every row written): the reminders that are
+  // new or moved, the ones no longer wanted, and the subscription once in a while.
+  const sub = await db.prepare('SELECT p256dh, auth, updated FROM subs WHERE id = ?1').bind(id).first();
+  const { results: had } = await db.prepare('SELECT eid, at, payload FROM events WHERE sub = ?1').bind(id).all();
+  const old = new Map(had.map((r) => [r.eid, r]));
+  const want = new Set(events.map((e) => e.eid));
+  const writes = [];
+  if (!sub || sub.p256dh !== s.keys.p256dh || sub.auth !== s.keys.auth || now - sub.updated > 86400000) {
+    writes.push(db.prepare('INSERT INTO subs (id, endpoint, p256dh, auth, updated) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET p256dh = ?3, auth = ?4, updated = ?5').bind(id, s.endpoint, s.keys.p256dh, s.keys.auth, now));
+  }
+  for (const r of had) if (!want.has(r.eid) && r.eid !== 'test') writes.push(db.prepare('DELETE FROM events WHERE sub = ?1 AND eid = ?2').bind(id, r.eid)); // a test on its way stays
+  for (const e of events) {
+    const o = old.get(e.eid);
+    if (!o || o.at !== e.at || o.payload !== e.payload) writes.push(db.prepare('INSERT OR REPLACE INTO events (sub, eid, at, payload) VALUES (?1, ?2, ?3, ?4)').bind(id, e.eid, e.at, e.payload));
+  }
+  if (writes.length) await db.batch(writes);
+  return reply(req, 200, { ok: true, events: events.length, written: writes.length });
 }
 
 // A test reminder about a minute from now, for a phone the server already knows.
@@ -223,13 +234,16 @@ async function googleForget(req, env) {
 
 // ---- Cron: send what is due ----
 
-async function sendDue(env) {
+// Each minute's run sends the reminders of its own minute only (by the time it was scheduled for),
+// so a reminder goes out once even when the clean-up below cannot write.
+async function sendDue(env, scheduled = Date.now()) {
   const db = env.DB;
   await schema(db);
   const now = Date.now();
+  const to = Math.floor(scheduled / 60000) * 60000 + EARLY;
   const { results } = await db
     .prepare('SELECT e.sub, e.eid, e.payload, s.endpoint, s.p256dh, s.auth FROM events e JOIN subs s ON s.id = e.sub WHERE e.at <= ?1 AND e.at > ?2 ORDER BY e.at LIMIT 500')
-    .bind(now + EARLY, now - LATE)
+    .bind(to, to - 60000)
     .all();
   const gone = new Set();
   const log = [];
@@ -245,11 +259,11 @@ async function sendDue(env) {
     })
   );
   await db.batch([
-    db.prepare('DELETE FROM events WHERE at <= ?1').bind(now + EARLY),
+    db.prepare('DELETE FROM events WHERE at <= ?1').bind(to),
     ...[...gone].flatMap((id) => [db.prepare('DELETE FROM events WHERE sub = ?1').bind(id), db.prepare('DELETE FROM subs WHERE id = ?1').bind(id)]),
     db.prepare('DELETE FROM subs WHERE updated < ?1').bind(now - 30 * 86400000), // not opened for a month
-    // What the push services answered, kept for two days to see why a reminder did not arrive.
-    ...log.map(([sub, eid, status, reason]) => db.prepare('INSERT INTO sent (sub, eid, at, status, reason) VALUES (?1, ?2, ?3, ?4, ?5)').bind(sub, eid, now, status, reason)),
+    // What the push services answered when they refused, kept for two days to see why a reminder did not arrive.
+    ...log.filter(([, , status]) => status < 200 || status >= 300).map(([sub, eid, status, reason]) => db.prepare('INSERT INTO sent (sub, eid, at, status, reason) VALUES (?1, ?2, ?3, ?4, ?5)').bind(sub, eid, now, status, reason)),
     db.prepare('DELETE FROM sent WHERE at < ?1').bind(now - 2 * 86400000),
   ]);
 }
@@ -273,6 +287,6 @@ export default {
     return reply(req, 404, { error: 'not found' });
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sendDue(env));
+    ctx.waitUntil(sendDue(env, event.scheduledTime));
   },
 };

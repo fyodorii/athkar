@@ -49,8 +49,15 @@ function upcoming() {
   return out.sort((a, b) => a.at - b.at);
 }
 
-let last = '';
-let lastAt = 0;
+// What was last sent, kept across reloads: { endpoint, ids, at }.
+const SENT = 'adhkar-app:push-sent';
+const lastSent = () => {
+  try {
+    return JSON.parse(localStorage.getItem(SENT)) || {};
+  } catch (e) {
+    return {};
+  }
+};
 // Sends the coming reminders to the server; again only when they changed or every few hours.
 export async function syncPush(force = false) {
   if (!state.settings.notify.push || !pushConfigured()) return;
@@ -60,13 +67,21 @@ export async function syncPush(force = false) {
     const sub = await subscription(window.Notification?.permission === 'granted');
     if (!sub) return;
     const events = upcoming();
-    const sig = JSON.stringify([sub.endpoint, events.map((e) => [e.id, e.at, e.title, e.body])]);
-    if (!force && sig === last && Date.now() - lastAt < 6 * 3600000) return;
+    // A reminder only passing by is no reason to send: only a new or changed one, or 6 hours.
+    const ids = events.map((e) => `${e.id}|${e.at}|${e.title}|${e.body}`);
+    const prev = lastSent();
+    const known = new Set(prev.ids || []);
+    const have = new Set(ids);
+    const removed = (prev.ids || []).some((x) => Number(x.split('|')[1]) > Date.now() && !have.has(x)); // switched off or moved
+    if (!force && prev.endpoint === sub.endpoint && Date.now() - (prev.at || 0) < 6 * 3600000 && !removed && ids.every((x) => known.has(x))) return;
     // keepalive: the request still goes out when the app is being closed.
     const res = await fetch(`${PUSH_URL}/sync`, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), events }) });
     if (res.ok) {
-      last = sig;
-      lastAt = Date.now();
+      try {
+        localStorage.setItem(SENT, JSON.stringify({ endpoint: sub.endpoint, ids, at: Date.now() }));
+      } catch (e) {
+        /* private mode */
+      }
     }
   } catch (e) {
     // Offline: the next sync sends them.
