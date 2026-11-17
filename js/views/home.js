@@ -30,8 +30,6 @@ const QUICK = [
   ['#/audio', 'الصوتيات', 'play'],
   ['#/tools', 'الأدوات', 'widget'],
   ['#/counter', 'العداد', 'hash'],
-  ['#/ayat', 'آيات', 'quote'],
-  ['#/appts', 'مواعيدي', 'calendar'],
   ['#/prayers', 'المواقيت', 'mosque'],
   ['#/ends', 'خروج الصلوات', 'clock'],
 ];

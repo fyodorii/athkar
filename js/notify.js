@@ -50,13 +50,6 @@ export function reminders(now = new Date()) {
     add(`mine-${r.id}-${r.time}`, atTime(h, m), 'تذكير', r.text, '#/reminders');
   }
 
-  // «مواعيدي»: at the appointment's time, or at nine in the morning of a day without one.
-  for (const a of state.appointments) {
-    if (a.date !== info.key) continue;
-    const [h, m] = CLOCK.test(a.time) ? a.time.split(':').map(Number) : [9, 0];
-    add(`appt-${a.id}-${a.time}`, atTime(h, m), a.time ? 'حان موعدك' : 'لديك موعد اليوم', a.title, '#/appts');
-  }
-
   // The surahs the user wants to be reminded to recite, each at its time.
   if (state.surahRem.on) {
     for (const r of state.surahRem.list) {
@@ -135,7 +128,7 @@ async function show(r) {
 
 // Called every second, and when the app comes back: shows what is due and not yet shown.
 export function checkReminders() {
-  if (!state.settings.notify.on && !state.reminders.some((r) => r.on) && !state.khatmas.some((k) => k.remind) && !(state.surahRem.on && state.surahRem.list.length) && !state.appointments.length) return;
+  if (!state.settings.notify.on && !state.reminders.some((r) => r.on) && !state.khatmas.some((k) => k.remind) && !(state.surahRem.on && state.surahRem.list.length)) return;
   const now = Date.now();
   const log = state.notifyLog;
   const due = reminders().filter((r) => r.at <= now && now - r.at < LATE && !log[r.id]);
