@@ -14,6 +14,7 @@ import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, openSheet, ring, shareText } from '../ui.js';
 import { APP_NAME } from '../config.js';
 import { dayScore } from './worship.js';
+import { endNow } from '../ends.js';
 
 // Shortcuts: two columns of pills, each with its round icon.
 const QUICK = [
@@ -29,6 +30,10 @@ const QUICK = [
   ['#/audio', 'الصوتيات', 'play'],
   ['#/tools', 'الأدوات', 'widget'],
   ['#/counter', 'العداد', 'hash'],
+  ['#/ayat', 'آيات', 'quote'],
+  ['#/appts', 'مواعيدي', 'calendar'],
+  ['#/prayers', 'المواقيت', 'mosque'],
+  ['#/ends', 'خروج الصلوات', 'clock'],
 ];
 
 // The day and the months as a calligrapher writes them: vowelled, the day drawn out.
@@ -234,16 +239,11 @@ function moonSheet(info) {
 
 // When the time of the prayer now in its time runs out: Fajr at sunrise, Dhuhr at Asr, Asr at
 // sunset, Maghrib at Isha, and Isha at the middle of the night (its chosen time).
-const LEAVES = { fajr: 'sunrise', dhuhr: 'asr', asr: 'maghrib', maghrib: 'isha', isha: 'midnight' };
 function leaveText(info) {
-  const p = info.lastPrayer;
   const now = Date.now();
-  const end = [info.yesterday, info.times, info.tomorrow]
-    .map((d) => d?.[LEAVES[p.key]]?.at)
-    .filter((at) => at > p.at)
-    .sort((a, b) => a - b)[0];
-  if (!end || end <= now) return '';
-  return `<span>${icon('clock', 15)} باقي على خروج وقت ${esc(p.name)}</span><b>${countdown(end - now)}</b>`;
+  const e = endNow(info, now);
+  if (!e) return '';
+  return `<a href="#/ends">${icon('clock', 15)} ${e.need ? `وقت الضرورة لصلاة ${esc(e.w.name)}، باقي على ${e.w.lastText}` : `باقي على خروج وقت ${esc(e.w.name)}`}</a><b>${countdown(e.at - now)}</b>`;
 }
 
 // The kind of time it is now (Duha, the afternoon, the last third…); around a prayer, the
@@ -287,7 +287,7 @@ function prayersCard(info) {
       ${icon(PRAYER_ICONS[key], 20)}<b>${t.name}</b><strong>${c.time}<small>${c.period}</small></strong>${sub ? `<span>${sub}</span>` : ''}</li>`;
   }).join('');
   return `<section class="card hx-times" data-prayers>
-    <div class="hx-head"><h2>مواقيت الصلاة</h2><a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a></div>
+    <div class="hx-head"><h2><a href="#/prayers">مواقيت الصلاة ${icon('back', 16)}</a></h2><a class="link" href="#/settings/method">${esc(METHODS[s.method]?.name.split(' — ')[0] || '')}</a></div>
     <div class="pday">
       <button class="icon-btn ghost sm flip" data-pday="-1" aria-label="اليوم السابق">${icon('chevron', 20)}</button>
       <button class="pday-label ${dayOffset ? 'other' : ''}" data-pday="0"><b>${label}</b><small>${weekday(d)}، ${num(d.d)} ${GREG_MONTHS[d.m - 1]} • ${hijriText(d, s.hijriAdjust)}</small></button>
