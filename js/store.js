@@ -41,6 +41,9 @@ export const DEFAULTS = {
       duha: true,
       duhaEnd: false,
       lastThird: false,
+      sunrise: false, // when the sun rises: the end of Fajr's time
+      midnight: false, // the middle of the night: the end of Isha's chosen time
+      after: 0, // also remind this many minutes after the adhan (0 = no)
       morning: true, // morning adhkar, after Fajr
       evening: true, // evening adhkar, after Asr
       debts: true,

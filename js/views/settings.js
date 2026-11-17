@@ -538,6 +538,8 @@ export function renderNotify(view) {
         ${PRAYERS.map((k) => sw(`p:${k}`, PRAYER_NAMES[k], n.prayers[k], clockText(t[k].hours, s.clock24), 'mosque')).join('')}
         <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">تنبيه قبل الأذان<small>${n.before ? `قبله بـ${minutesText(n.before)}` : 'بلا تنبيه مسبق'}</small></span>
           <div class="stepper" data-before><button data-d="-5">−</button><b>${num(n.before)}</b><button data-d="5">+</button></div></div>
+        <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">تنبيه بعد الأذان<small>${n.after ? `بعده بـ${minutesText(n.after)}` : 'بلا تنبيه بعده'}</small></span>
+          <div class="stepper" data-after><button data-d="-5">−</button><b>${num(n.after || 0)}</b><button data-d="5">+</button></div></div>
         ${sw('iqama', 'تنبيه الإقامة', n.iqama, 'عند انقضاء مدة الانتظار بعد الأذان', 'minaret')}
       </div>
       <div class="group">
@@ -552,6 +554,8 @@ export function renderNotify(view) {
         <h4>أوقات وأذكار</h4>
         ${sw('duha', 'دخول وقت الضحى', n.duha, clockText(t.duha.hours, s.clock24), 'sun')}
         ${sw('duhaEnd', 'قرب نهاية الضحى', n.duhaEnd, `قبل ${clockText(t.duhaEnd.hours, s.clock24)} بربع ساعة`, 'sun')}
+        ${sw('sunrise', 'الشروق', n.sunrise, clockText(t.sunrise.hours, s.clock24), 'sunrise')}
+        ${sw('midnight', 'منتصف الليل', n.midnight, clockText(t.midnight.hours, s.clock24), 'moon')}
         ${sw('lastThird', 'الثلث الأخير من الليل', n.lastThird, clockText(t.lastThird.hours, s.clock24), 'stars')}
         ${sw('morning', 'أذكار الصباح', n.morning, 'بعد الفجر بنصف ساعة', 'sunrise')}
         ${sw('evening', 'أذكار المساء', n.evening, 'بعد العصر بنصف ساعة', 'sunset')}
@@ -599,12 +603,14 @@ export function renderNotify(view) {
     }
     const b = e.target.closest('[data-before] [data-d]');
     if (b) n.before = Math.max(0, Math.min(30, n.before + Number(b.dataset.d)));
+    const af = e.target.closest('[data-after] [data-d]');
+    if (af) n.after = Math.max(0, Math.min(60, (n.after || 0) + Number(af.dataset.d)));
     const q = e.target.closest('[data-iqama] [data-d]');
     if (q) {
       const k = q.closest('[data-iqama]').dataset.iqama;
       s.iqama[k] = Math.max(0, Math.min(60, s.iqama[k] + Number(q.dataset.d)));
     }
-    if (!b && !q) return;
+    if (!b && !q && !af) return;
     save();
     const y = window.scrollY;
     draw();

@@ -73,11 +73,18 @@ export function reminders(now = new Date()) {
       const p = t[k];
       if (n.before > 0) add(`${k}-before`, p.at - n.before * 60000, `${p.name} بعد ${minutesText(n.before)}`, 'استعدّ للصلاة');
       add(k, p.at, `حان وقت صلاة ${p.name}`, '«إن الصلاة كانت على المؤمنين كتاباً موقوتاً»');
+      if (n.after > 0) add(`${k}-after`, p.at + n.after * 60000, `مضى على أذان ${p.name} ${minutesText(n.after)}`, 'هل صلّيت؟');
       const wait = state.settings.iqama?.[k];
       if (n.iqama && wait) add(`${k}-iqama`, p.at + wait * 60000, `إقامة صلاة ${p.name}`, 'حان وقت الإقامة');
     }
     if (n.duha) add('duha', t.duha.at, 'دخل وقت الضحى', 'ركعتان فأكثر، تجزئان عن صدقة كل مفاصلك', '#/worship');
     if (n.duhaEnd) add('duha-end', t.duhaEnd.at - 15 * 60000, 'يوشك وقت الضحى أن ينتهي', `يبقى ${minutesText(15)} على نهاية وقت الضحى`, '#/worship');
+    if (n.sunrise) add('sunrise', t.sunrise.at, 'الشروق', 'طلعت الشمس، وانتهى وقت صلاة الفجر');
+    if (n.midnight) {
+      // Before Fajr the night's middle is yesterday's.
+      const md = now.getTime() < t.fajr.at ? info.yesterday.midnight : t.midnight;
+      add('midnight', md.at, 'منتصف الليل', 'انتهى الوقت المختار لصلاة العشاء');
+    }
     if (n.lastThird) {
       // Before Fajr the night's last third is yesterday's.
       const lt = now.getTime() < t.fajr.at ? info.yesterday.lastThird : t.lastThird;
