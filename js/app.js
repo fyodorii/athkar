@@ -35,18 +35,18 @@ import { onRadio, radioStatus, stop as stopRadio, toggle as toggleRadio } from '
 
 // The side menu: the sections, then the tools, then the settings ('' is a divider).
 const TABS = [
-  ['home', 'الرئيسية', 'home', '#/home'],
-  ['mine', 'أذكاري', 'heart', '#/mine'],
-  ['duas', 'أدعيتي', 'hand', '#/notebook'],
-  ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
-  ['counter', 'العداد', 'hash', '#/counter'],
-  ['worship', 'متابعة', 'check', '#/worship'],
-  ['radio', 'الإذاعة', 'radio', '#/radio'],
-  ['audio', 'الصوتيات', 'play', '#/audio'],
+  ['home', 'الرئيسية', 'f-home', '#/home'],
+  ['mine', 'أذكاري', 'f-heart', '#/mine'],
+  ['duas', 'أدعيتي', 'f-notebook', '#/notebook'],
+  ['tasbeeh', 'السبحة', 'f-beads', '#/tasbeeh'],
+  ['counter', 'العداد', 'f-number_symbol_square', '#/counter'],
+  ['worship', 'متابعة', 'f-checkmark_circle', '#/worship'],
+  ['radio', 'الإذاعة', 'f-mic', '#/radio'],
+  ['audio', 'الصوتيات', 'f-headphones', '#/audio'],
   '',
-  ['tools', 'الأدوات', 'widget', '#/tools'], // also the khatmas, nawafil, reminders, debts and the date calculator
+  ['tools', 'الأدوات', 'f-toolbox', '#/tools'], // also the khatmas, nawafil, reminders, debts and the date calculator
   '',
-  ['settings', 'الإعدادات', 'gear', '#/settings'],
+  ['settings', 'الإعدادات', 'f-settings', '#/settings'],
 ];
 
 // [pattern, tab, view(viewEl, ...params)]
