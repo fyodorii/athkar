@@ -1,3 +1,4 @@
+import { FR } from './icons-fluent.js';
 // Line icons drawn inline (24×24, stroke = currentColor), so they need no font or request.
 const P = {
   home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>',
@@ -82,6 +83,7 @@ const FLUENT = new Set(['heart', 'notebook', 'shield_checkmark', 'person_heart',
 
 export function icon(name, size = 22, extra = '') {
   if (name.startsWith('f-') && FLUENT.has(name.slice(2))) return `<img class="ic fluent ${extra}" src="icons/fluent/${name.slice(2)}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
+  if (FR[name]) return `<svg class="ic fr ${extra}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${FR[name]}</svg>`;
   if (METEO[name]) return `<img class="ic meteo ${extra}" src="icons/meteo/${METEO[name]}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
   return `<svg class="ic ${extra}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || ''}</svg>`;
 }
