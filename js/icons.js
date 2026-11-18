@@ -75,9 +75,13 @@ const P = {
 };
 
 // Prayer-time pictures from Meteocons (MIT, Bas Milius): icons/meteo/<name>.svg.
-const METEO = { 'm-fajr': 'moonset', 'm-sunrise': 'sunrise', 'm-duha': 'horizon', 'm-dhuhr': 'clear-day', 'm-asr': 'partly-cloudy-day', 'm-maghrib': 'sunset', 'm-isha': 'starry-night', 'm-midnight': 'clear-night', 'm-lastThird': 'falling-stars' };
+const METEO = { 'm-fajr': 'moonset', 'm-sunrise': 'sunrise', 'm-duha': 'horizon', 'm-dhuhr': 'clear-day', 'm-asr': 'partly-cloudy-day', 'm-maghrib': 'sunset', 'm-isha': 'starry-night', 'm-midnight': 'clear-night', 'm-lastThird': 'falling-stars', 'm-wind': 'wind', 'm-zawal': 'sun-hot' };
+
+// Colour pictures for the app's sections: Fluent UI System Icons (MIT, Microsoft): icons/fluent/<name>.svg.
+const FLUENT = new Set(['heart', 'notebook', 'shield_checkmark', 'person_heart', 'book_open', 'book_star', 'calendar', 'ribbon_star', 'alert', 'headphones', 'toolbox', 'number_symbol_square', 'clock', 'clock_alarm', 'home', 'checkmark_circle', 'settings', 'calendar_data_bar', 'warning', 'beach', 'sport', 'mic', 'coin_multiple', 'lightbulb_filament', 'beads', 'breath']);
 
 export function icon(name, size = 22, extra = '') {
+  if (name.startsWith('f-') && FLUENT.has(name.slice(2))) return `<img class="ic fluent ${extra}" src="icons/fluent/${name.slice(2)}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
   if (METEO[name]) return `<img class="ic meteo ${extra}" src="icons/meteo/${METEO[name]}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
   return `<svg class="ic ${extra}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || ''}</svg>`;
 }

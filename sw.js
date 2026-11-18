@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline, and opens
 // the app at the right screen when a reminder is tapped.
 
-const VERSION = 'v93'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v94'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 // Files the app opens without (it loads them on their own and copes when they are missing).
 const OPTIONAL = ['js/away.js'];
@@ -103,6 +103,34 @@ const FILES = [
   'icons/meteo/starry-night.svg',
   'icons/meteo/clear-night.svg',
   'icons/meteo/falling-stars.svg',
+  'icons/fluent/alert.svg',
+  'icons/fluent/beach.svg',
+  'icons/fluent/beads.svg',
+  'icons/fluent/breath.svg',
+  'icons/fluent/book_open.svg',
+  'icons/fluent/book_star.svg',
+  'icons/fluent/calendar.svg',
+  'icons/fluent/calendar_data_bar.svg',
+  'icons/fluent/checkmark_circle.svg',
+  'icons/fluent/clock.svg',
+  'icons/fluent/clock_alarm.svg',
+  'icons/fluent/coin_multiple.svg',
+  'icons/fluent/headphones.svg',
+  'icons/fluent/heart.svg',
+  'icons/fluent/home.svg',
+  'icons/fluent/lightbulb_filament.svg',
+  'icons/fluent/mic.svg',
+  'icons/fluent/notebook.svg',
+  'icons/fluent/number_symbol_square.svg',
+  'icons/fluent/person_heart.svg',
+  'icons/fluent/ribbon_star.svg',
+  'icons/fluent/settings.svg',
+  'icons/fluent/shield_checkmark.svg',
+  'icons/fluent/sport.svg',
+  'icons/fluent/toolbox.svg',
+  'icons/fluent/warning.svg',
+  'icons/meteo/wind.svg',
+  'icons/meteo/sun-hot.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',

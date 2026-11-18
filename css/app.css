@@ -2840,3 +2840,6 @@ body[data-tab='home']::after, :root:not([data-theme='dark']) body[data-tab='home
 [data-theme='dark'] .pt-row.next .pt-ic { background: rgba(255, 255, 255, 0.08); }
 [data-theme='dark'] .pt-row.next small { color: var(--ink-3) !important; }
 [data-theme='dark'] .seg-mini button.on { background: var(--primary-soft); color: var(--primary); }
+
+/* ---------- Version 94: colour icons (Fluent UI, MIT) for the sections ---------- */
+img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08)); }
