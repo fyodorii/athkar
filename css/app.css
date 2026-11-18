@@ -2783,3 +2783,23 @@ body[data-tab='search'] .page-head { display: none; }
 .br-steps li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .br-steps li:last-child { border-bottom: 0; }
 .br-steps small { color: var(--ink-3); }
+/* سورة البقرة للرقية */
+.bq-virtue { padding: 14px 16px; display: grid; gap: 10px; }
+.bq-virtue p { margin: 0; line-height: 1.9; font-size: 15px; }
+.bq-virtue small { color: var(--ink-3); margin-inline-start: 4px; }
+.bq-track { padding: 16px; display: grid; gap: 10px; margin-top: 12px; }
+.bq-head { display: flex; justify-content: space-between; align-items: baseline; }
+.bq-head b { font-size: 17px; }
+.bq-head span { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.bq-msg { margin: 0; color: var(--ink-2); line-height: 1.8; display: flex; gap: 6px; align-items: center; }
+.bq-track.done .bq-msg { color: var(--ok); }
+.bq-step { padding: 14px 16px; margin-bottom: 10px; }
+.bq-step b { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.bq-step b em { font-style: normal; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); font-size: 14px; }
+.bq-step p { margin: 8px 0 0; line-height: 1.9; font-size: 15px; color: var(--ink-2); }
+.bq-ayah { font-size: 24px; line-height: 2; color: var(--ink) !important; text-align: center; }
+.br-modes { margin-bottom: 4px; }
+.br-modes button { flex: 1; text-align: center; padding: 8px 6px; border: 0; border-radius: 12px; background: none; font: inherit; font-size: 15px; font-weight: 600; color: var(--ink-2); }
+.br-modes button.on { background: var(--card-solid); color: var(--ink); box-shadow: var(--shadow); }
+.bq-track .bar { background: var(--bg-2); margin-top: 0; }
+.bq-track .bar i { background: var(--primary); transition: width 0.4s; }
