@@ -3,7 +3,7 @@
 // Item ids are stored with the user's progress and bookmarks, so keep them stable
 // when editing: add new ids, never reuse old ones.
 
-import { AL_IMRAN_END, EVENING, HASBIYA, MORNING, SLEEP } from './wird-data.js';
+import { AL_IMRAN_END, EVENING, HASBIYA, MORNING, RUQYAH, SLEEP } from './wird-data.js';
 
 const list = (cat, items) => items.map((x, i) => ({ ...x, id: `${cat}-${i + 1}`, count: x.count || 1 }));
 
@@ -61,6 +61,7 @@ export const CATEGORIES = [
       { quran: true, title: 'خواتيم سورة آل عمران', text: AL_IMRAN_END, ref: 'آل عمران: ١٩٠–٢٠٠ — قرأها النبي ﷺ حين استيقظ، متفق عليه' },
     ]),
   },
+  { id: 'ruqyah', title: 'الرقية الشرعية', subtitle: 'آيات وسور يرقي بها نفسه', icon: 'shield', tone: 'teal', items: list('ruqyah', RUQYAH) },
 ];
 
 export const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));

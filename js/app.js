@@ -36,6 +36,7 @@ const TABS = [
   ['home', 'الرئيسية', 'home', '#/home'],
   ['mine', 'أذكاري', 'heart', '#/mine'],
   ['duas', 'أدعيتي', 'hand', '#/notebook'],
+  ['ruqyah', 'الرقية الشرعية', 'shield', '#/ruqyah'],
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
   ['counter', 'العداد', 'hash', '#/counter'],
   ['worship', 'متابعة', 'check', '#/worship'],
@@ -57,6 +58,7 @@ const ROUTES = [
   [/^#\/audio$/, 'audio', (v) => audioView.render(v)],
   [/^#\/calendar$/, 'calendar', (v) => calendar.render(v)],
   [/^#\/counter$/, 'counter', (v) => counter.render(v)],
+  [/^#\/ruqyah$/, 'ruqyah', (v) => adhkar.renderWird(v, 'ruqyah')],
   [/^#\/prayers$/, 'prayers', (v) => prayersView.render(v)],
   [/^#\/ends$/, 'prayers', (v) => prayersView.renderEnds(v)],
   [/^#\/search$/, 'search', (v) => search.render(v)],
@@ -90,8 +92,8 @@ let currentHash = '';
 
 function route() {
   const hash = location.hash || '#/home';
-  // Links to what the app no longer has (memorization, ruqyah, widget) open the home screen.
-  if (/^#\/(quran|hifz|ruqyah|calendar\/[\d-]+|surah\/\w+|qibla|settings\/widget)$/.test(hash)) {
+  // Links to what the app no longer has (memorization, widget) open the home screen.
+  if (/^#\/(quran|hifz|calendar\/[\d-]+|surah\/\w+|qibla|settings\/widget)$/.test(hash)) {
     location.replace('#/home');
     return;
   }
