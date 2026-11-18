@@ -1,31 +1,57 @@
-// «تنفّس ٥-٣-٧»: breathe in for 5 seconds (the belly rising), hold for 3, breathe out slowly for 7;
-// five rounds, before sleep or in a moment of worry. A circle grows and shrinks with the breath.
+// «تمارين التنفّس»: ٥-٣-٧ (in 5 seconds, the belly rising; hold 3; out slowly 7) and ٤-٧-٨ (in 4
+// through the nose; hold 7; out 8 through the mouth); five rounds, before sleep or in a moment of worry. A circle grows and shrinks with the breath.
 
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
 import { haptic, pageHeader } from '../ui.js';
 
-const PHASES = [
-  ['in', 'شهيق', 'من الأنف، والبطن يبرز', 5],
-  ['hold', 'احبس', 'أمسك النفس بهدوء', 3],
-  ['out', 'زفير', 'ببطء من الفم', 7],
-];
+const MODES = {
+  537: { name: '٥-٣-٧', sub: 'شهيق ٥ ثوانٍ، حبس ٣، زفير ٧', phases: [
+    ['in', 'شهيق', 'من الأنف، والبطن يبرز', 5],
+    ['hold', 'احبس', 'أمسك النفس بهدوء', 3],
+    ['out', 'زفير', 'ببطء من الفم', 7],
+  ] },
+  478: { name: '٤-٧-٨', sub: 'شهيق ٤ ثوانٍ، حبس ٧، زفير ٨', phases: [
+    ['in', 'شهيق', 'من الأنف مع إغلاق الفم', 4],
+    ['hold', 'احبس', 'احبس نفَسك', 7],
+    ['out', 'زفير', 'أخرج الهواء من الفم بهدوء', 8],
+  ] },
+};
 const ROUNDS = 5;
-const CYCLE = PHASES.reduce((a, p) => a + p[3], 0);
+const MODE_KEY = 'adhkar-app:breath';
+let mode = '537';
+try {
+  if (MODES[localStorage.getItem(MODE_KEY)]) mode = localStorage.getItem(MODE_KEY);
+} catch (e) {
+  /* nothing kept */
+}
+let PHASES = MODES[mode].phases;
+let CYCLE = PHASES.reduce((a, p) => a + p[3], 0);
+const setMode = (m) => {
+  mode = m;
+  PHASES = MODES[m].phases;
+  CYCLE = PHASES.reduce((a, p) => a + p[3], 0);
+  try {
+    localStorage.setItem(MODE_KEY, m);
+  } catch (e) {
+    /* nothing kept */
+  }
+};
 
 export function render(view) {
   let start = 0; // when the exercise began (0 = not running)
   let raf = 0;
   const draw = () => {
     view.innerHTML = `
-      ${pageHeader('تنفّس ٥-٣-٧', { back: '#/home', sub: 'شهيق ٥ ثوانٍ، حبس ٣، زفير ٧' })}
+      ${pageHeader('تمارين التنفّس', { back: '#/home', sub: MODES[mode].sub })}
       <section class="br">
+        <div class="segmented br-modes">${Object.entries(MODES).map(([k, m]) => `<button class="${k === mode ? 'on' : ''}" data-mode="${k}">تنفّس ${m.name}</button>`).join('')}</div>
         <div class="br-stage"><span class="br-ring"></span><span class="br-ball" data-ball></span>
           <div class="br-text"><b data-word>${start ? '' : 'جاهز؟'}</b><strong data-sec></strong><small data-how>${start ? '' : `${num(ROUNDS)} دورات`}</small></div></div>
         <p class="br-round" data-round>${start ? '' : '&nbsp;'}</p>
         <button class="btn ${start ? 'ghost' : 'primary'} wide" data-go>${start ? 'إيقاف' : `${icon('play', 18)} ابدأ`}</button>
         <ol class="card br-steps">${PHASES.map(([, w, how, s]) => `<li><b>${w} ${num(s)} ثوانٍ</b><small>${how}</small></li>`).join('')}</ol>
-        <p class="hint">جرّبه ٥ دورات قبل النوم أو في أثناء القلق. تمرين للاسترخاء، ولا يغني عن استشارة الطبيب ولا عن علاج الضغط.</p>
+        <p class="hint">جرّبه ${num(ROUNDS)} دورات قبل النوم أو في أثناء القلق. تمرين للاسترخاء، ولا يغني عن استشارة الطبيب ولا عن علاج الضغط.</p>
       </section>`;
   };
   const frame = () => {
@@ -69,6 +95,12 @@ export function render(view) {
   };
   draw();
   view.onclick = (e) => {
+    const m = e.target.closest('[data-mode]');
+    if (m) {
+      stop();
+      setMode(m.dataset.mode);
+      return draw();
+    }
     if (!e.target.closest('[data-go]')) return;
     if (start) {
       stop();

@@ -25,6 +25,7 @@ import * as reminders from './views/reminders.js';
 import * as account from './views/account.js';
 import * as prayersView from './views/prayers.js';
 import * as breathe from './views/breathe.js';
+import * as baqarah from './views/baqarah.js';
 import { takeRedirect } from './google.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
 import { APP_NAME, APP_VERSION, DESIGNER } from './config.js';
@@ -61,6 +62,7 @@ const ROUTES = [
   [/^#\/ruqyah$/, 'ruqyah', (v) => adhkar.renderWird(v, 'ruqyah')],
   [/^#\/karb$/, 'karb', (v) => adhkar.renderWird(v, 'karb')],
   [/^#\/breathe$/, 'breathe', (v) => breathe.render(v)],
+  [/^#\/baqarah$/, 'baqarah', (v) => baqarah.render(v)],
   [/^#\/prayers$/, 'prayers', (v) => prayersView.render(v)],
   [/^#\/ends$/, 'prayers', (v) => prayersView.renderEnds(v)],
   [/^#\/search$/, 'search', (v) => search.render(v)],
