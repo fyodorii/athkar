@@ -10,6 +10,7 @@ const SECTIONS = [
   ['#/mine', 'أذكاري', 'heart'],
   ['#/notebook', 'أدعيتي', 'hand'],
   ['#/ruqyah', 'الرقية الشرعية', 'shield'],
+  ['#/breathe', 'تنفّس ٥-٣-٧', 'leaf'],
   ['#/tasbeeh', 'السبحة', 'beads'],
   ['#/counter', 'العداد', 'hash'],
   ['#/worship', 'متابعة العبادات', 'check'],
