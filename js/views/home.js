@@ -24,6 +24,8 @@ const QUICK = [
   ['#/mine', 'أذكاري', 'heart'],
   ['#/notebook', 'أدعيتي', 'hand'],
   ['#/ruqyah', 'الرقية', 'shield'],
+  ['#/karb', 'أدعية الكرب', 'heart'],
+  ['#/breathe', 'تنفّس ٥-٣-٧', 'leaf'],
   ['#/khatma', 'الختمات', 'quran'],
   ['#/calendar', 'التقويم', 'calendar'],
   ['#/rawatib', 'النوافل', 'mosque'],
