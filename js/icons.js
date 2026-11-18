@@ -82,6 +82,7 @@ const METEO = { 'm-fajr': 'moonset', 'm-sunrise': 'sunrise', 'm-duha': 'horizon'
 const FLUENT = new Set(['heart', 'notebook', 'shield_checkmark', 'person_heart', 'book_open', 'book_star', 'calendar', 'ribbon_star', 'alert', 'headphones', 'toolbox', 'number_symbol_square', 'clock', 'clock_alarm', 'home', 'checkmark_circle', 'settings', 'calendar_data_bar', 'warning', 'beach', 'sport', 'mic', 'coin_multiple', 'lightbulb_filament', 'beads', 'breath']);
 
 export function icon(name, size = 22, extra = '') {
+  if (typeof name !== 'string') return '';
   if (name.startsWith('f-') && FLUENT.has(name.slice(2))) return `<img class="ic fluent ${extra}" src="icons/fluent/${name.slice(2)}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
   if (FR[name]) return `<svg class="ic fr ${extra}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${FR[name]}</svg>`;
   if (METEO[name]) return `<img class="ic meteo ${extra}" src="icons/meteo/${METEO[name]}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
