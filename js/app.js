@@ -299,7 +299,12 @@ if (signedIn?.error) toast(signedIn.error);
 window.addEventListener('hashchange', route);
 // Reminders while the app is closed (away.js) are loaded on their own: if a content blocker or a
 // failed download keeps that file away, the rest of the app still opens.
-const syncPush = () => import('./away.js').then((m) => m.syncPush()).catch(() => {});
+// Reminders while the app is closed were removed (release 97): a subscription left from before is
+// cancelled once, so the server stops sending.
+const syncPush = () => {
+  if (!state.settings.notify.push) return;
+  import('./away.js').then((m) => m.disablePush()).catch(() => {});
+};
 let pushPending = false;
 
 let pushTimer;
