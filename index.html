@@ -13,7 +13,7 @@
     <meta name="format-detection" content="telephone=no" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/alt/sky.png?v=3" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/alt/emerald.png?v=4" />
     <link rel="preload" href="fonts/tajawal-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="fonts/tajawal-arabic-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="css/app.css" />
@@ -46,8 +46,8 @@
         // The home-screen icon chosen in the settings (or ?icon= in a shared link); iOS reads it
         // when the app is added to the home screen.
         var ic = new URLSearchParams(location.search).get('icon') || st.appIcon;
-        if (['emerald', 'night', 'violet', 'parchment', 'black', 'burgundy', 'gold'].indexOf(ic) < 0) ic = 'sky'; // the default is the blue one
-        document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png?v=3';
+        if (['sky', 'night', 'violet', 'parchment', 'black', 'burgundy', 'gold'].indexOf(ic) < 0) ic = 'emerald'; // the default is the green one
+        document.querySelector('link[rel=apple-touch-icon]').href = 'icons/alt/' + ic + '.png?v=4';
       } catch (e) {}
     </script>
   </head>
