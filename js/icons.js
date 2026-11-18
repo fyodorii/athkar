@@ -74,17 +74,23 @@ const P = {
   more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
 };
 
+// Prayer-time pictures from Meteocons (MIT, Bas Milius): icons/meteo/<name>.svg.
+const METEO = { 'm-fajr': 'moonset', 'm-sunrise': 'sunrise', 'm-duha': 'horizon', 'm-dhuhr': 'clear-day', 'm-asr': 'partly-cloudy-day', 'm-maghrib': 'sunset', 'm-isha': 'starry-night', 'm-midnight': 'clear-night', 'm-lastThird': 'falling-stars' };
+
 export function icon(name, size = 22, extra = '') {
+  if (METEO[name]) return `<img class="ic meteo ${extra}" src="icons/meteo/${METEO[name]}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
   return `<svg class="ic ${extra}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || ''}</svg>`;
 }
 
 export const PRAYER_ICONS = {
-  fajr: 'moonStar',
-  sunrise: 'sunrise',
-  dhuhr: 'sun',
-  asr: 'sunLow',
-  maghrib: 'sunset',
-  isha: 'moon',
-  midnight: 'stars',
-  lastThird: 'stars',
+  fajr: 'm-fajr',
+  sunrise: 'm-sunrise',
+  duha: 'm-duha',
+  duhaEnd: 'm-duha',
+  dhuhr: 'm-dhuhr',
+  asr: 'm-asr',
+  maghrib: 'm-maghrib',
+  isha: 'm-isha',
+  midnight: 'm-midnight',
+  lastThird: 'm-lastThird',
 };

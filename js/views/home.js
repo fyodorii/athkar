@@ -261,7 +261,7 @@ function periodTile(info) {
   return `<span class="h-now-ic">${icon(PERIOD_ICONS[n.key] || 'stars', 20)}</span>
     <span class="h-now-text"><b><small>الآن</small> ${esc(n.title)}</b><small>${esc(n.sub)}</small></span>`;
 }
-const PERIOD_ICONS = { sunrise: 'sunrise', duha: 'sun', zawal: 'sun', day: 'sun', night: 'moon', midnight: 'moon', qiyam: 'stars' };
+const PERIOD_ICONS = { sunrise: 'm-sunrise', duha: 'm-duha', zawal: 'm-dhuhr', day: 'm-dhuhr', night: 'm-isha', midnight: 'm-midnight', qiyam: 'm-lastThird' };
 
 // The day shown in the two time cards: today, or another day picked with the arrows.
 function shownDay(info) {

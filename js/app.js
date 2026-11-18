@@ -206,11 +206,18 @@ document.addEventListener('touchmove', (e) => e.touches.length > 1 && e.preventD
 // The phone's status bar (the clock and battery) takes the colour of the top of the page under
 // it, so it reads as part of the page: the light header on the home screen, the page's own
 // background elsewhere, the tasbeeh's colour on the tasbeeh.
+// The app colour mixed into a base, as CSS color-mix does for --hero-top (css/app.css).
+export function mixHex(hex, base, p) {
+  const c = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [a, b] = [c(hex), c(base)];
+  return '#' + a.map((v, i) => Math.round(v * p + b[i] * (1 - p)).toString(16).padStart(2, '0')).join('');
+}
 const STATUS = { dark: { home: '#101b30', tasbeeh: '#070f2c', other: '#0a1220' } };
 function paintStatusBar() {
   // In the light theme the top of every screen is the app colour.
   const main = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#2c6fcc';
-  const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: '#232a4a' } : { home: '#9ea6cc', other: main };
+  const hex = /^#[0-9a-f]{6}$/i.test(main) ? main : '#2c6fcc';
+  const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: mixHex(hex, '#141a26', 0.3) } : { home: mixHex(hex, '#e6e7ee', 0.42), other: main };
   const tab = document.body.dataset.tab;
   const own = tab === 'tasbeeh' && document.querySelector('.tsb')?.dataset.top;
   document.querySelector('meta[name="theme-color"]').setAttribute('content', own || shade[tab] || shade.other);

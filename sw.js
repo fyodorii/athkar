@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline, and opens
 // the app at the right screen when a reminder is tapped.
 
-const VERSION = 'v92'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v93'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 // Files the app opens without (it loads them on their own and copes when they are missing).
 const OPTIONAL = ['js/away.js'];
@@ -94,6 +94,15 @@ const FILES = [
   'fonts/ruqaa-latin-400.woff2',
   'fonts/ruqaa-arabic-700.woff2',
   'fonts/ruqaa-latin-700.woff2',
+  'icons/meteo/moonset.svg',
+  'icons/meteo/sunrise.svg',
+  'icons/meteo/horizon.svg',
+  'icons/meteo/clear-day.svg',
+  'icons/meteo/partly-cloudy-day.svg',
+  'icons/meteo/sunset.svg',
+  'icons/meteo/starry-night.svg',
+  'icons/meteo/clear-night.svg',
+  'icons/meteo/falling-stars.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',

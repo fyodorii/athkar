@@ -2803,3 +2803,40 @@ body[data-tab='search'] .page-head { display: none; }
 .br-modes button.on { background: var(--card-solid); color: var(--ink); box-shadow: var(--shadow); }
 .bq-track .bar { background: var(--bg-2); margin-top: 0; }
 .bq-track .bar i { background: var(--primary); transition: width 0.4s; }
+
+/* ---------- Version 93: Meteocons for the prayer times; breathing options ---------- */
+img.ic.meteo { object-fit: contain; transform: scale(1.45); flex-shrink: 0; }
+.br-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
+.br-opt span { display: grid; gap: 2px; }
+.br-opt span svg { display: inline; vertical-align: -4px; margin-inline-end: 4px; color: var(--primary); }
+.br-opt small { color: var(--ink-3); font-size: 12.5px; }
+
+/* The home's top in the app colour (light and dark), with the status bar painted the same (app.js). */
+:root { --hero-top: color-mix(in srgb, var(--primary) 42%, #e6e7ee); --hero-mid: color-mix(in srgb, var(--primary) 20%, #e6e7ee); }
+[data-theme='dark'] { --hero-top: color-mix(in srgb, var(--primary) 30%, #141a26); --hero-mid: color-mix(in srgb, var(--primary) 14%, #141a26); }
+.hx-hero { background:
+    radial-gradient(1.5px 1.5px at 18% 22%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1.2px 1.2px at 72% 14%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(1px 1px at 46% 34%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(1.3px 1.3px at 86% 40%, rgba(255, 255, 255, 0.6), transparent 60%),
+    linear-gradient(180deg, var(--hero-top) 0%, var(--hero-mid) 45%, var(--bg) 100%); }
+[data-theme='dark'] .hx-hero { background:
+    radial-gradient(1.5px 1.5px at 18% 22%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(1.2px 1.2px at 72% 14%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 46% 34%, rgba(255, 255, 255, 0.6), transparent 60%),
+    linear-gradient(180deg, var(--hero-top) 0%, var(--hero-mid) 45%, var(--bg) 100%); }
+body[data-tab='home']::after, :root:not([data-theme='dark']) body[data-tab='home']::after, [data-theme='dark'] body[data-tab='home']::after { background: var(--hero-top); }
+
+/* One look in every colour: the cream pages and solid cards of the default (sage), each page lightly
+   tinted with the chosen colour; in the dark, a near-black tinted the same way. */
+:root:not([data-accent='sage']):not([data-theme='dark']) { --bg: color-mix(in srgb, var(--primary) 5%, #f4f3ee); --bg-2: color-mix(in srgb, var(--primary) 7%, #ebeae3); --card: #fcfcf9; --card-solid: #fcfcf9; --card-2: #f7f6f1; --raised: #fcfcf9; --ink: color-mix(in srgb, var(--primary) 18%, #1c2226); --ink-2: #57605f; --ink-3: #8b928f; --line: rgba(30, 40, 45, 0.1); --shadow: 0 0 0 1px rgba(30, 40, 45, 0.07), 0 10px 24px -20px rgba(30, 40, 45, 0.35); --sheet-bg: #fbfaf6; --tab-bg: #fbfaf6; }
+:root:not([data-accent='sage'])[data-theme='dark'] { --bg: color-mix(in srgb, var(--primary) 5%, #0e1113); --bg-2: color-mix(in srgb, var(--primary) 8%, #191d1f); --card: color-mix(in srgb, var(--primary) 5%, #16191b); --card-solid: color-mix(in srgb, var(--primary) 5%, #16191b); --card-2: color-mix(in srgb, var(--primary) 6%, #1b1f21); --raised: color-mix(in srgb, var(--primary) 6%, #1b1f21); --ink: #eef1f0; --ink-2: #b3bbb8; --ink-3: #808a87; --line: rgba(255, 255, 255, 0.09); --primary-ink: #0e1113; }
+:root:not([data-accent='sage']) .card { box-shadow: var(--shadow); border-radius: 28px; }
+:root:not([data-accent='sage']) body { background: var(--bg); }
+:root:not([data-accent='sage']) body::before { display: none; }
+/* Light text on the app colour only where that colour is deep enough: in the dark, a deep mix. */
+[data-theme='dark'] .pt-hero { background: linear-gradient(150deg, color-mix(in srgb, var(--primary) 45%, #10151a), color-mix(in srgb, var(--primary) 22%, #0c1014)); }
+[data-theme='dark'] .pt-row.next { background: var(--primary-soft); color: var(--ink); }
+[data-theme='dark'] .pt-row.next .pt-ic { background: rgba(255, 255, 255, 0.08); }
+[data-theme='dark'] .pt-row.next small { color: var(--ink-3) !important; }
+[data-theme='dark'] .seg-mini button.on { background: var(--primary-soft); color: var(--primary); }
