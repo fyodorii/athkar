@@ -520,18 +520,8 @@ export function renderNotify(view) {
       <div class="group">
         ${sw('on', 'تفعيل التنبيهات', n.on, 'إشعار وصوت عند دخول الوقت', n.on ? 'bell' : 'bellOff')}
         <p class="hint">${status}</p>
-        <p class="hint">${n.push ? 'تصلك التنبيهات والتطبيق مفتوح أو مغلق. وصولها وهو مغلق يحتاج اتصالاً بالإنترنت، فلا تعتمد عليه وحده للاستيقاظ.' : `يظهر التنبيه ما دام التطبيق مفتوحاً أو حيّاً في الخلفية، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه. لتصلك وهو مغلق فعّل «والتطبيق مغلق» أدناه.`}</p>
+        <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً أو حيّاً في الخلفية، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه.</p>
         ${n.on ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} جرّب التنبيه</button>` : ''}
-      </div>
-      <div class="group">
-        ${(() => {
-          const why = away ? away.pushBlocker() : 'unsupported';
-          const sub = why === 'setup' ? 'قيد الإعداد: يعمل بعد تشغيل خادم التنبيهات' : why === 'install' ? 'أضف التطبيق إلى الشاشة الرئيسية من Safari أولاً' : why === 'unsupported' ? 'هذا المتصفح لا يدعم إشعارات الدفع' : n.push ? 'مفعّل: تصلك التنبيهات والتطبيق مغلق' : 'تصلك التنبيهات المفعّلة هنا والتطبيق مغلق';
-          return `<div class="row ${why ? 'off' : ''}"><span class="row-icon">${icon('bell', 20)}</span><span class="row-label">والتطبيق مغلق<small>${sub}</small></span>${toggle('push', !!n.push && !why, why ? 'disabled' : '')}</div>`;
-        })()}
-        ${n.push && !n.on ? `<p class="hint warn">«تفعيل التنبيهات» في الأعلى مطفأ، فلا يصلك والتطبيق مغلق إلا تذكيراتك الخاصة وورد الختمة. فعّله لتصلك الصلوات والأذكار.</p>` : ''}
-        ${n.push && away && !away.pushBlocker() ? `<button class="btn ghost wide" data-pushtest>${icon('bell', 18)} جرّب التنبيه والتطبيق مغلق</button>` : ''}
-        <p class="hint">يحفظ التطبيق تنبيهات الأيام السبعة القادمة لدى خادم التنبيهات فيرسلها في وقتها، ويحدّثها كلما فتحته. افتحه مرة في الأسبوع على الأقل.</p>
       </div>
       <div class="group ${n.on ? '' : 'off'}">
         <h4>الصلوات</h4>
