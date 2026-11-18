@@ -44,7 +44,7 @@ export function renderWird(view, id) {
         sub: `<span data-done>${num(done)}</span> من ${num(cat.items.length)} • ${esc(cat.subtitle)}`,
         actions: `<button class="icon-btn ghost" data-reset aria-label="البدء من جديد">${icon('reset', 22)}</button>`,
       })}
-      ${segmented(WIRD_TABS, `#/adhkar/${id}`)}
+      ${WIRD_TABS.some(([h]) => h === `#/adhkar/${id}`) ? segmented(WIRD_TABS, `#/adhkar/${id}`) : ''}
       <div class="cat-bar"><i data-bar style="width:${(done / cat.items.length) * 100}%"></i></div>
       <section class="dhikr-list" style="--scale:${scale};--qscale:${state.settings.quranScale || 1}">
         ${cat.items.map((x, i) => wirdCard(x, c[x.id] || 0)).join('')}

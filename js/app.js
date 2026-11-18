@@ -36,7 +36,6 @@ const TABS = [
   ['home', 'الرئيسية', 'home', '#/home'],
   ['mine', 'أذكاري', 'heart', '#/mine'],
   ['duas', 'أدعيتي', 'hand', '#/notebook'],
-  ['ruqyah', 'الرقية الشرعية', 'shield', '#/ruqyah'],
   ['tasbeeh', 'السبحة', 'beads', '#/tasbeeh'],
   ['counter', 'العداد', 'hash', '#/counter'],
   ['worship', 'متابعة', 'check', '#/worship'],
