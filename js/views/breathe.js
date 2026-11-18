@@ -3,7 +3,8 @@
 
 import { num } from '../dates.js';
 import { icon } from '../icons.js';
-import { haptic, pageHeader } from '../ui.js';
+import { chime, unlockAudio } from '../timers.js';
+import { haptic, pageHeader, toggle } from '../ui.js';
 
 const MODES = {
   537: { name: '٥-٣-٧', sub: 'شهيق ٥ ثوانٍ، حبس ٣، زفير ٧', phases: [
@@ -40,6 +41,12 @@ const setMode = (m) => {
 
 export function render(view) {
   let start = 0; // when the exercise began (0 = not running)
+  let sound = true;
+  try {
+    sound = localStorage.getItem('adhkar-app:breath-sound') !== '0';
+  } catch (e) {
+    /* nothing kept */
+  }
   let raf = 0;
   const draw = () => {
     view.innerHTML = `
@@ -50,6 +57,7 @@ export function render(view) {
           <div class="br-text"><b data-word>${start ? '' : 'جاهز؟'}</b><strong data-sec></strong><small data-how>${start ? '' : `${num(ROUNDS)} دورات`}</small></div></div>
         <p class="br-round" data-round>${start ? '' : '&nbsp;'}</p>
         <button class="btn ${start ? 'ghost' : 'primary'} wide" data-go>${start ? 'إيقاف' : `${icon('play', 18)} ابدأ`}</button>
+        <label class="card br-opt"><span>${icon('sound', 20)} صوت عند كل مرحلة<small>مع الاهتزاز: نقرة للشهيق، نقرتان للحبس، ثلاث للزفير</small></span>${toggle('br-sound', sound)}</label>
         <ol class="card br-steps">${PHASES.map(([, w, how, s]) => `<li><b>${w} ${num(s)} ثوانٍ</b><small>${how}</small></li>`).join('')}</ol>
         <p class="hint">جرّبه ${num(ROUNDS)} دورات قبل النوم أو في أثناء القلق. تمرين للاسترخاء، ولا يغني عن استشارة الطبيب ولا عن علاج الضغط.</p>
       </section>`;
@@ -75,14 +83,21 @@ export function render(view) {
     ball.style.transform = `scale(${scale})`;
     ball.dataset.phase = key;
     const w = view.querySelector('[data-word]');
-    if (w.textContent !== word) {
+    if (ball.dataset.cue !== `${round}${key}`) {
+      ball.dataset.cue = `${round}${key}`;
       w.textContent = word;
       view.querySelector('[data-how]').textContent = how;
-      haptic(15, true);
+      cue(key);
     }
     view.querySelector('[data-sec]').textContent = num(Math.ceil(len - x));
     view.querySelector('[data-round]').textContent = `الدورة ${num(round + 1)} من ${num(ROUNDS)}`;
     raf = requestAnimationFrame(frame);
+  };
+  // Each phase felt and heard: one tick to breathe in, two to hold, three to breathe out.
+  const cue = (key) => {
+    const n = key === 'in' ? 1 : key === 'hold' ? 2 : 3;
+    haptic(n === 1 ? 20 : n === 2 ? 40 : 120, true, true);
+    if (sound) chime(Array.from({ length: n }, (_, i) => i * 0.18), false);
   };
   const stop = () => {
     cancelAnimationFrame(raf);
@@ -94,6 +109,16 @@ export function render(view) {
     }
   };
   draw();
+  view.onchange = (e) => {
+    if (e.target.name !== 'br-sound') return;
+    sound = e.target.checked;
+    try {
+      localStorage.setItem('adhkar-app:breath-sound', sound ? '1' : '0');
+    } catch (err) {
+      /* nothing kept */
+    }
+    if (sound) unlockAudio();
+  };
   view.onclick = (e) => {
     const m = e.target.closest('[data-mode]');
     if (m) {
@@ -107,6 +132,7 @@ export function render(view) {
       draw();
       return;
     }
+    unlockAudio();
     start = Date.now();
     draw();
     frame();
@@ -114,5 +140,6 @@ export function render(view) {
   return { destroy: () => {
     cancelAnimationFrame(raf);
     view.onclick = null;
+    view.onchange = null;
   } };
 }
