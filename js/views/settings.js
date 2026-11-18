@@ -329,10 +329,10 @@ export function renderMethod(view) {
 }
 
 export const APP_ICONS = [
+  ['emerald', 'زمردي'],
   ['sky', 'أزرق'],
   ['night', 'ليلي'],
   ['violet', 'بنفسجي'],
-  ['emerald', 'زمردي'],
   ['parchment', 'ورق المصحف'],
   ['black', 'أسود'],
   ['burgundy', 'عنابي'],
@@ -348,7 +348,7 @@ export function renderIcon(view) {
     view.innerHTML = `
       ${pageHeader('أيقونة التطبيق', { back: '#/settings', sub: 'اختر أيقونة جديدة للتطبيق' })}
       <div class="icon-grid">
-        ${APP_ICONS.map(([id, name]) => `<button class="icon-pick ${s.appIcon === id ? 'on' : ''}" data-icon="${id}"><img src="icons/alt/${id}.png" alt="" width="90" height="90"><span>${name}</span></button>`).join('')}
+        ${APP_ICONS.map(([id, name]) => `<button class="icon-pick ${s.appIcon === id ? 'on' : ''}" data-icon="${id}"><img src="icons/alt/${id}.png?v=4" alt="" width="90" height="90"><span>${name}</span></button>`).join('')}
       </div>
       <div class="group">
         <h4>كيف تظهر الأيقونة الجديدة؟</h4>
@@ -368,7 +368,7 @@ export function renderIcon(view) {
       s.appIcon = b.dataset.icon;
       save();
       const l = document.querySelector('link[rel=apple-touch-icon]');
-      if (l) l.href = `icons/alt/${s.appIcon}.png?v=3`; // ?v= as in index.html: a new address so iOS fetches the icon afresh
+      if (l) l.href = `icons/alt/${s.appIcon}.png?v=4`; // ?v= as in index.html: a new address so iOS fetches the icon afresh
       return draw();
     }
     const c = e.target.closest('[data-icon-link]');

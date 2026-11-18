@@ -29,7 +29,7 @@ export const DEFAULTS = {
     flat: true, // flat design (the default since release 31) instead of liquid glass
     haptics: true,
     quranGoal: 5,
-    appIcon: 'sky', // icons/alt/<name>.png for the home screen
+    appIcon: 'emerald', // icons/alt/<name>.png for the home screen
     // Minutes between the adhan and the iqama.
     iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
     notify: {
@@ -222,6 +222,17 @@ if (!state.migrated.tsbBlack) {
 if (!state.migrated.tsbBgs) {
   state.tasbeeh.bgs = {};
   state.migrated.tsbBgs = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    /* private mode: nothing kept */
+  }
+}
+
+// Release 92: the new icon is green like the app; the old blue default follows it.
+if (!state.migrated.icon92) {
+  if (state.settings.appIcon === 'sky') state.settings.appIcon = 'emerald';
+  state.migrated.icon92 = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {
