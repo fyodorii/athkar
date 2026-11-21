@@ -43,5 +43,5 @@ export const POEMS = [
 // Nasheeds, each as one recording from archive.org.
 export const NASHEEDS = [
   { id: 'kafa', name: 'كفى يا نفس ما كان', sub: 'إنشاد — من أرشيف الإنترنت', url: 'https://archive.org/download/alkhaili_20130414_2127/%D9%83%D9%81%D9%89%20%D9%8A%D8%A7%20%D9%86%D9%81%D8%B3%20%D9%85%D8%A7%20%D9%83%D8%A7%D9%86.mp3' },
-  { id: 'salit', name: 'هل صليت على النبي اليوم؟', sub: 'بصوت عبدالله الكامل — كاملة على يوتيوب', link: 'https://youtu.be/MZSCSzTrNkQ' },
+  { id: 'salit', name: 'هل صليت على النبي اليوم؟', sub: 'بصوت عبدالله الكامل — من أرشيف الإنترنت', url: 'https://archive.org/download/LLYouTube/%D9%87%D9%84%20%D8%B5%D9%84%D9%8A%D8%AA%20%D8%B9%D9%84%D9%89%20%D8%A7%D9%84%D9%86%D8%A8%D9%8A%20%D8%A7%D9%84%D9%8A%D9%88%D9%85%20%D8%9F.mp3' },
 ];
