@@ -2843,3 +2843,6 @@ body[data-tab='home']::after, :root:not([data-theme='dark']) body[data-tab='home
 
 /* ---------- Version 94: colour icons (Fluent UI, MIT) for the sections ---------- */
 img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08)); }
+
+.radio-switch { flex-wrap: wrap; justify-content: center; border-radius: 22px; }
+.radio-switch button { padding: 7px 12px; }
