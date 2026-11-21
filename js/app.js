@@ -1,6 +1,6 @@
 // App shell: hash routes, the side menu, theme and the one-second tick (countdowns, timers, reminders).
 
-import { setDigits } from './dates.js';
+import { latinDigits, setDigits, toLatin } from './dates.js';
 import { FONTS } from './ui.js';
 import { icon } from './icons.js';
 import { checkForUpdate, isIOS, isStandalone, registerServiceWorker } from './push.js';
@@ -119,6 +119,7 @@ function route() {
   closeNav(false);
   try {
     current = fn(view, ...m.slice(1)) || null;
+    fixDigits(view);
   } catch (err) {
     // A screen that cannot be drawn shows why, instead of a blank page.
     current = null;
@@ -234,6 +235,7 @@ function applyTheme() {
   document.documentElement.dataset.accent = state.settings.accent || 'blue';
   paintStatusBar();
   setDigits(state.settings.digits);
+  fixDigits(document.body);
   const s = state.settings;
   document.documentElement.toggleAttribute('data-flat', !!s.flat);
   const root = document.documentElement.style;
@@ -413,3 +415,22 @@ syncPush();
 persistStorage();
 installHint();
 document.documentElement.classList.add('ready');
+
+// With Latin digits chosen, numbers written into the pages' text (references, counts, labels) follow
+// the choice too, everywhere, as each page is drawn.
+function fixDigits(root) {
+  if (!latinDigits() || !root) return;
+  const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) if (/[٠-٩]/.test(n.nodeValue)) n.nodeValue = toLatin(n.nodeValue);
+  for (const el of root.querySelectorAll?.('input[placeholder], [aria-label]') || []) {
+    if (el.placeholder && /[٠-٩]/.test(el.placeholder)) el.placeholder = toLatin(el.placeholder);
+  }
+}
+new MutationObserver((list) => {
+  if (!latinDigits()) return;
+  for (const m of list) {
+    if (m.type === 'characterData') {
+      if (/[٠-٩]/.test(m.target.nodeValue)) m.target.nodeValue = toLatin(m.target.nodeValue);
+    } else for (const n of m.addedNodes) n.nodeType === 3 ? /[٠-٩]/.test(n.nodeValue) && (n.nodeValue = toLatin(n.nodeValue)) : fixDigits(n);
+  }
+}).observe(document.body, { childList: true, subtree: true, characterData: true });

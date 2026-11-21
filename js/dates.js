@@ -11,6 +11,8 @@ export const GREG_MONTHS = [
 export const WEEKDAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
 let digitStyle = 'arab';
+export const toLatin = (s) => String(s).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g, '.').replace(/٬/g, ',');
+export const latinDigits = () => digitStyle === 'latn';
 export function setDigits(style) {
   digitStyle = style;
 }
@@ -18,7 +20,7 @@ export function setDigits(style) {
 // Shows numbers in Arabic-Indic digits (٠١٢…) unless Latin digits are chosen.
 export function num(value) {
   const s = String(value);
-  return digitStyle === 'arab' ? s.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]) : s;
+  return digitStyle === 'arab' ? s.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]) : toLatin(s);
 }
 
 let umalqura;
