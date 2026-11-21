@@ -73,8 +73,15 @@ const sw = { start: 0, acc: 0, laps: [] }; // kept while the app is open
 const cd = { end: 0, left: 5 * 60000, total: 5 * 60000 };
 let tab = 'watch';
 
+// A tap felt and heard on every button; the last seconds of the timer tick, its end rings.
+const cue = (n = 1, ms = 15) => {
+  haptic(ms, true, true);
+  chime(Array.from({ length: n }, (_, i) => i * 0.16), false);
+};
+
 export function renderStopwatch(view) {
   let raf = 0;
+  let lastSec = -1;
   const running = () => (tab === 'watch' ? !!sw.start : !!cd.end);
   const elapsed = () => sw.acc + (sw.start ? Date.now() - sw.start : 0);
   const left = () => (cd.end ? cd.end - Date.now() : cd.left);
@@ -108,11 +115,16 @@ export function renderStopwatch(view) {
     else {
       const l = left();
       f.textContent = fmt(l, false);
+      const sec = Math.ceil(l / 1000);
+      if (cd.end && sec <= 3 && sec > 0 && sec !== lastSec) cue(1, 20);
+      lastSec = sec;
       if (cd.end && l <= 0) {
         cd.end = 0;
         cd.left = cd.total;
-        chime([0, 0.35, 0.7, 1.05]);
+        chime([0, 0.35, 0.7, 1.05, 1.6, 1.95, 2.3, 2.65]);
         haptic(150, true, true);
+        setTimeout(() => haptic(150, true, true), 900);
+        setTimeout(() => haptic(150, true, true), 1800);
         draw();
       }
     }
@@ -134,6 +146,7 @@ export function renderStopwatch(view) {
     }
     if (e.target.closest('[data-go]')) {
       unlockAudio();
+      cue(running() ? 2 : 1);
       if (tab === 'watch') {
         if (sw.start) {
           sw.acc += Date.now() - sw.start;
@@ -149,11 +162,14 @@ export function renderStopwatch(view) {
       return draw();
     }
     if (e.target.closest('[data-lap]')) {
+      cue(1, 25);
       const total = elapsed();
       sw.laps.push(total - sw.laps.reduce((a, b) => a + b, 0));
       return draw();
     }
     if (e.target.closest('[data-reset]')) {
+      unlockAudio();
+      cue(3, 30);
       if (tab === 'watch') Object.assign(sw, { start: 0, acc: 0, laps: [] });
       else Object.assign(cd, { end: 0, left: cd.total });
       return draw();
