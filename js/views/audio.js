@@ -1,7 +1,7 @@
 // «الصوتيات»: al-Fatiha in the reading of Abu Amr, and the poems (al-Ilbiri, al-Zaynabiyya). The recordings play in
 // the app's shared player (radio.js), so they go on while the user moves around the app.
 
-import { FATIHA_QIRAAT, POEMS } from '../audio-data.js';
+import { FATIHA_QIRAAT, NASHEEDS, POEMS } from '../audio-data.js';
 import { icon } from '../icons.js';
 import { onRadio, playTrack, radioStatus, stop, toggle } from '../radio.js';
 import { esc, pageHeader } from '../ui.js';
@@ -10,6 +10,7 @@ import { statusText } from './radio.js';
 const tracks = new Map(
   FATIHA_QIRAAT.flatMap((q) => q.rawis.filter((r) => r.url).map((r) => [`fatiha-${r.id}`, { id: `fatiha-${r.id}`, name: `الفاتحة برواية ${r.name}`, sub: r.reciter, url: r.url }]))
 );
+for (const n of NASHEEDS) tracks.set(`nasheed-${n.id}`, { ...n, id: `nasheed-${n.id}` });
 for (const p of POEMS) if (p.audio) tracks.set(`poem-${p.id}`, { id: `poem-${p.id}`, name: p.title, sub: p.audio.reader || 'إنشاد', url: p.audio.url });
 
 export function render(view) {
@@ -36,6 +37,16 @@ export function render(view) {
               .join('')}</div>`
         ).join('')}
         <p class="hint">التسجيلات من موقع mp3quran.net، وتحتاج اتصالاً بالإنترنت.</p>
+      </section>
+      <section class="card au-sec">
+        <div class="au-head"><span class="au-ic">${icon('sound', 22)}</span><span><b>أناشيد</b><small>بلا معازف</small></span></div>
+        ${NASHEEDS.map((n) => {
+          const id = `nasheed-${n.id}`;
+          return `<button class="au-row ${on(id) ? 'on' : ''}" data-track="${id}">
+            <span class="au-btn">${icon(on(id) && live ? 'pause' : 'play', 18)}</span>
+            <span class="au-text"><b>${esc(n.name)}</b><small>${esc(n.sub)}${on(id) ? ` • ${statusText(status, true)}` : ''}</small></span>
+          </button>`;
+        }).join('')}
       </section>
       ${POEMS.map((p) => {
         const id = `poem-${p.id}`;

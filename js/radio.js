@@ -6,6 +6,9 @@ import { state, save } from './store.js';
 export const STATIONS = [
   { id: 'saudi', name: 'إذاعة القرآن الكريم', sub: 'المملكة العربية السعودية — بث مباشر', url: 'https://stream.radiojar.com/0tpy1h0kxtzuv' },
   // HLS from the Saudi Broadcasting Authority; Safari on the iPhone plays it in an <audio> element.
+  // The Saudi Quran and Sunnah channels, live from al-Masjid al-Haram and al-Masjid an-Nabawi (sound only).
+  { id: 'makkah', name: 'بث مباشر من المسجد الحرام بمكة المكرمة', sub: 'بث مباشر', url: 'https://cdn-globecast.akamaized.net/live/eds/saudi_quran/hls_roku/index.m3u8' },
+  { id: 'madinah', name: 'بث مباشر من المسجد النبوي بالمدينة المنورة', sub: 'بث مباشر', url: 'https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/index.m3u8' },
   { id: 'nidaa', name: 'إذاعة نداء الإسلام', sub: 'من مكة المكرمة — بث مباشر', url: 'https://live.kwikmotion.com/sbrksanedaradiolive/srpksanedaradio/playlist.m3u8' },
 ];
 
