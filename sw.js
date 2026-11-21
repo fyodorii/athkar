@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline, and opens
 // the app at the right screen when a reminder is tapped.
 
-const VERSION = 'v101'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v102'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 // Files the app opens without (it loads them on their own and copes when they are missing).
 const OPTIONAL = ['js/away.js'];
@@ -53,6 +53,7 @@ const FILES = [
   'js/views/prayers.js',
   'js/views/breathe.js',
   'js/views/baqarah.js',
+  'js/views/calc.js',
   'js/ends.js',
   'js/views/search.js',
   'js/views/counter.js',

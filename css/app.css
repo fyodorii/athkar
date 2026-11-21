@@ -2886,3 +2886,34 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 .rd-eq i { width: 3px; height: 5px; border-radius: 2px; background: var(--tint); animation: rd-bar2 0.9s ease-in-out infinite; }
 .rd-eq i:nth-child(2) { animation-delay: -0.3s; } .rd-eq i:nth-child(3) { animation-delay: -0.6s; }
 @keyframes rd-bar2 { 50% { height: 14px; } }
+
+/* ---------- Version 102: VAT calculator, stopwatch and timer ---------- */
+.seg-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 16px; background: var(--bg-2); margin-bottom: 14px; }
+.seg-tabs button { flex: 1; padding: 10px 6px; border: 0; border-radius: 12px; background: none; font: inherit; font-size: 14.5px; font-weight: 700; color: var(--ink-2); }
+.seg-tabs button.on { background: var(--card-solid); color: var(--primary); box-shadow: var(--shadow); }
+.vt, .stw { padding: 16px; }
+.vt input { font-size: 22px; text-align: left; }
+.vt-out { display: grid; gap: 8px; margin-top: 14px; }
+.vt-out div { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border-radius: 16px; background: var(--bg-2); }
+.vt-out small { color: var(--ink-2); font-size: 14px; }
+.vt-out b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.vt-out .vat b, .vt-table .vat { color: var(--danger); }
+.vt-out .tot { background: var(--primary-soft); }
+.vt-out .tot b, .vt-table .tot { color: var(--ok); font-weight: 700; }
+.vt-out .tot b { font-size: 26px; color: var(--primary); }
+.vt-table { padding: 14px 16px; margin-top: 12px; }
+.vt-table h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 16px; }
+.vt-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.vt-table th, .vt-table td { padding: 10px 6px; border-bottom: 1px solid var(--line); text-align: center; font-size: 14px; }
+.vt-table th { color: var(--ink-3); font-weight: 600; }
+.vt-table td:first-child { font-weight: 700; }
+.stw-face { margin: 18px 0; text-align: center; font-size: clamp(54px, 18vw, 78px); font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; direction: ltr; letter-spacing: 1px; }
+.stw-set { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stw-set input { text-align: center; font-size: 20px; }
+.stw-btns { display: flex; gap: 10px; }
+.stw-btns .btn { flex: 1; }
+.stw-btns .btn.primary { flex: 2; }
+.stw-laps { list-style: none; margin: 14px 0 0; padding: 0; }
+.stw-laps li { display: flex; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.stw-laps span { color: var(--ink-2); }
+.stw-face, .stw-laps b, .vt-out b, .vt-table td { direction: ltr; unicode-bidi: bidi-override; }

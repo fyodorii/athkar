@@ -26,6 +26,7 @@ import * as account from './views/account.js';
 import * as prayersView from './views/prayers.js';
 import * as breathe from './views/breathe.js';
 import * as baqarah from './views/baqarah.js';
+import * as calc from './views/calc.js';
 import { takeRedirect } from './google.js';
 import { CATEGORY_BY_ID } from './adhkar-data.js';
 import { APP_NAME, APP_VERSION, DESIGNER } from './config.js';
@@ -63,6 +64,9 @@ const ROUTES = [
   [/^#\/karb$/, 'karb', (v) => adhkar.renderWird(v, 'karb')],
   [/^#\/breathe$/, 'breathe', (v) => breathe.render(v)],
   [/^#\/baqarah$/, 'baqarah', (v) => baqarah.render(v)],
+  [/^#\/vat$/, 'tools', (v) => calc.renderVat(v)],
+  [/^#\/stopwatch$/, 'tools', (v) => calc.renderStopwatch(v)],
+  [/^#\/masjid$/, 'tools', (v) => adhkar.renderWird(v, 'masjid')],
   [/^#\/prayers$/, 'prayers', (v) => prayersView.render(v)],
   [/^#\/ends$/, 'prayers', (v) => prayersView.renderEnds(v)],
   [/^#\/search$/, 'search', (v) => search.render(v)],
