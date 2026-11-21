@@ -64,9 +64,10 @@ export function renderVat(view) {
 const pad = (n) => String(n).padStart(2, '0');
 const fmt = (ms, cs = true) => {
   const t = Math.max(0, ms);
-  const m = Math.floor(t / 60000);
+  const h = Math.floor(t / 3600000);
+  const m = Math.floor((t % 3600000) / 60000);
   const s = Math.floor((t % 60000) / 1000);
-  return num(`${pad(m)}:${pad(s)}${cs ? `.${pad(Math.floor((t % 1000) / 10))}` : ''}`);
+  return num(`${h ? `${pad(h)}:` : ''}${pad(m)}:${pad(s)}${cs ? `.${pad(Math.floor((t % 1000) / 10))}` : ''}`);
 };
 const sw = { start: 0, acc: 0, laps: [] }; // kept while the app is open
 const cd = { end: 0, left: 5 * 60000, total: 5 * 60000 };
@@ -80,15 +81,16 @@ export function renderStopwatch(view) {
   const draw = () => {
     const r = running();
     view.innerHTML = `
-      ${pageHeader('ساعة إيقاف ومؤقت', { back: '#/tools' })}
+      ${pageHeader('مؤقت وعداد', { back: '#/tools' })}
       <section class="card stw">
         <div class="seg-tabs">
-          <button class="${tab === 'watch' ? 'on' : ''}" data-stab="watch">ساعة إيقاف</button>
-          <button class="${tab === 'timer' ? 'on' : ''}" data-stab="timer">مؤقت</button>
+          <button class="${tab === 'watch' ? 'on' : ''}" data-stab="watch">العداد</button>
+          <button class="${tab === 'timer' ? 'on' : ''}" data-stab="timer">المؤقت</button>
         </div>
         <div class="stw-face" data-face>${tab === 'watch' ? fmt(elapsed()) : fmt(left(), false)}</div>
         ${tab === 'timer' && !r ? `<div class="stw-set">
-            <label class="field"><span>دقائق</span><input type="number" min="0" max="599" inputmode="numeric" data-min value="${Math.floor(cd.left / 60000)}"></label>
+            <label class="field"><span>ساعات</span><input type="number" min="0" max="23" inputmode="numeric" data-hr value="${Math.floor(cd.left / 3600000)}"></label>
+            <label class="field"><span>دقائق</span><input type="number" min="0" max="59" inputmode="numeric" data-min value="${Math.floor((cd.left % 3600000) / 60000)}"></label>
             <label class="field"><span>ثوانٍ</span><input type="number" min="0" max="59" inputmode="numeric" data-sec value="${Math.floor((cd.left % 60000) / 1000)}"></label>
           </div>` : ''}
         <div class="stw-btns">
@@ -119,9 +121,10 @@ export function renderStopwatch(view) {
   draw();
   tick();
   const readSet = () => {
+    const h = Number(view.querySelector('[data-hr]')?.value || 0);
     const m = Number(view.querySelector('[data-min]')?.value || 0);
     const s = Number(view.querySelector('[data-sec]')?.value || 0);
-    cd.left = cd.total = Math.max(1, Math.min(599, m) * 60 + Math.min(59, s)) * 1000;
+    cd.left = cd.total = Math.max(1, Math.min(23, h) * 3600 + Math.min(59, m) * 60 + Math.min(59, s)) * 1000;
   };
   view.onclick = (e) => {
     const t = e.target.closest("[data-stab]");
@@ -157,7 +160,7 @@ export function renderStopwatch(view) {
     }
   };
   view.onchange = (e) => {
-    if (e.target.matches('[data-min], [data-sec]')) readSet();
+    if (e.target.matches('[data-hr], [data-min], [data-sec]')) readSet();
   };
   return { destroy: () => {
     cancelAnimationFrame(raf);

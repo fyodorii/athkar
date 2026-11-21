@@ -2917,3 +2917,4 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 .stw-laps li { display: flex; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .stw-laps span { color: var(--ink-2); }
 .stw-face, .stw-laps b, .vt-out b, .vt-table td { direction: ltr; unicode-bidi: bidi-override; }
+.stw-set { grid-template-columns: repeat(3, 1fr); }
