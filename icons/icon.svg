@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+  <linearGradient id="bg" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#2f7a66"/><stop offset="1" stop-color="#0f3a30"/></linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.4" r="0.6"><stop offset="0" stop-color="#fff2c8" stop-opacity="0.2"/><stop offset="1" stop-color="#fff2c8" stop-opacity="0"/></radialGradient>
+  <linearGradient id="em" x1="0.2" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset="1" stop-color="#c4953d"/></linearGradient>
+  <pattern id="pt" width="128" height="128" patternUnits="userSpaceOnUse"><path d="M64.0 24.0 L75.7 35.7 L92.3 35.7 L92.3 52.3 L104.0 64.0 L92.3 75.7 L92.3 92.3 L75.7 92.3 L64.0 104.0 L52.3 92.3 L35.7 92.3 L35.7 75.7 L24.0 64.0 L35.7 52.3 L35.7 35.7 L52.3 35.7 Z" fill="none" stroke="#fff" stroke-opacity="0.045" stroke-width="2.5"/></pattern>
+  <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#000" flood-opacity="0.38"/></filter>
+  <mask id="cres"><rect width="1024" height="1024" fill="#000"/><circle cx="488" cy="512" r="150" fill="#fff"/><circle cx="548" cy="482" r="128" fill="#000"/></mask>
+</defs>
+<rect width="1024" height="1024" fill="url(#bg)"/>
+<rect width="1024" height="1024" fill="url(#pt)"/>
+<rect width="1024" height="1024" fill="url(#glow)"/>
+<g filter="url(#sh)">
+  <path d="M512.0 182.0 L608.7 278.6 L745.3 278.7 L745.4 415.3 L842.0 512.0 L745.4 608.7 L745.3 745.3 L608.7 745.4 L512.0 842.0 L415.3 745.4 L278.7 745.3 L278.6 608.7 L182.0 512.0 L278.6 415.3 L278.7 278.7 L415.3 278.6 Z" fill="none" stroke="url(#em)" stroke-width="24" stroke-linejoin="round"/>
+  <path d="M512.0 222.0 L596.9 306.9 L717.1 306.9 L717.1 427.1 L802.0 512.0 L717.1 596.9 L717.1 717.1 L596.9 717.1 L512.0 802.0 L427.1 717.1 L306.9 717.1 L306.9 596.9 L222.0 512.0 L306.9 427.1 L306.9 306.9 L427.1 306.9 Z" fill="#ffffff" fill-opacity="0.06" stroke="url(#em)" stroke-opacity="0.55" stroke-width="6" stroke-linejoin="round"/>
+  <rect width="1024" height="1024" fill="url(#em)" mask="url(#cres)"/>
+  <path d="M598.0 430.0 L609.7 441.7 L626.3 441.7 L626.3 458.3 L638.0 470.0 L626.3 481.7 L626.3 498.3 L609.7 498.3 L598.0 510.0 L586.3 498.3 L569.7 498.3 L569.7 481.7 L558.0 470.0 L569.7 458.3 L569.7 441.7 L586.3 441.7 Z" fill="url(#em)" stroke="url(#em)" stroke-width="6" stroke-linejoin="round"/>
+</g>
+</svg>
