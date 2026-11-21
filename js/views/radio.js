@@ -7,7 +7,8 @@ import { onRadio, play, radioStatus, STATIONS, stationById, stop, toggle } from 
 import { esc, pageHeader } from '../ui.js';
 
 // The two live Saudi stations share the big player; a switch picks which one it shows.
-const LIVE = ['saudi', 'nidaa'];
+const LIVE = ['saudi', 'nidaa', 'makkah', 'madinah'];
+const SHORT = { saudi: 'القرآن الكريم', nidaa: 'نداء الإسلام', makkah: 'المسجد الحرام', madinah: 'المسجد النبوي' };
 
 export function renderRadio(view) {
   let hero = LIVE.includes(state.radio.station) ? state.radio.station : 'saudi';
@@ -20,7 +21,7 @@ export function renderRadio(view) {
     view.innerHTML = `
       ${pageHeader('الإذاعة', { sub: 'القرآن الكريم — بث مباشر' })}
       <section class="radio-hero ${heroOn && live ? 'live' : ''}">
-        <div class="radio-switch">${LIVE.map((id) => `<button class="${id === hero ? 'on' : ''}" data-hero="${id}">${esc(stationById(id).name.replace('إذاعة ', ''))}</button>`).join('')}</div>
+        <div class="radio-switch">${LIVE.map((id) => `<button class="${id === hero ? 'on' : ''}" data-hero="${id}">${esc(SHORT[id])}</button>`).join('')}</div>
         <div class="radio-art">${icon('radio', 46)}<span class="wave"><i></i><i></i><i></i><i></i></span></div>
         <b>${esc(main.name)}</b>
         <span>${esc(main.sub)}</span>
