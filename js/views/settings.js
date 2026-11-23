@@ -520,8 +520,18 @@ export function renderNotify(view) {
       <div class="group">
         ${sw('on', 'تفعيل التنبيهات', n.on, 'إشعار وصوت عند دخول الوقت', n.on ? 'bell' : 'bellOff')}
         <p class="hint">${status}</p>
-        <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً أو حيّاً في الخلفية، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه.</p>
+        <p class="hint">${n.push ? 'تصلك التنبيهات والتطبيق مفتوح أو مغلق. وصولها وهو مغلق يحتاج اتصالاً بالإنترنت، فلا تعتمد عليه وحده للاستيقاظ.' : `يظهر التنبيه ما دام التطبيق مفتوحاً أو حيّاً في الخلفية، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه. لتصلك وهو مغلق فعّل «والتطبيق مغلق» أدناه.`}</p>
         ${n.on ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} جرّب التنبيه</button>` : ''}
+      </div>
+      <div class="group">
+        ${(() => {
+          const why = away ? away.pushBlocker() : 'unsupported';
+          const sub = why === 'setup' ? 'قيد الإعداد: يعمل بعد تشغيل خادم التنبيهات' : why === 'install' ? 'أضف التطبيق إلى الشاشة الرئيسية من Safari أولاً' : why === 'unsupported' ? 'هذا المتصفح لا يدعم إشعارات الدفع' : n.push ? 'مفعّل: تصلك التنبيهات والتطبيق مغلق' : 'تصلك التنبيهات المفعّلة هنا والتطبيق مغلق';
+          return `<div class="row ${why ? 'off' : ''}"><span class="row-icon">${icon('bell', 20)}</span><span class="row-label">والتطبيق في الخلفية أو مغلق<small>${sub}</small></span>${toggle('push', !!n.push && !why, why ? 'disabled' : '')}</div>`;
+        })()}
+        ${n.push && !n.on ? `<p class="hint warn">«تفعيل التنبيهات» في الأعلى مطفأ، فلا يصلك والتطبيق مغلق إلا تذكيراتك الخاصة وورد الختمة. فعّله لتصلك الصلوات والأذكار.</p>` : ''}
+        ${n.push && away && !away.pushBlocker() ? `<button class="btn ghost wide" data-pushtest>${icon('bell', 18)} جرّب التنبيه والتطبيق مغلق</button>` : ''}
+        <p class="hint">يحفظ التطبيق تنبيهات الأيام السبعة القادمة لدى خادم التنبيهات فيرسلها في وقتها، ويحدّثها كلما فتحته. افتحه مرة في الأسبوع على الأقل.</p>
       </div>
       <div class="group ${n.on ? '' : 'off'}">
         <h4>الصلوات</h4>
@@ -561,7 +571,7 @@ export function renderNotify(view) {
     if (t.name === 'push') {
       if (t.checked) {
         try {
-          await away.enablePush();
+          await away.enablePush().catch(() => new Promise((r) => setTimeout(r, 2500)).then(() => away.enablePush()));
           toast(`${icon('check', 18)} ستصلك التنبيهات والتطبيق مغلق`);
         } catch (err) {
           toast(err.message === 'permission' ? 'اسمح بالإشعارات لهذا التطبيق من إعدادات الجهاز' : 'تعذر تفعيل التنبيهات والتطبيق مغلق');
@@ -585,10 +595,11 @@ export function renderNotify(view) {
   view.onclick = (e) => {
     if (e.target.closest('[data-test]')) return testReminder();
     if (e.target.closest('[data-pushtest]')) {
-      away
-        .testPush()
+      // The server may need a moment to wake: try again twice before saying it failed.
+      const tries = (n) => away.testPush().catch((err) => (n > 1 ? new Promise((r) => setTimeout(r, 2500)).then(() => tries(n - 1)) : Promise.reject(err)));
+      tries(3)
         .then(() => toast(`${icon('check', 18)} أغلق التطبيق الآن؛ يصلك تنبيه تجريبي خلال دقيقة أو دقيقتين`, 'long'))
-        .catch(() => toast('تعذر الوصول إلى خادم التنبيهات؛ تحقق من الاتصال'));
+        .catch(() => toast('لم يصل الطلب الآن؛ تأكد من الإنترنت وجرّب بعد قليل'));
       return;
     }
     const b = e.target.closest('[data-before] [data-d]');
