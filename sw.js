@@ -1,7 +1,7 @@
 // Service worker: keeps the app on the device so it opens instantly and offline, and opens
 // the app at the right screen when a reminder is tapped.
 
-const VERSION = 'v104'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
+const VERSION = 'v105'; // raise on every release (with APP_VERSION in js/config.js) so phones fetch the new files
 const CACHE = `adhkar-${VERSION}`;
 // Files the app opens without (it loads them on their own and copes when they are missing).
 const OPTIONAL = ['js/away.js'];
@@ -61,6 +61,18 @@ const FILES = [
   'fonts/plex-arabic-400.woff2',
   'fonts/noto-naskh-400.woff2',
   'fonts/noto-naskh-700.woff2',
+  'fonts/scheherazade-new-400.woff2',
+  'fonts/scheherazade-new-700.woff2',
+  'fonts/markazi-text-400.woff2',
+  'fonts/markazi-text-700.woff2',
+  'fonts/noto-kufi-arabic-400.woff2',
+  'fonts/noto-kufi-arabic-700.woff2',
+  'fonts/kufam-400.woff2',
+  'fonts/kufam-700.woff2',
+  'fonts/el-messiri-400.woff2',
+  'fonts/el-messiri-700.woff2',
+  'fonts/readex-pro-400.woff2',
+  'fonts/readex-pro-700.woff2',
   'fonts/calligraphy.woff2',
   'fonts/plex-arabic-600.woff2',
   'fonts/plex-arabic-700.woff2',

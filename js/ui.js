@@ -28,6 +28,14 @@ export const FONTS = {
   amiri: "'Amiri', serif",
   lateef: "'Lateef', 'Amiri', serif",
   ruqaa: "'Aref Ruqaa', 'Amiri', serif",
+  scheherazade: "'Scheherazade', 'Amiri', serif",
+  markazi: "'Markazi', 'Amiri', serif",
+  kufi: `'Noto Kufi', ${SYS}`,
+  kufam: `'Kufam', ${SYS}`,
+  messiri: `'El Messiri', ${SYS}`,
+  readex: `'Readex', ${SYS}`,
+  naskh: "'Noto Naskh', 'Amiri', serif",
+  apple: "-apple-system, 'SF Arabic', 'Geeza Pro', system-ui, sans-serif",
 };
 export const FONT_NAMES = {
   tajawal: 'تجوال',
@@ -37,6 +45,14 @@ export const FONT_NAMES = {
   amiri: 'أميري',
   lateef: 'لطيف',
   ruqaa: 'رقعة',
+  scheherazade: 'شهرزاد',
+  markazi: 'مركزي',
+  kufi: 'نوتو كوفي',
+  kufam: 'كُفام',
+  messiri: 'المسيري',
+  readex: 'ريدكس',
+  naskh: 'نوتو نسخ',
+  apple: 'خط أبل',
 };
 // Weights offered in the settings; a font without one falls to its nearest.
 export const WEIGHTS = [
