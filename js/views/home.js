@@ -15,9 +15,10 @@ import { $, copyText, esc, openSheet, ring, shareText } from '../ui.js';
 import { APP_NAME } from '../config.js';
 import { dayScore } from './worship.js';
 import { endNow } from '../ends.js';
+import { ordered } from '../order.js';
 
 // Shortcuts: two columns of pills, each with its round icon.
-const QUICK = [
+export const QUICK = [
   ['#/adhkar/morning', 'أذكار الصباح', 'm-sunrise'],
   ['#/adhkar/evening', 'أذكار المساء', 'm-maghrib'],
   ['#/tasbeeh', 'السبحة', 'f-beads'],
@@ -96,7 +97,7 @@ export function render(view) {
     <div data-period-tile>${nowTile(info)}</div>
 
     <nav class="hx-grid" aria-label="اختصارات">
-      ${QUICK.map(([href, label, ic]) => `<a href="${href}"><span>${icon(ic, 21)}</span><b>${label}</b></a>`).join('')}
+      ${ordered('home', QUICK).map(([href, label, ic]) => `<a href="${href}"><span>${icon(ic, 21)}</span><b>${label}</b></a>`).join('')}
     </nav>
 
     ${khatmaCard()}

@@ -2,6 +2,7 @@
 // view), the qailulah (midday nap) calculator, the Japanese interval walk and the
 // ten-minute rule, each with a timer that keeps going across the app (timers.js).
 
+import { ordered } from '../order.js';
 import { clockText, num } from '../dates.js';
 import { icon } from '../icons.js';
 import { PAGES, SURAHS } from '../quran-data.js';
@@ -42,7 +43,7 @@ function duration(min, after = false) {
 
 // ---- Hub ----
 
-const TOOLS = [
+export const TOOLS = [
   ['#/vat', 'حاسبة الضريبة', 'ضريبة القيمة المضافة ١٥٪: إضافتها أو استخراجها', 'f-coin_multiple', 'amber'],
   ['#/stopwatch', 'مؤقت وعداد', 'مؤقت تنازلي بالساعات والدقائق، وعدّاد وقت باللفات', 'f-clock_alarm', 'indigo'],
   ['#/breathe', 'تمارين التنفّس', 'تنفّس ٥-٣-٧ و٤-٧-٨ — للاسترخاء قبل النوم أو عند القلق', 'f-breath', 'teal'],
@@ -65,7 +66,7 @@ export function renderTools(view) {
   view.innerHTML = `
     ${pageHeader('الأدوات', { back: '#/home' })}
     <section class="cat-grid">
-      ${TOOLS.map(
+      ${ordered('tools', TOOLS).map(
         ([href, title, sub, ic, tone]) => `<a class="cat tone-${tone}" href="${href}">
           <div class="cat-icon">${icon(ic, 26)}</div>
           <div class="cat-text"><b>${title}</b><span>${sub}</span></div>${icon('chevron', 18, 'muted')}</a>`

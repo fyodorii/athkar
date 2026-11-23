@@ -89,6 +89,7 @@ const ROUTES = [
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
   [/^#\/settings\/method$/, 'settings', (v) => settings.renderMethod(v)],
   [/^#\/settings\/icon$/, 'settings', (v) => settings.renderIcon(v)],
+  [/^#\/settings\/order$/, 'settings', (v) => (settings.renderOrder(v), { destroy: () => ((v.onclick = null), (v.onchange = null)) })],
   [/^#\/settings\/fonts$/, 'settings', (v) => settings.renderFonts(v)],
   [/^#\/settings\/notify$/, 'settings', (v) => settings.renderNotify(v)],
   [/^#\/settings\/account$/, 'settings', (v) => account.render(v)],
@@ -305,7 +306,12 @@ if (signedIn?.error) toast(signedIn.error);
 window.addEventListener('hashchange', route);
 // Reminders while the app is closed (away.js) are loaded on their own: if a content blocker or a
 // failed download keeps that file away, the rest of the app still opens.
-const syncPush = () => import('./away.js').then((m) => m.syncPush()).catch(() => {});
+// Reminders while the app is closed were removed (release 97): a subscription left from before is
+// cancelled once, so the server stops sending.
+const syncPush = () => {
+  if (!state.settings.notify.push) return;
+  import('./away.js').then((m) => m.disablePush()).catch(() => {});
+};
 let pushPending = false;
 
 let pushTimer;
