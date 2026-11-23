@@ -2918,3 +2918,17 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 .stw-laps span { color: var(--ink-2); }
 .stw-face, .stw-laps b, .vt-out b, .vt-table td { direction: ltr; unicode-bidi: bidi-override; }
 .stw-set { grid-template-columns: repeat(3, 1fr); }
+
+/* ---------- Version 105: more fonts (Fontsource, SIL OFL) ---------- */
+@font-face { font-family: 'Scheherazade'; src: url('../fonts/scheherazade-new-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Scheherazade'; src: url('../fonts/scheherazade-new-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Markazi'; src: url('../fonts/markazi-text-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Markazi'; src: url('../fonts/markazi-text-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Noto Kufi'; src: url('../fonts/noto-kufi-arabic-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Noto Kufi'; src: url('../fonts/noto-kufi-arabic-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Kufam'; src: url('../fonts/kufam-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Kufam'; src: url('../fonts/kufam-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'El Messiri'; src: url('../fonts/el-messiri-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'El Messiri'; src: url('../fonts/el-messiri-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Readex'; src: url('../fonts/readex-pro-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Readex'; src: url('../fonts/readex-pro-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
