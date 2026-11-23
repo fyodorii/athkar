@@ -26,6 +26,7 @@ export function render(view) {
       ${row('#/settings/location', 'pin', 'الموقع', esc(s.location.name))}
       ${row('#/settings/method', 'sun', 'طريقة الحساب', esc(METHODS[s.method]?.name.split(' — ')[0]))}
       ${row('#/settings/notify', s.notify.on ? 'bell' : 'bellOff', 'التنبيهات والإقامة', s.notify.on ? 'مفعّلة' : 'متوقفة')}
+      ${row('#/settings/order', 'rows', 'ترتيب الرئيسية والأدوات', 'إظهار وإخفاء وترتيب')}
       ${row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
     </div>
     <div class="group">
@@ -520,18 +521,8 @@ export function renderNotify(view) {
       <div class="group">
         ${sw('on', 'تفعيل التنبيهات', n.on, 'إشعار وصوت عند دخول الوقت', n.on ? 'bell' : 'bellOff')}
         <p class="hint">${status}</p>
-        <p class="hint">${n.push ? 'تصلك التنبيهات والتطبيق مفتوح أو مغلق. وصولها وهو مغلق يحتاج اتصالاً بالإنترنت، فلا تعتمد عليه وحده للاستيقاظ.' : `يظهر التنبيه ما دام التطبيق مفتوحاً أو حيّاً في الخلفية، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه. لتصلك وهو مغلق فعّل «والتطبيق مغلق» أدناه.`}</p>
+        <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه.</p>
         ${n.on ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} جرّب التنبيه</button>` : ''}
-      </div>
-      <div class="group">
-        ${(() => {
-          const why = away ? away.pushBlocker() : 'unsupported';
-          const sub = why === 'setup' ? 'قيد الإعداد: يعمل بعد تشغيل خادم التنبيهات' : why === 'install' ? 'أضف التطبيق إلى الشاشة الرئيسية من Safari أولاً' : why === 'unsupported' ? 'هذا المتصفح لا يدعم إشعارات الدفع' : n.push ? 'مفعّل: تصلك التنبيهات والتطبيق مغلق' : 'تصلك التنبيهات المفعّلة هنا والتطبيق مغلق';
-          return `<div class="row ${why ? 'off' : ''}"><span class="row-icon">${icon('bell', 20)}</span><span class="row-label">والتطبيق في الخلفية أو مغلق<small>${sub}</small></span>${toggle('push', !!n.push && !why, why ? 'disabled' : '')}</div>`;
-        })()}
-        ${n.push && !n.on ? `<p class="hint warn">«تفعيل التنبيهات» في الأعلى مطفأ، فلا يصلك والتطبيق مغلق إلا تذكيراتك الخاصة وورد الختمة. فعّله لتصلك الصلوات والأذكار.</p>` : ''}
-        ${n.push && away && !away.pushBlocker() ? `<button class="btn ghost wide" data-pushtest>${icon('bell', 18)} جرّب التنبيه والتطبيق مغلق</button>` : ''}
-        <p class="hint">يحفظ التطبيق تنبيهات الأيام السبعة القادمة لدى خادم التنبيهات فيرسلها في وقتها، ويحدّثها كلما فتحته. افتحه مرة في الأسبوع على الأقل.</p>
       </div>
       <div class="group ${n.on ? '' : 'off'}">
         <h4>الصلوات</h4>
@@ -618,4 +609,58 @@ export function renderNotify(view) {
     window.scrollTo(0, y);
   };
   return { destroy: () => (view.onchange = view.onclick = null) };
+}
+
+// «ترتيب الرئيسية والأدوات»: move each shortcut and tool up or down, or hide it.
+export async function renderOrder(view) {
+  const [{ QUICK }, { TOOLS }, { ordered }] = await Promise.all([import('./home.js'), import('./tools.js'), import('../order.js')]);
+  const LISTS = { home: ['اختصارات الرئيسية', QUICK], tools: ['الأدوات', TOOLS] };
+  const s = state.settings;
+  const conf = (k) => (s.order ??= {})[k] ??= { list: [], hidden: [] };
+  const draw = () => {
+    view.innerHTML = `
+      ${pageHeader('ترتيب الرئيسية والأدوات', { back: '#/settings' })}
+      ${Object.entries(LISTS).map(([k, [title, list]]) => {
+        const all = ordered(k, list, true);
+        const hidden = conf(k).hidden;
+        return `<div class="group"><h4>${title}</h4>
+          ${all.map(([href, name, a, b], i) => {
+            const ic = k === 'home' ? a : b;
+            const off = hidden.includes(href);
+            return `<div class="row ord ${off ? 'off' : ''}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${esc(name)}</span>
+              <button class="icon-btn ghost sm" data-mv="${k}|${i}|-1" ${i ? '' : 'disabled'} aria-label="لأعلى">${icon('up', 18)}</button>
+              <button class="icon-btn ghost sm" data-mv="${k}|${i}|1" ${i < all.length - 1 ? '' : 'disabled'} aria-label="لأسفل">${icon('down', 18)}</button>
+              ${toggle(`show:${k}|${href}`, !off)}</div>`;
+          }).join('')}
+          <button class="btn ghost wide" data-reset-order="${k}">${icon('reset', 18)} الترتيب الأصلي</button></div>`;
+      }).join('')}`;
+  };
+  draw();
+  view.onclick = (e) => {
+    const m = e.target.closest('[data-mv]');
+    if (m) {
+      const [k, i, d] = m.dataset.mv.split('|');
+      const list = ordered(k, LISTS[k][1], true).map((x) => x[0]);
+      const a = Number(i), b = a + Number(d);
+      [list[a], list[b]] = [list[b], list[a]];
+      conf(k).list = list;
+      save();
+      return draw();
+    }
+    const r = e.target.closest('[data-reset-order]');
+    if (r) {
+      s.order[r.dataset.resetOrder] = { list: [], hidden: [] };
+      save();
+      draw();
+    }
+  };
+  view.onchange = (e) => {
+    if (!e.target.name?.startsWith('show:')) return;
+    const [k, href] = e.target.name.slice(5).split('|');
+    const h = conf(k).hidden;
+    conf(k).hidden = e.target.checked ? h.filter((x) => x !== href) : [...h, href];
+    save();
+    draw();
+  };
+  return { destroy: () => ((view.onclick = null), (view.onchange = null)) };
 }

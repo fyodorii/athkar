@@ -2932,3 +2932,7 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 @font-face { font-family: 'El Messiri'; src: url('../fonts/el-messiri-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
 @font-face { font-family: 'Readex'; src: url('../fonts/readex-pro-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Readex'; src: url('../fonts/readex-pro-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+
+.row.ord { gap: 6px; }
+.row.ord .row-label { flex: 1; }
+.row.ord.off .row-icon, .row.ord.off .row-label { opacity: 0.45; }
