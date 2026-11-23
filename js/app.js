@@ -1,7 +1,7 @@
 // App shell: hash routes, the side menu, theme and the one-second tick (countdowns, timers, reminders).
 
 import { latinDigits, setDigits, toLatin } from './dates.js';
-import { FONTS } from './ui.js';
+import { FONTS, QURAN_FONTS } from './ui.js';
 import { icon } from './icons.js';
 import { checkForUpdate, isIOS, isStandalone, registerServiceWorker } from './push.js';
 import { onChange, persistStorage, state } from './store.js';
@@ -242,6 +242,8 @@ function applyTheme() {
   const root = document.documentElement.style;
   root.setProperty('--font-text', FONTS[s.fontText] || FONTS.tajawal);
   root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.tajawal);
+  root.setProperty('--font-quran', (QURAN_FONTS[s.fontQuran] || QURAN_FONTS.hafs)[1]);
+  if (s.awake) keepAwake(true);
   root.setProperty('--text-weight', s.textWeight || 500);
   root.setProperty('--font-tsb', FONTS[s.fontTsb] || FONTS.tajawal);
   root.setProperty('--tsb-weight', s.tsbWeight || 700);
@@ -408,7 +410,7 @@ document.addEventListener('visibilitychange', () => {
   checkReminders();
   syncPush();
   // The screen lock is dropped when the app is hidden; take it again for a running timer.
-  if (anyTimerRunning()) keepAwake(true);
+  if (anyTimerRunning() || state.settings.awake) keepAwake(true);
 });
 
 registerServiceWorker();

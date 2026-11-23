@@ -17,7 +17,7 @@ import { esc, toast } from './ui.js';
 import { icon } from './icons.js';
 
 const CLOCK = /^\d{1,2}:\d\d$/; // a stored time of day
-const LATE = 20 * 60000; // a reminder still shows this long after its moment
+const LATE = 10 * 60000; // a reminder still shows this long after its moment
 
 export const notifySupported = () => 'Notification' in window;
 export const notifyPermission = () => (notifySupported() ? Notification.permission : 'unsupported');

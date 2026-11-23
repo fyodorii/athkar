@@ -70,7 +70,7 @@ let lock;
 export async function keepAwake(on) {
   try {
     if (on && !lock && navigator.wakeLock) lock = await navigator.wakeLock.request('screen');
-    if (!on && lock) {
+    if (!on && lock && !state.settings.awake) {
       await lock.release();
       lock = null;
     }
