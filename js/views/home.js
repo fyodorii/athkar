@@ -9,7 +9,7 @@ import { icon, PRAYER_ICONS } from '../icons.js';
 import { addDays, dayKey, dayTimes, DUHA_END, DUHA_START, METHODS } from '../prayer.js';
 import { weekStrip } from './calendar.js';
 import { firstKhatma, state } from '../store.js';
-import { PRAYERS, today } from '../today.js';
+import { hoursAt, PRAYERS, today } from '../today.js';
 import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, openSheet, ring, shareText } from '../ui.js';
 import { APP_NAME } from '../config.js';
@@ -18,6 +18,22 @@ import { endNow } from '../ends.js';
 import { ordered } from '../order.js';
 
 // Shortcuts: two columns of pills, each with its round icon.
+// The home's sections, in the order the user can change (settings → «ترتيب الرئيسية والأدوات»).
+export const SECTIONS = [
+  ['now', 'الوقت الآن', 'f-clock'],
+  ['shortcuts', 'الاختصارات', 'f-toolbox'],
+  ['khatma', 'ختمتي', 'f-book_open'],
+  ['prayers', 'مواقيت الصلاة', 'm-dhuhr'],
+  ['worship', 'متابعة العبادات', 'f-checkmark_circle'],
+  ['week', 'التقويم', 'f-calendar'],
+  ['moments', 'الشروق ومنتصف الليل', 'm-sunrise'],
+  ['today', 'زاد اليوم', 'f-book_star'],
+];
+const nowClock = () => {
+  const c = hoursAt();
+  return clockText(c.h + c.m / 60, state.settings.clock24);
+};
+
 export const QUICK = [
   ['#/adhkar/morning', 'أذكار الصباح', 'm-sunrise'],
   ['#/adhkar/evening', 'أذكار المساء', 'm-maghrib'],
@@ -75,10 +91,32 @@ export function render(view) {
   };
 
   const h = hijri(info.day, s.hijriAdjust);
+  const sectionHtml = (id) =>
+    ({
+      now: `<div data-period-tile>${nowTile(info)}</div>`,
+      shortcuts: `<nav class="hx-grid" aria-label="اختصارات">${ordered('home', QUICK).map(([href, label, ic]) => `<a href="${href}"><span>${icon(ic, 21)}</span><b>${label}</b></a>`).join('')}</nav>`,
+      khatma: khatmaCard(),
+      prayers: prayersCard(info),
+      worship: worshipCard(info),
+      week: `<a class="card hx-week" href="#/calendar">
+      <div class="hx-head"><h2>التقويم</h2><small>${GREG_MONTHS[info.day.m - 1]} ${num(info.day.y)} · ${HIJRI_MONTHS[h.month - 1]}</small></div>
+      <ul>${weekStrip(info)}</ul>
+    </a>`,
+      moments: momentsCard(info),
+      today: `<div><h3 class="section-title small h-title">${icon('stars', 16)} زاد اليوم</h3>
+  <section class="today-cards" data-cards>
+    ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs ayah"><span class="ayah-br">﴿</span>${esc(d.ayah.text)}<span class="ayah-br">﴾</span></span>`, d.ayah.ref)}
+    ${todayCard('hadith', 'حديث اليوم', 'quote', esc(d.hadith.text), d.hadith.ref)}
+    ${todayCard('advice', 'نصيحة اليوم', 'heart', esc(d.advice.text), '')}
+    ${todayCard('dhikr', 'ذكر اليوم', 'beads', esc(daily.text), daily.note)}
+  </section>
+  <div class="dots" data-dots>${[0, 1, 2, 3].map((i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div></div>`,
+    })[id] || '';
   view.innerHTML = `
   <section class="hx-hero">
     <div class="hx-top">
       <button class="hx-btn" data-nav aria-label="القائمة">${icon('rows', 19)}</button>
+      ${s.topClock ? `<span class="hx-clock" data-clock>${nowClock()}</span>` : ''}
     </div>
     <div class="hx-day">
       <div><h1>${DAY_HAND[new Date(Date.UTC(info.day.y, info.day.m - 1, info.day.d)).getUTCDay()]}</h1><a href="#/settings/location">${esc(s.location.name)}</a></div>
@@ -94,35 +132,13 @@ export function render(view) {
   ${info.isFriday ? `<div class="banner gold">${icon('stars', 22)}<div><b>جمعة مباركة</b><span>الإكثار من الصلاة على النبي ﷺ، وتحرّي ساعة الإجابة</span></div></div>` : ''}
 
   <div class="hx-body">
-    <div data-period-tile>${nowTile(info)}</div>
-
-    <nav class="hx-grid" aria-label="اختصارات">
-      ${ordered('home', QUICK).map(([href, label, ic]) => `<a href="${href}"><span>${icon(ic, 21)}</span><b>${label}</b></a>`).join('')}
-    </nav>
-
-    ${khatmaCard()}
-    ${prayersCard(info)}
-    ${worshipCard(info)}
-    <a class="card hx-week" href="#/calendar">
-      <div class="hx-head"><h2>التقويم</h2><small>${GREG_MONTHS[info.day.m - 1]} ${num(info.day.y)} · ${HIJRI_MONTHS[h.month - 1]}</small></div>
-      <ul>${weekStrip(info)}</ul>
-    </a>
-    ${momentsCard(info)}
-  </div>
-
-  <h3 class="section-title small h-title">${icon('stars', 16)} زاد اليوم</h3>
-  <section class="today-cards" data-cards>
-    ${todayCard('ayah', 'آية اليوم', 'quran', `<span class="hafs ayah"><span class="ayah-br">﴿</span>${esc(d.ayah.text)}<span class="ayah-br">﴾</span></span>`, d.ayah.ref)}
-    ${todayCard('hadith', 'حديث اليوم', 'quote', esc(d.hadith.text), d.hadith.ref)}
-    ${todayCard('advice', 'نصيحة اليوم', 'heart', esc(d.advice.text), '')}
-    ${todayCard('dhikr', 'ذكر اليوم', 'beads', esc(daily.text), daily.note)}
-  </section>
-  <div class="dots" data-dots>${[0, 1, 2, 3].map((i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
+    ${ordered('sections', SECTIONS).map(([id]) => sectionHtml(id)).join('')}
+  </div>`;
 
   let lastTile = nowTile(info);
   view.addEventListener('click', onClick);
   const cards = $('[data-cards]', view);
-  cards.addEventListener('scroll', () => {
+  cards?.addEventListener('scroll', () => {
     const i = Math.round(Math.abs(cards.scrollLeft) / cards.clientWidth);
     [...$('[data-dots]', view).children].forEach((dot, j) => dot.classList.toggle('on', i === j));
   }, { passive: true });
@@ -133,10 +149,13 @@ export function render(view) {
       if (info2.key !== info.key || info2.next.at !== info.next.at || info2.nextPrayer.at !== info.nextPrayer.at || info2.period.key !== info.period.key) {
         return 'rerender';
       }
+      const ck = $('[data-clock]', view);
+      if (ck) ck.textContent = nowClock();
       $('[data-countdown]', view).textContent = countdown(info2.nextPrayer.at - Date.now());
       $('[data-leave]', view).innerHTML = leaveText(info2);
       const p2 = nowTile(info2);
-      if (p2 !== lastTile) $('[data-period-tile]', view).innerHTML = lastTile = p2;
+      const pt = $('[data-period-tile]', view);
+      if (p2 !== lastTile && pt) pt.innerHTML = lastTile = p2;
     },
     destroy() {
       view.removeEventListener('click', onClick);
@@ -148,8 +167,10 @@ export function render(view) {
     if (nav) {
       dayOffset = nav.dataset.pday === '0' ? 0 : dayOffset + Number(nav.dataset.pday);
       const now = today();
-      $('[data-prayers]', view).outerHTML = prayersCard(now);
-      $('[data-moments]', view).outerHTML = momentsCard(now);
+      const pc = $('[data-prayers]', view);
+      if (pc) pc.outerHTML = prayersCard(now);
+      const mc = $('[data-moments]', view);
+      if (mc) mc.outerHTML = momentsCard(now);
       return;
     }
     const act = e.target.closest('[data-card-act]');

@@ -54,6 +54,15 @@ export const FONT_NAMES = {
   naskh: 'نوتو نسخ',
   apple: 'خط أبل',
 };
+// Fonts for the verses of the Quran; the Hafs font stays behind each for the verse-end signs.
+export const QURAN_FONTS = {
+  hafs: ['مصحف المدينة (حفص)', "'KFGQPC Hafs', 'Amiri', serif"],
+  amiri: ['أميري', "'Amiri', 'KFGQPC Hafs', serif"],
+  scheherazade: ['شهرزاد', "'Scheherazade', 'KFGQPC Hafs', serif"],
+  naskh: ['نوتو نسخ', "'Noto Naskh', 'KFGQPC Hafs', serif"],
+  markazi: ['مركزي', "'Markazi', 'KFGQPC Hafs', serif"],
+  lateef: ['لطيف', "'Lateef', 'KFGQPC Hafs', serif"],
+};
 // Weights offered in the settings; a font without one falls to its nearest.
 export const WEIGHTS = [
   [200, 'رفيع جداً'],

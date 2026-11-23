@@ -10,7 +10,8 @@ import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
 import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
 import { PRAYERS } from '../today.js';
-import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, toast, toggle, WEIGHTS } from '../ui.js';
+import { anyTimerRunning, keepAwake } from '../timers.js';
+import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, QURAN_FONTS, toast, toggle, WEIGHTS } from '../ui.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -47,6 +48,8 @@ export function render(view) {
       <div class="row"><span class="row-icon">${icon('layers', 20)}</span><span class="row-label">تصميم مسطّح<small>ضوء مسطّح وألوان أقل، بلا زجاج سائل</small></span>${toggle('flat', s.flat)}</div>
       ${row('#/settings/fonts', 'type', 'الخطوط والألوان', `${ACCENTS.find((a) => a[0] === (s.accent || 'blue'))?.[1] || ''} · ${FONT_NAMES[s.fontUi] || ''}`)}
       <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">نظام ٢٤ ساعة</span>${toggle('clock24', s.clock24)}</div>
+      <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">إظهار الساعة أعلى الرئيسية</span>${toggle('topClock', s.topClock)}</div>
+      <div class="row"><span class="row-icon">${icon('sun', 20)}</span><span class="row-label">إبقاء الشاشة مضاءة<small>لا تنطفئ الشاشة ولا يُقفل الجوال والتطبيق مفتوح</small></span>${toggle('awake', s.awake)}</div>
       <div class="row"><span class="row-icon">${icon('digits', 20)}</span><span class="row-label">نوع الأرقام</span>
         <div class="seg-mini" data-digits>
           ${[['arab', '١٢٣'], ['latn', '123']].map(([v, l]) => `<button class="${s.digits === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}
@@ -77,6 +80,12 @@ export function render(view) {
     if (t.name === 'haptics') s.haptics = t.checked;
     if (t.name === 'haptics' && s.haptics) haptic(30, true); // a buzz to feel it on
     if (t.name === 'flat') s.flat = t.checked;
+    if (t.name === 'topClock') s.topClock = t.checked;
+    if (t.name === 'awake') {
+      s.awake = t.checked;
+      if (s.awake || !anyTimerRunning()) keepAwake(s.awake);
+      if (s.awake && !navigator.wakeLock) toast('هذا الجهاز لا يدعم إبقاء الشاشة مضاءة (يحتاج iOS 16.4 أو أحدث)');
+    }
     if (t.matches('[data-import]') && t.files[0]) {
       t.files[0].text().then((text) => {
         try {
@@ -443,6 +452,12 @@ export function renderFonts(view) {
         <p class="hint">كل حجم نسبة إلى تصميم التطبيق. العناوين البارزة تحتفظ بوزن أثقل لتبقى واضحة.</p>
       </div>
       ${picker('fontText', 'textWeight', 'خط الأذكار')}
+      <div class="group fonts">
+        <div class="f-head"><h4>خط الآيات القرآنية</h4><span>${QURAN_FONTS[s.fontQuran || 'hafs'][0]}</span></div>
+        <div class="f-grid q-grid" data-qfont>
+          ${Object.entries(QURAN_FONTS).map(([v, [name, fam]]) => `<button class="${(s.fontQuran || 'hafs') === v ? 'on' : ''}" data-v="${v}"><small>${name}</small>${(s.fontQuran || 'hafs') === v ? `<i>${icon('check', 14)}</i>` : ''}<b style="font-family:${fam}">ٱلۡحَمۡدُ لِلَّهِ</b></button>`).join('')}
+        </div>
+      </div>
       ${sizer('text', 'حجم خط الأذكار', `${num(Math.round(s.textScale * 100))}%`)}
       <p class="sample amiri" data-text-sample style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
       <p class="hint center">آيات القرآن تبقى بخط المصحف.</p>
@@ -465,6 +480,13 @@ export function renderFonts(view) {
       const y = window.scrollY;
       draw();
       return window.scrollTo(0, y);
+    }
+    const qf = e.target.closest('[data-qfont] [data-v]');
+    if (qf) {
+      s.fontQuran = qf.dataset.v;
+      save();
+      document.documentElement.style.setProperty('--font-quran', QURAN_FONTS[s.fontQuran][1]);
+      return draw();
     }
     const f = e.target.closest('[data-font] [data-v]');
     const w = e.target.closest('[data-weight] [data-v]');
@@ -521,7 +543,7 @@ export function renderNotify(view) {
       <div class="group">
         ${sw('on', 'تفعيل التنبيهات', n.on, 'إشعار وصوت عند دخول الوقت', n.on ? 'bell' : 'bellOff')}
         <p class="hint">${status}</p>
-        <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً، وما فاتك في آخر ${num(20)} دقيقة يظهر عند فتحه.</p>
+        <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً، وما فاتك في آخر ${num(10)} دقائق يظهر عند فتحه.</p>
         ${n.on ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} جرّب التنبيه</button>` : ''}
       </div>
       <div class="group ${n.on ? '' : 'off'}">
@@ -613,8 +635,8 @@ export function renderNotify(view) {
 
 // «ترتيب الرئيسية والأدوات»: move each shortcut and tool up or down, or hide it.
 export async function renderOrder(view) {
-  const [{ QUICK }, { TOOLS }, { ordered }] = await Promise.all([import('./home.js'), import('./tools.js'), import('../order.js')]);
-  const LISTS = { home: ['اختصارات الرئيسية', QUICK], tools: ['الأدوات', TOOLS] };
+  const [{ QUICK, SECTIONS }, { TOOLS }, { ordered }] = await Promise.all([import('./home.js'), import('./tools.js'), import('../order.js')]);
+  const LISTS = { sections: ['أقسام الرئيسية', SECTIONS], home: ['اختصارات الرئيسية', QUICK], tools: ['الأدوات', TOOLS] };
   const s = state.settings;
   const conf = (k) => (s.order ??= {})[k] ??= { list: [], hidden: [] };
   const draw = () => {
@@ -625,7 +647,7 @@ export async function renderOrder(view) {
         const hidden = conf(k).hidden;
         return `<div class="group"><h4>${title}</h4>
           ${all.map(([href, name, a, b], i) => {
-            const ic = k === 'home' ? a : b;
+            const ic = k === 'tools' ? b : a;
             const off = hidden.includes(href);
             return `<div class="row ord ${off ? 'off' : ''}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${esc(name)}</span>
               <button class="icon-btn ghost sm" data-mv="${k}|${i}|-1" ${i ? '' : 'disabled'} aria-label="لأعلى">${icon('up', 18)}</button>

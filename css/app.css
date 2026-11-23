@@ -2936,3 +2936,9 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 .row.ord { gap: 6px; }
 .row.ord .row-label { flex: 1; }
 .row.ord.off .row-icon, .row.ord.off .row-label { opacity: 0.45; }
+
+/* ---------- Version 108: the verses' font, the top clock ---------- */
+.hafs, .dhikr-text.hafs, .mine-text.hafs, .note-text.hafs, .tc-text .hafs, .hafs-line, .ay-text { font-family: var(--font-quran, 'KFGQPC Hafs', 'Amiri', serif); }
+.hx-clock { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 6px 12px; border-radius: 99px; background: rgba(255, 255, 255, 0.35); color: inherit; }
+[data-theme='dark'] .hx-clock { background: rgba(255, 255, 255, 0.1); }
+.q-grid button b { font-size: 22px; line-height: 2; }

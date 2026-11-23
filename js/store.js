@@ -29,6 +29,9 @@ export const DEFAULTS = {
     flat: true, // flat design (the default since release 31) instead of liquid glass
     haptics: true,
     quranGoal: 5,
+    fontQuran: 'hafs', // the verses' font (QURAN_FONTS in js/ui.js)
+    awake: false, // keep the screen on while the app is open
+    topClock: false, // a clock at the top of the home screen
     appIcon: 'emerald', // icons/alt/<name>.png for the home screen
     // Minutes between the adhan and the iqama.
     iqama: { fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20 },
