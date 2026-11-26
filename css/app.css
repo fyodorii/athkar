@@ -2658,7 +2658,7 @@ body[data-tab='counter'] #tabs { display: none; }
 .sr-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 18px; color: var(--ink); }
 .sr-field input::-webkit-search-cancel-button { display: none; }
 .sr-res { margin-top: 18px; }
-body[data-tab='search'] .page-head { display: none; }
+body[data-tab='search'] .sr-field { margin-top: 6px; }
 
 /* Version 78: a quieter top (two small buttons), the day higher, the moon opens its phases, square cards */
 .hx-top { justify-content: space-between; }
@@ -2967,3 +2967,13 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 .ms-text { margin: 0; text-align: justify; text-align-last: center; font-size: clamp(20px, 5.6vw, 26px); line-height: 2.15; word-spacing: 1px; }
 .ms-num { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 13px; color: #8a7440; }
 .ct-num { font-size: clamp(58px, 20vw, 104px); margin-top: 6vh; }
+
+/* ---------- Version 113: design review — one look in every colour ---------- */
+.w-day, [data-flat] .w-day { background: linear-gradient(160deg, color-mix(in srgb, var(--primary) 16%, var(--card-solid)), color-mix(in srgb, var(--primary) 6%, var(--card-solid))); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+[data-theme='dark'] .w-day, [data-flat][data-theme='dark'] .w-day { background: linear-gradient(160deg, color-mix(in srgb, var(--primary) 18%, #12171a), color-mix(in srgb, var(--primary) 8%, #0e1214)); }
+.w-day-ring { color: var(--primary); }
+.w-day-top small { color: var(--ink-2); }
+[data-theme='dark'] .br-ball { background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--primary) 70%, #1a2a26), color-mix(in srgb, var(--primary) 45%, #0b1110)); }
+[data-theme='dark'] .br-ball[data-phase='hold'] { background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--gold) 70%, #2a2210), color-mix(in srgb, var(--gold) 45%, #120e06)); }
+[data-theme='dark'] .br-text { color: #fff; }
+.br-stage:not(:has([data-phase])) .br-text { color: #fff; }
