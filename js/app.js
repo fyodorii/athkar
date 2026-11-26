@@ -223,7 +223,13 @@ function paintStatusBar() {
   // In the light theme the top of every screen is the app colour.
   const main = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#2c6fcc';
   const hex = /^#[0-9a-f]{6}$/i.test(main) ? main : '#2c6fcc';
-  const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: mixHex(hex, '#141a26', 0.3) } : { home: mixHex(hex, '#e6e7ee', 0.42), other: main };
+  // In the dark the top of a page is the page's own background.
+  const bgc = getComputedStyle(document.body).backgroundColor;
+  const nums = (bgc.match(/[\d.]+/g) || []).map(Number);
+  // rgb(r, g, b) or color(srgb r g b), as a colour-mix comes back
+  const bg = bgc.startsWith('color(') ? nums.slice(0, 3).map((v) => Math.round(v * 255)) : nums.slice(0, 3);
+  const bgHex = bg.length === 3 && bg.every((v) => v >= 0 && v <= 255) ? '#' + bg.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('') : STATUS.dark.other;
+  const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: mixHex(hex, '#141a26', 0.3), other: bgHex } : { home: mixHex(hex, '#e6e7ee', 0.42), other: main };
   const tab = document.body.dataset.tab;
   const own = tab === 'tasbeeh' && document.querySelector('.tsb')?.dataset.top;
   document.querySelector('meta[name="theme-color"]').setAttribute('content', own || shade[tab] || shade.other);

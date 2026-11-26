@@ -3,7 +3,7 @@
 import { CATEGORIES } from '../adhkar-data.js';
 import { icon } from '../icons.js';
 import { state } from '../store.js';
-import { esc } from '../ui.js';
+import { esc, pageHeader } from '../ui.js';
 
 const SECTIONS = [
   ['#/home', 'الرئيسية', 'home'],
@@ -46,10 +46,7 @@ let query = '';
 // The search as a page of its own: a field at the top, the results under it as you type.
 export function render(view) {
   view.innerHTML = `
-    <header class="sr-head">
-      <a class="sr-back" href="#/home" aria-label="رجوع">${icon('back', 22)}</a>
-      <h1>البحث</h1>
-    </header>
+    ${pageHeader('البحث', { back: '#/home' })}
     <label class="sr-field">${icon('search', 20)}<input type="search" enterkeyhint="search" placeholder="بحث …" value="${esc(query)}" data-q></label>
     <div class="sr-res" data-res></div>`;
   const input = view.querySelector('[data-q]');
