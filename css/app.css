@@ -2952,3 +2952,18 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 .q-colors { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 12px; }
 .q-colors button { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--c); display: grid; place-items: center; color: #fff; box-shadow: 0 0 0 2px var(--card-solid), 0 0 0 3px var(--line); }
 .q-colors button.on { box-shadow: 0 0 0 2px var(--card-solid), 0 0 0 4px var(--c); }
+
+/* ---------- Version 110: whole surahs from the sleep adhkar; the counter's number ---------- */
+.read-surah { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; background: var(--primary-soft); color: var(--primary); font-family: var(--font-ui); font-size: 15px; line-height: 1.4; }
+.read-surah span { flex: 1; display: grid; gap: 2px; }
+.read-surah small { color: var(--ink-3); font-size: 12.5px; }
+.ms { display: grid; gap: 14px; margin-bottom: 14px; }
+.ms-page { position: relative; padding: 22px 18px 34px; border-radius: 6px; background: #fffdf5; color: #1d1a14; box-shadow: 0 0 0 1px #d8c79a, 0 0 0 6px #fffdf5, 0 0 0 7px #c9b37a, 0 14px 30px -18px rgba(60, 45, 10, 0.5); margin: 7px; }
+[data-theme='dark'] .ms-page { background: #1c1a15; color: #f1e9d2; box-shadow: 0 0 0 1px #5e5236, 0 0 0 6px #1c1a15, 0 0 0 7px #6d5d35; }
+.ms-head { display: grid; place-items: center; margin: 0 0 6px; padding: 6px; border-radius: 10px; background: linear-gradient(90deg, transparent, rgba(201, 179, 122, 0.35), transparent); border-block: 1px solid #c9b37a; }
+.ms-head span { font-family: 'Amiri', serif; font-weight: 700; font-size: 19px; color: #6b5420; }
+[data-theme='dark'] .ms-head span { color: #e6c27a; }
+.ms-basmala { margin: 4px 0 2px; text-align: center; font-size: 22px; line-height: 2.1; }
+.ms-text { margin: 0; text-align: justify; text-align-last: center; font-size: clamp(20px, 5.6vw, 26px); line-height: 2.15; word-spacing: 1px; }
+.ms-num { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 13px; color: #8a7440; }
+.ct-num { font-size: clamp(58px, 20vw, 104px); margin-top: 6vh; }
