@@ -170,7 +170,7 @@ export function renderMine(view, focusId) {
     const list = state.custom;
     view.innerHTML = `
       ${pageHeader('أذكاري', {
-        sub: 'أذكارك الخاصة بعدّادها وتذكيرها',
+        sub: 'أذكارك الخاصة بعدّادها',
         actions: `<button class="icon-btn ghost" data-pick aria-label="من الأذكار المأثورة">${icon('book', 22)}</button><button class="icon-btn primary" data-add aria-label="إضافة ذكر">${icon('plus', 22)}</button>`,
       })}
       ${wirdCards()}

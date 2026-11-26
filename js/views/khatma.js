@@ -284,7 +284,7 @@ export function render(view) {
   const menu = (k) => {
     openSheet(
       `<div class="menu">
-         <button data-a="edit">${icon('edit', 20)} تعديل الختمة<small>الاسم والنطاق والمدة والتذكير</small></button>
+         <button data-a="edit">${icon('edit', 20)} تعديل الختمة<small>الاسم والنطاق والمدة وأيام القراءة</small></button>
          <button data-a="juz">${icon('reset', 20)} ابدأ من أول الجزء<small>إذا انقطع خيطك – وتقدّمك ما ينقص</small></button>
          <button data-a="again">${icon('reset', 20)} ابدأها من جديد<small>والحالية تُحفظ في السجل</small></button>
          <button class="danger" data-a="del">${icon('trash', 20)} حذف الختمة</button>

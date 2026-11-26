@@ -83,7 +83,6 @@ export function render(view) {
           save();
           close();
           draw();
-          if (data.remind && !state.settings.notify.on) toast('فعّل التنبيهات من الإعدادات ليصلك التذكير');
         });
       },
       { title: debt ? 'تعديل الدين' : 'دين جديد' }
