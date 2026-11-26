@@ -11,7 +11,7 @@ import { today } from '../today.js';
 import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
 import { PRAYERS } from '../today.js';
 import { anyTimerRunning, keepAwake } from '../timers.js';
-import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, QURAN_FONTS, toast, toggle, WEIGHTS } from '../ui.js';
+import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, QURAN_COLORS, QURAN_FONTS, QURAN_WEIGHTS, toast, toggle, WEIGHTS } from '../ui.js';
 
 const row = (href, ic, label, value = '') =>
   `<a class="row" href="${href}"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}</span><span class="row-value">${value}</span>${icon('chevron', 18, 'muted')}</a>`;
@@ -457,10 +457,19 @@ export function renderFonts(view) {
         <div class="f-grid q-grid" data-qfont>
           ${Object.entries(QURAN_FONTS).map(([v, [name, fam]]) => `<button class="${(s.fontQuran || 'hafs') === v ? 'on' : ''}" data-v="${v}"><small>${name}</small>${(s.fontQuran || 'hafs') === v ? `<i>${icon('check', 14)}</i>` : ''}<b style="font-family:${fam}">ٱلۡحَمۡدُ لِلَّهِ</b></button>`).join('')}
         </div>
+        <div class="f-head"><h4>لون الآيات</h4><span>${(QURAN_COLORS[s.quranColor] || QURAN_COLORS.blue)[0]}</span></div>
+        <div class="q-colors" data-qcolor>
+          ${Object.entries(QURAN_COLORS).map(([v, [name, c]]) => `<button class="${(s.quranColor || 'blue') === v ? 'on' : ''}" data-v="${v}" style="--c:${c}" aria-label="${name}">${(s.quranColor || 'blue') === v ? icon('check', 16) : ''}</button>`).join('')}
+        </div>
+        <div class="f-head"><h4>وزن خط الآيات</h4><span>${QURAN_WEIGHTS.find((w) => w[0] === (s.quranWeight || 400))?.[1] || ''}</span></div>
+        <div class="chips scroll" data-qweight>
+          ${QURAN_WEIGHTS.map(([w, l]) => `<button class="chip-opt ${(s.quranWeight || 400) === w ? 'on' : ''}" data-v="${w}">${l}</button>`).join('')}
+        </div>
+        <p class="hafs q-sample" style="font-size:24px;line-height:2;text-align:center;margin:12px 0 0">﴿ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ﴾</p>
       </div>
       ${sizer('text', 'حجم خط الأذكار', `${num(Math.round(s.textScale * 100))}%`)}
       <p class="sample amiri" data-text-sample style="font-size:calc(1.3rem * ${s.textScale})">سبحان الله وبحمده، سبحان الله العظيم</p>
-      <p class="hint center">آيات القرآن تبقى بخط المصحف.</p>
+      <p class="hint center">لآيات القرآن خطها ولونها ووزنها في «خط الآيات القرآنية» أعلاه.</p>
       ${picker('fontTsb', 'tsbWeight', 'خط السبحة')}
       ${sizer('tsb', 'حجم خط السبحة', num(state.tasbeeh.fontSize || 40))}
       <p class="sample tsb-sample" data-tsb-sample style="font-size:${Math.min(48, state.tasbeeh.fontSize || 40)}px">سبحان الله وبحمده</p>`;
@@ -480,6 +489,19 @@ export function renderFonts(view) {
       const y = window.scrollY;
       draw();
       return window.scrollTo(0, y);
+    }
+    const qc = e.target.closest('[data-qcolor] [data-v]');
+    const qw = e.target.closest('[data-qweight] [data-v]');
+    if (qc || qw) {
+      if (qc) s.quranColor = qc.dataset.v;
+      if (qw) s.quranWeight = Number(qw.dataset.v);
+      save();
+      const c = QURAN_COLORS[s.quranColor] || QURAN_COLORS.blue;
+      const r = document.documentElement.style;
+      r.setProperty('--ayah-light', c[1]);
+      r.setProperty('--ayah-dark', c[2]);
+      r.setProperty('--quran-weight', String(s.quranWeight || 400));
+      return draw();
     }
     const qf = e.target.closest('[data-qfont] [data-v]');
     if (qf) {

@@ -63,6 +63,21 @@ export const QURAN_FONTS = {
   markazi: ['مركزي', "'Markazi', 'KFGQPC Hafs', serif"],
   lateef: ['لطيف', "'Lateef', 'KFGQPC Hafs', serif"],
 };
+// Colours for the verses: [name, light, dark].
+export const QURAN_COLORS = {
+  blue: ['أزرق', '#1b3f8f', '#a9c4f5'],
+  ink: ['أسود', '#1c2226', '#eef1f0'],
+  green: ['أخضر', '#1f6b4f', '#7fd1ae'],
+  gold: ['ذهبي', '#8a6420', '#e6c27a'],
+  burgundy: ['عنابي', '#8a2a3e', '#f0a3b4'],
+  brown: ['بني', '#6b4423', '#d9b48f'],
+};
+// Weights for the verses.
+export const QURAN_WEIGHTS = [
+  [400, 'عادي'],
+  [500, 'متوسط'],
+  [700, 'عريض'],
+];
 // Weights offered in the settings; a font without one falls to its nearest.
 export const WEIGHTS = [
   [200, 'رفيع جداً'],

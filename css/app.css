@@ -2942,3 +2942,13 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 .hx-clock { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 6px 12px; border-radius: 99px; background: rgba(255, 255, 255, 0.35); color: inherit; }
 [data-theme='dark'] .hx-clock { background: rgba(255, 255, 255, 0.1); }
 .q-grid button b { font-size: 22px; line-height: 2; }
+
+/* ---------- Version 109: the verses' colour and weight; the clock on the left ---------- */
+:root { --ayah: var(--ayah-light, #1b3f8f); }
+[data-theme='dark'] { --ayah: var(--ayah-dark, #a9c4f5); }
+.hafs, .dhikr-text.hafs, .mine-text.hafs, .note-text.hafs, .tc-text .hafs, .hafs-line { font-weight: var(--quran-weight, 400); }
+.hafs:not(.tsb-phrase), .bq-ayah, .hafs-line { color: var(--ayah) !important; }
+.hx-top .hx-clock { margin-inline-start: auto; }
+.q-colors { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 12px; }
+.q-colors button { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--c); display: grid; place-items: center; color: #fff; box-shadow: 0 0 0 2px var(--card-solid), 0 0 0 3px var(--line); }
+.q-colors button.on { box-shadow: 0 0 0 2px var(--card-solid), 0 0 0 4px var(--c); }
