@@ -28,7 +28,7 @@ export function render(view) {
       }
       return `<button class="db-row ${d.dir} ${d.paid ? 'paid' : ''}" data-id="${d.id}">
         <span class="db-ic">${icon(d.paid ? 'check' : d.dir === 'owe' ? 'arrowDown' : 'arrowUp', 20)}</span>
-        <span class="db-text"><b>${esc(d.person)}</b><small>${d.dir === 'owe' ? 'عليّ' : 'لي'} • ${gregText(keyDay(d.date))}${d.remind && d.due && !d.paid ? ` • ${icon('bell', 12)}` : ''}</small>${d.note ? `<small>${esc(d.note)}</small>` : ''}</span>
+        <span class="db-text"><b>${esc(d.person)}</b><small>${d.dir === 'owe' ? 'عليّ' : 'لي'} • ${gregText(keyDay(d.date))}</small>${d.note ? `<small>${esc(d.note)}</small>` : ''}</span>
         <span class="db-amt"><b>${money(d.amount)} <i>ريال</i></b>${due}</span>
       </button>`;
     };
@@ -60,7 +60,6 @@ export function render(view) {
          <label class="field"><span>المبلغ (ريال)</span><input name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" required value="${d.amount}"></label>
          <label class="field"><span>${icon('calendar', 16)} تاريخ الدين</span><input name="date" type="date" required value="${d.date}"></label>
          <label class="field"><span>${icon('calendar', 16)} تاريخ الاستحقاق (اختياري)</span><input name="due" type="date" value="${d.due || ''}"></label>
-         <div class="row"><span class="row-label">تذكير قبل الاستحقاق بـ${num(3)} أيام<small>تنبيه قبله بثلاثة أيام وفي يومه</small></span>${toggle('remind', d.remind)}</div>
          <label class="field"><span>ملاحظة (اختياري)</span><input name="note" maxlength="120" value="${esc(d.note || '')}"></label>
          <div class="sheet-actions"><button class="btn primary" type="submit">${icon('save', 20)} حفظ الدين</button></div>
        </form>`,
@@ -78,7 +77,7 @@ export function render(view) {
           const amount = Math.round(Number(f.amount.value) * 100) / 100;
           const person = f.person.value.trim();
           if (!person || !(amount > 0)) return;
-          const data = { dir, person, amount, date: f.date.value, due: f.due.value, remind: f.remind.checked && !!f.due.value, note: f.note.value.trim() };
+          const data = { dir, person, amount, date: f.date.value, due: f.due.value, remind: false, note: f.note.value.trim() };
           if (debt) Object.assign(debt, data);
           else state.debts.push({ id: uid(), paid: false, paidAt: 0, ...data });
           save();

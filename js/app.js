@@ -21,7 +21,6 @@ import * as khatma from './views/khatma.js';
 import * as debts from './views/debts.js';
 import * as datecalc from './views/datecalc.js';
 import * as rawatib from './views/rawatib.js';
-import * as reminders from './views/reminders.js';
 import * as account from './views/account.js';
 import * as prayersView from './views/prayers.js';
 import * as breathe from './views/breathe.js';
@@ -85,7 +84,6 @@ const ROUTES = [
   [/^#\/debts$/, 'debts', (v) => debts.render(v)],
   [/^#\/datecalc$/, 'datecalc', (v) => datecalc.render(v)],
   [/^#\/rawatib$/, 'rawatib', (v) => rawatib.render(v)],
-  [/^#\/reminders$/, 'reminders', (v) => reminders.render(v)],
   [/^#\/notebook(?:\/\w+)?$/, 'duas', (v) => notebook.render(v)], // «saved» and «notes» are old links
   [/^#\/settings$/, 'settings', (v) => settings.render(v)],
   [/^#\/settings\/location$/, 'settings', (v) => settings.renderLocation(v)],
@@ -104,7 +102,7 @@ let currentHash = '';
 function route() {
   const hash = location.hash || '#/home';
   // Links to what the app no longer has (memorization, widget) open the home screen.
-  if (/^#\/(quran|hifz|calendar\/[\d-]+|surah\/\w+|qibla|settings\/widget)$/.test(hash)) {
+  if (/^#\/(quran|hifz|reminders|calendar\/[\d-]+|surah\/\w+|qibla|settings\/widget)$/.test(hash)) {
     location.replace('#/home');
     return;
   }
