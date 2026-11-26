@@ -1,7 +1,7 @@
 // App shell: hash routes, the side menu, theme and the one-second tick (countdowns, timers, reminders).
 
 import { latinDigits, setDigits, toLatin } from './dates.js';
-import { FONTS, QURAN_FONTS } from './ui.js';
+import { FONTS, QURAN_COLORS, QURAN_FONTS } from './ui.js';
 import { icon } from './icons.js';
 import { checkForUpdate, isIOS, isStandalone, registerServiceWorker } from './push.js';
 import { onChange, persistStorage, state } from './store.js';
@@ -243,6 +243,10 @@ function applyTheme() {
   root.setProperty('--font-text', FONTS[s.fontText] || FONTS.tajawal);
   root.setProperty('--font-ui', FONTS[s.fontUi] || FONTS.tajawal);
   root.setProperty('--font-quran', (QURAN_FONTS[s.fontQuran] || QURAN_FONTS.hafs)[1]);
+  root.setProperty('--quran-weight', String(s.quranWeight || 400));
+  const qc = QURAN_COLORS[s.quranColor] || QURAN_COLORS.blue;
+  root.setProperty('--ayah-light', qc[1]);
+  root.setProperty('--ayah-dark', qc[2]);
   if (s.awake) keepAwake(true);
   root.setProperty('--text-weight', s.textWeight || 500);
   root.setProperty('--font-tsb', FONTS[s.fontTsb] || FONTS.tajawal);

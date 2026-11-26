@@ -29,6 +29,8 @@ export const DEFAULTS = {
     flat: true, // flat design (the default since release 31) instead of liquid glass
     haptics: true,
     quranGoal: 5,
+    quranColor: 'blue', // the verses' colour (QURAN_COLORS in js/ui.js)
+    quranWeight: 400,
     fontQuran: 'hafs', // the verses' font (QURAN_FONTS in js/ui.js)
     awake: false, // keep the screen on while the app is open
     topClock: false, // a clock at the top of the home screen
