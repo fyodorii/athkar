@@ -8,7 +8,6 @@ import { icon } from '../icons.js';
 import { METHODS, PRAYER_NAMES } from '../prayer.js';
 import { exportData, importData, save, state } from '../store.js';
 import { today } from '../today.js';
-import { askPermission, notifyPermission, primeReminders, testReminder } from '../notify.js';
 import { PRAYERS } from '../today.js';
 import { anyTimerRunning, keepAwake } from '../timers.js';
 import { $, ACCENTS, copyText, esc, FONT_NAMES, FONTS, haptic, openSheet, pageHeader, QURAN_COLORS, QURAN_FONTS, QURAN_WEIGHTS, toast, toggle, WEIGHTS } from '../ui.js';
@@ -26,7 +25,7 @@ export function render(view) {
       <h4>الموقع والأوقات</h4>
       ${row('#/settings/location', 'pin', 'الموقع', esc(s.location.name))}
       ${row('#/settings/method', 'sun', 'طريقة الحساب', esc(METHODS[s.method]?.name.split(' — ')[0]))}
-      ${row('#/settings/notify', s.notify.on ? 'bell' : 'bellOff', 'التنبيهات والإقامة', s.notify.on ? 'مفعّلة' : 'متوقفة')}
+      ${row('#/settings/notify', 'clock', 'الإقامة', 'المدة بين الأذان والإقامة')}
       ${row('#/settings/order', 'rows', 'ترتيب الرئيسية والأدوات', 'إظهار وإخفاء وترتيب')}
       ${row('#/settings/icon', 'stars', 'أيقونة التطبيق', APP_ICONS.find((x) => x[0] === s.appIcon)?.[1] || '')}
     </div>
@@ -543,40 +542,12 @@ export function renderFonts(view) {
 let away = null;
 const loadAway = () => import('../away.js').then((m) => (away = m)).catch(() => null);
 
+// «الإقامة»: the minutes between each adhan and its iqama, shown on the home screen after the adhan.
 export function renderNotify(view) {
-  if (!away) loadAway().then((m) => m && location.hash === '#/settings/notify' && renderNotify(view));
   const s = state.settings;
-  const n = s.notify;
-  const sw = (name, label, on, sub = '', ic = 'bell') =>
-    `<div class="row"><span class="row-icon">${icon(ic, 20)}</span><span class="row-label">${label}${sub ? `<small>${sub}</small>` : ''}</span>${toggle(name, on)}</div>`;
   const draw = () => {
-    const t = today().times;
-    const perm = notifyPermission();
-    const status =
-      perm === 'granted'
-        ? 'إشعارات النظام مسموحة.'
-        : perm === 'denied'
-          ? 'إشعارات النظام مرفوضة لهذا التطبيق؛ اسمح بها من إعدادات الجهاز. التنبيه داخل التطبيق يعمل.'
-          : perm === 'unsupported'
-            ? 'هذا المتصفح لا يعرض إشعارات النظام (على الآيفون: أضف التطبيق إلى الشاشة الرئيسية أولاً). التنبيه داخل التطبيق يعمل.'
-            : 'لم يُطلب إذن الإشعارات بعد.';
     view.innerHTML = `
-      ${pageHeader('التنبيهات والإقامة', { back: '#/settings' })}
-      <div class="group">
-        ${sw('on', 'تفعيل التنبيهات', n.on, 'إشعار وصوت عند دخول الوقت', n.on ? 'bell' : 'bellOff')}
-        <p class="hint">${status}</p>
-        <p class="hint">يظهر التنبيه ما دام التطبيق مفتوحاً، وما فاتك في آخر ${num(10)} دقائق يظهر عند فتحه.</p>
-        ${n.on ? `<button class="btn ghost wide" data-test>${icon('bell', 18)} جرّب التنبيه</button>` : ''}
-      </div>
-      <div class="group ${n.on ? '' : 'off'}">
-        <h4>الصلوات</h4>
-        ${PRAYERS.map((k) => sw(`p:${k}`, PRAYER_NAMES[k], n.prayers[k], clockText(t[k].hours, s.clock24), 'mosque')).join('')}
-        <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">تنبيه قبل الأذان<small>${n.before ? `قبله بـ${minutesText(n.before)}` : 'بلا تنبيه مسبق'}</small></span>
-          <div class="stepper" data-before><button data-d="-5">−</button><b>${num(n.before)}</b><button data-d="5">+</button></div></div>
-        <div class="row"><span class="row-icon">${icon('clock', 20)}</span><span class="row-label">تنبيه بعد الأذان<small>${n.after ? `بعده بـ${minutesText(n.after)}` : 'بلا تنبيه بعده'}</small></span>
-          <div class="stepper" data-after><button data-d="-5">−</button><b>${num(n.after || 0)}</b><button data-d="5">+</button></div></div>
-        ${sw('iqama', 'تنبيه الإقامة', n.iqama, 'عند انقضاء مدة الانتظار بعد الأذان', 'minaret')}
-      </div>
+      ${pageHeader('الإقامة', { back: '#/settings' })}
       <div class="group">
         <h4>الإقامة بعد الأذان بالدقائق</h4>
         ${PRAYERS.map(
@@ -584,75 +555,20 @@ export function renderNotify(view) {
             <div class="stepper" data-iqama="${k}"><button data-d="-1">−</button><b>${num(s.iqama[k])}</b><button data-d="1">+</button></div></div>`
         ).join('')}
         <p class="hint">تظهر في الرئيسية بعد الأذان: «مضى على الأذان… الإقامة بعد…». اجعلها صفراً لإخفائها.</p>
-      </div>
-      <div class="group ${n.on ? '' : 'off'}">
-        <h4>أوقات وأذكار</h4>
-        ${sw('duha', 'دخول وقت الضحى', n.duha, clockText(t.duha.hours, s.clock24), 'sun')}
-        ${sw('duhaEnd', 'قرب نهاية الضحى', n.duhaEnd, `قبل ${clockText(t.duhaEnd.hours, s.clock24)} بربع ساعة`, 'sun')}
-        ${sw('sunrise', 'الشروق', n.sunrise, clockText(t.sunrise.hours, s.clock24), 'sunrise')}
-        ${sw('midnight', 'منتصف الليل', n.midnight, clockText(t.midnight.hours, s.clock24), 'moon')}
-        ${sw('lastThird', 'الثلث الأخير من الليل', n.lastThird, clockText(t.lastThird.hours, s.clock24), 'stars')}
-        ${sw('morning', 'أذكار الصباح', n.morning, 'بعد الفجر بنصف ساعة', 'sunrise')}
-        ${sw('evening', 'أذكار المساء', n.evening, 'بعد العصر بنصف ساعة', 'sunset')}
-        <p class="hint">تذكير ورد القرآن يُضبط لكل ختمة من «ختماتي».</p>
-        ${sw('fastMonThu', 'صيام الاثنين والخميس', n.fastMonThu, 'ليلة الأحد والأربعاء الساعة ١٠ مساءً', 'moon')}
-        ${sw('debts', 'الديون المستحقة', n.debts, 'قبل الاستحقاق بثلاثة أيام وفي يومه', 'wallet')}
-        ${sw('sound', 'صوت التنبيه', n.sound, '', 'radio')}
       </div>`;
   };
   draw();
-  view.onchange = async (e) => {
-    const t = e.target;
-    if (t.name === 'push') {
-      if (t.checked) {
-        try {
-          await away.enablePush().catch(() => new Promise((r) => setTimeout(r, 2500)).then(() => away.enablePush()));
-          toast(`${icon('check', 18)} ستصلك التنبيهات والتطبيق مغلق`);
-        } catch (err) {
-          toast(err.message === 'permission' ? 'اسمح بالإشعارات لهذا التطبيق من إعدادات الجهاز' : 'تعذر تفعيل التنبيهات والتطبيق مغلق');
-        }
-      } else await away.disablePush();
-      return draw();
-    }
-    if (t.name === 'on') {
-      n.on = t.checked;
-      if (n.on) {
-        const p = await askPermission();
-        primeReminders();
-        if (p !== 'granted') toast('التنبيه يعمل داخل التطبيق؛ إشعارات النظام غير مسموحة');
-      }
-    } else if (t.name?.startsWith('p:')) n.prayers[t.name.slice(2)] = t.checked;
-    else if (t.name in n) n[t.name] = t.checked;
-    else return;
-    save();
-    draw();
-  };
   view.onclick = (e) => {
-    if (e.target.closest('[data-test]')) return testReminder();
-    if (e.target.closest('[data-pushtest]')) {
-      // The server may need a moment to wake: try again twice before saying it failed.
-      const tries = (n) => away.testPush().catch((err) => (n > 1 ? new Promise((r) => setTimeout(r, 2500)).then(() => tries(n - 1)) : Promise.reject(err)));
-      tries(3)
-        .then(() => toast(`${icon('check', 18)} أغلق التطبيق الآن؛ يصلك تنبيه تجريبي خلال دقيقة أو دقيقتين`, 'long'))
-        .catch(() => toast('لم يصل الطلب الآن؛ تأكد من الإنترنت وجرّب بعد قليل'));
-      return;
-    }
-    const b = e.target.closest('[data-before] [data-d]');
-    if (b) n.before = Math.max(0, Math.min(30, n.before + Number(b.dataset.d)));
-    const af = e.target.closest('[data-after] [data-d]');
-    if (af) n.after = Math.max(0, Math.min(60, (n.after || 0) + Number(af.dataset.d)));
     const q = e.target.closest('[data-iqama] [data-d]');
-    if (q) {
-      const k = q.closest('[data-iqama]').dataset.iqama;
-      s.iqama[k] = Math.max(0, Math.min(60, s.iqama[k] + Number(q.dataset.d)));
-    }
-    if (!b && !q && !af) return;
+    if (!q) return;
+    const k = q.closest('[data-iqama]').dataset.iqama;
+    s.iqama[k] = Math.max(0, Math.min(60, s.iqama[k] + Number(q.dataset.d)));
     save();
     const y = window.scrollY;
     draw();
     window.scrollTo(0, y);
   };
-  return { destroy: () => (view.onchange = view.onclick = null) };
+  return { destroy: () => (view.onclick = null) };
 }
 
 // «ترتيب الرئيسية والأدوات»: move each shortcut and tool up or down, or hide it.

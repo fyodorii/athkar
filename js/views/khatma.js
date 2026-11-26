@@ -57,7 +57,7 @@ export function render(view) {
         i.done
           ? `<p class="kh-plan">تقبّل الله منك. ${num(i.total)} صفحة في ${num(i.wirds)} ورداً.</p>
              <button class="btn primary wide" data-again>${icon('reset', 20)} ابدأها من جديد</button>`
-          : `<p class="kh-now">الوِرد الحالي (${num(i.no)}) <small>من ${num(i.wirds)} • ${wirdWord(i)} • ${weekWord(i.week)}${k.remind ? ` • ${icon('bell', 13)} ${num(k.remind)}` : ''}</small></p>
+          : `<p class="kh-now">الوِرد الحالي (${num(i.no)}) <small>من ${num(i.wirds)} • ${wirdWord(i)} • ${weekWord(i.week)}</small></p>
              <div class="kh-wird">
                <span class="kh-mark">${icon('bookmarkOn', 26)}<b>${verse(pageStart(i.pos))}</b></span>
                <div class="kh-bar"><i style="width:${inWird * 100}%"></i></div>
@@ -200,8 +200,6 @@ export function render(view) {
             <div class="row"><span class="row-icon">${icon('calendar', 20)}</span><span class="row-label">أيام القراءة<small>${weekWord(f.week)}</small></span></div>
             <div class="chips kh-week" data-week>${ALL_WEEK.map((d) => `<button type="button" class="chip-opt ${f.week.includes(d) ? 'on' : ''}" data-w="${d}">${WEEKDAYS[d].replace('ال', '')}</button>`).join('')}</div>
             <div class="row"><span class="row-icon">${icon('reset', 20)}</span><span class="row-label">كمية الوِرد (الجلسة)</span><span class="row-value kh-per">${wirdWord(plan)}</span></div>
-            <div class="row"><span class="row-icon">${icon('bell', 20)}</span><span class="row-label">وقت التذكير</span>
-              <input type="time" value="${f.remind}" data-remind ${f.remindOn ? '' : 'disabled'}>${toggle('remindOn', f.remindOn)}</div>
             <div class="sheet-actions"><button class="btn primary" type="submit">${k ? 'حفظ' : 'إنشاء'}</button></div>`;
         };
         const setRange = (from, to) => {

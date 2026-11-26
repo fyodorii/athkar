@@ -47,7 +47,6 @@ export const QUICK = [
   ['#/khatma', 'الختمات', 'f-book_open'],
   ['#/calendar', 'التقويم', 'f-calendar'],
   ['#/rawatib', 'النوافل', 'f-ribbon_star'],
-  ['#/reminders', 'تذكيراتي', 'f-alert'],
   ['#/audio', 'الصوتيات', 'f-headphones'],
   ['#/tools', 'الأدوات', 'f-toolbox'],
   ['#/counter', 'العداد', 'f-number_symbol_square'],

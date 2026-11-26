@@ -128,6 +128,7 @@ async function show(r) {
 
 // Called every second, and when the app comes back: shows what is due and not yet shown.
 export function checkReminders() {
+  return; // release 111: the app no longer gives reminders
   if (!state.settings.notify.on && !state.reminders.some((r) => r.on) && !state.khatmas.some((k) => k.remind) && !(state.surahRem.on && state.surahRem.list.length)) return;
   const now = Date.now();
   const log = state.notifyLog;
