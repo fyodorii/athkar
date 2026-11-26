@@ -37,6 +37,13 @@ function ordered(items, p) {
   const rest = items.filter((x) => !used.includes(x.id)).map((x) => (x.id === `${p}-32` ? { ...x, quran: true, text: HASBIYA, ref: 'التوبة: ١٢٩' } : x));
   const last = rest.findIndex((x) => x.id === `${p}-47`);
   rest.splice(last, 0, { id: `${p}-48`, text: 'لا حول ولا قوة إلا بالله', count: 100 });
+  // Before the closing istighfar: the supplication of Muhammad ibn Wasi' against Satan.
+  rest.splice(rest.findIndex((x) => x.id === `${p}-47`), 0, {
+    id: `${p}-49`,
+    text: 'اللهم إنك سلطت علينا عدواً بصيراً بعيوبنا، يرانا هو وقبيله من حيث لا نراهم، اللهم فآيسه منا كما آيسته من رحمتك، وقنّطه منا كما قنّطته من عفوك، وباعد بيننا وبينه كما باعدت بينه وبين رحمتك، إنك على كل شيء قدير',
+    count: 1,
+    ref: 'من دعاء التابعي محمد بن واسع رحمه الله صباحاً ومساءً، وليس حديثاً مرفوعاً؛ قال ابن باز: لا بأس به',
+  });
   return [...head, ...rest];
 }
 
