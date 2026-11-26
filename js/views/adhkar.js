@@ -110,7 +110,7 @@ export function renderWird(view, id) {
 }
 
 function wirdCard(x, n) {
-  const before = x.before ? esc(x.before) : '';
+  const before = x.before && !['sl-22', 'sl-3'].includes(x.id) ? esc(x.before) : '';
   const done = n >= x.count;
   const left = x.count - n;
   const TICK = `<span class="counter once" aria-hidden="true"><span data-left>${done ? icon('check', 12) : ''}</span></span>`;
@@ -119,7 +119,10 @@ function wirdCard(x, n) {
   // A dhikr counted to its end loses its ring for the same small green tick.
   const small = x.count === 1 || done;
   const room = small && !x.ref && !x.note && !x.virtue ? '<span class="tick-room"></span>' : '';
-  const body = x.quran ? `<span class="ayah-br">﴿</span>${esc(x.text)}<span class="ayah-br">﴾</span>` : esc(x.text);
+  const whole = { 'sl-22': 32, 'sl-3': 67 }[x.id];
+  const body = whole
+    ? `<a class="read-surah" href="#/read/${whole}">${icon('book', 20)}<span><b>اقرأ ${esc(x.title || 'السورة')} كاملة</b><small>صفحات مصحف المدينة</small></span>${icon('chevron', 16)}</a>`
+    : x.quran ? `<span class="ayah-br">﴿</span>${esc(x.text)}<span class="ayah-br">﴾</span>` : esc(x.text);
   const times = x.count === 2 ? 'مرتان' : `${num(x.count)} ${x.count <= 10 ? 'مرات' : 'مرة'}`;
   // One row on top: the title, then how many times and the counter (a ring counting
   // down, or for a dhikr said once a small tick), so the card holds no empty row of its own.
@@ -138,7 +141,7 @@ function wirdCard(x, n) {
         : TICK
     }
     ${x.title ? `<h3 class="dhikr-title">${esc(x.title)}</h3>` : ''}
-    <div class="dhikr-text ${x.quran ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${body}${room}</div>
+    <div class="dhikr-text ${x.quran && !whole ? 'hafs' : ''}">${before ? `<span class="before">${before}</span>` : ''}${body}${room}</div>
     ${x.note ? `<p class="dhikr-note">${icon('info', 15)} ${esc(x.note)}</p>` : ''}
     ${x.virtue ? `<details class="virtue"><summary>${icon('stars', 16)} الفضل</summary><p>${esc(x.virtue)}</p></details>` : ''}
     ${x.ref ? `<span class="ref">${esc(x.ref)}</span>` : ''}
@@ -769,12 +772,11 @@ export function renderTasbeeh(view, mineId) {
   };
 
   const reset = async (now = false) => {
-    if (!now && !(await confirmSheet(group ? 'البدء من أول المجموعة؟' : wird ? 'تصفير عدد هذا الذكر في الورد؟' : mine ? 'تصفير عدد اليوم لهذا الذكر؟' : 'تصفير العدّاد الحالي؟', { ok: group ? 'من الأول' : 'تصفير', danger: false }))) return;
     if (group) group.i = 0;
     src.reset();
     save();
     paint();
-    if (now) haptic(30);
+    haptic(30);
   };
   // Share the dhikr and its count, as text or as a picture.
   const shareSheet = () => {
