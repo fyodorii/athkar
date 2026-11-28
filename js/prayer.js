@@ -29,8 +29,9 @@ export const PRAYER_NAMES = {
   maghrib: 'المغرب',
   isha: 'العشاء',
   midnight: 'منتصف الليل',
+  firstThird: 'ثلث الليل الأول',
   lastThird: 'الثلث الأخير',
-  yellow: 'اصفرار الشمس',
+  yellow: 'مصير ظل الشيء مثليه',
   shafaq: 'غياب الشفق',
 };
 
@@ -113,6 +114,7 @@ export function solarTimes(year, month, day, lat, lng, tz, opts) {
   // The night runs from Maghrib to the next Fajr.
   const nightLen = diff(t.maghrib, t.fajr);
   t.midnight = t.maghrib + nightLen / 2;
+  t.firstThird = t.maghrib + nightLen / 3;
   t.lastThird = t.maghrib + (nightLen * 2) / 3;
   return t;
 }
@@ -153,7 +155,8 @@ export const dayKey = ({ y, m, d }) => `${y}-${String(m).padStart(2, '0')}-${Str
 
 // Full day of times for the app: every entry has `hours` (for display in the
 // location's time) and `at` (an exact moment, for countdowns and reminders).
-const ROUND_UP = new Set(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']);
+const ROUND_UP = new Set(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'lastThird']);
+const ROUND_DOWN = new Set(['sunrise', 'yellow', 'shafaq', 'midnight', 'firstThird']);
 
 export function dayTimes(day, settings, isRamadan = false) {
   const { location, method, asr, offsets = {} } = settings;
@@ -170,10 +173,11 @@ export function dayTimes(day, settings, isRamadan = false) {
   const base = Date.UTC(day.y, day.m - 1, day.d);
   const out = {};
   for (const k of Object.keys(raw)) {
-    // To the minute, after any manual correction, as the Umm al-Qura tables do: a prayer's time is
-    // never shown before it has come (rounded up), sunrise and the end of a time never after it (rounded down).
+    // To the minute, after any manual correction, as the Umm al-Qura tables do: a prayer's time (and
+    // the night's last third) is never shown before it has come (rounded up), sunrise and the end of
+    // a time (the shadow twice the length, the twilight, the middle and the first third of the night) never after it.
     const exact = raw[k] * 60 + (offsets[k] || 0);
-    const minutes = ROUND_UP.has(k) ? Math.ceil(exact - 1e-6) : k === 'sunrise' || k === 'yellow' || k === 'shafaq' ? Math.floor(exact + 1e-6) : Math.round(exact);
+    const minutes = ROUND_UP.has(k) ? Math.ceil(exact - 1e-6) : ROUND_DOWN.has(k) ? Math.floor(exact + 1e-6) : Math.round(exact);
     out[k] = { key: k, name: PRAYER_NAMES[k], hours: minutes / 60, at: base + (minutes - tz * 60) * 60000 };
   }
   // Duha begins once the sun has risen about a spear's length, 20 minutes after sunrise, and

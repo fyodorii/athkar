@@ -13,7 +13,7 @@ import { hoursAt, today } from '../today.js';
 import { juzOf, khatmaInfo } from '../khatma.js';
 import { $, copyText, esc, shareText } from '../ui.js';
 import { dayScore } from './worship.js';
-import { endNow } from '../ends.js';
+import { endLabel, endNow } from '../ends.js';
 import { ordered } from '../order.js';
 
 // Shortcuts: two columns of pills, each with its round icon.
@@ -218,7 +218,7 @@ function leaveText(info) {
   const now = Date.now();
   const e = endNow(info, now);
   if (!e) return '';
-  return `<a href="#/ends">${icon('clock', 15)} ${e.need ? `وقت الضرورة لصلاة ${esc(e.w.name)}، باقي على ${e.w.lastText}` : `باقي على خروج وقت ${esc(e.w.name)}`}</a><b>${countdown(e.at - now)}</b>`;
+  return `<a href="#/ends">${icon('clock', 15)} ${esc(endLabel(e))}</a><b>${countdown(e.at - now)}</b>`;
 }
 
 const PERIOD_ICONS = { sunrise: 'm-sunrise', duha: 'm-duha', zawal: 'm-dhuhr', day: 'm-dhuhr', night: 'm-isha', midnight: 'm-midnight', qiyam: 'm-lastThird' };
