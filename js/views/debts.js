@@ -6,7 +6,7 @@ import { dayKey } from '../prayer.js';
 import { daysBetween } from '../occasions.js';
 import { save, state, uid } from '../store.js';
 import { today } from '../today.js';
-import { confirmSheet, esc, openSheet, pageHeader, toast, toggle } from '../ui.js';
+import { confirmSheet, esc, openSheet, pageHeader } from '../ui.js';
 
 const money = (n) => num(Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }));
 const keyDay = (k) => {

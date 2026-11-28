@@ -113,6 +113,8 @@ function route() {
   }
   const [m, tab, fn] = match;
   current?.destroy?.();
+  // Whatever handlers the last page set on the view go with it, even if it did not remove them.
+  view.onclick = view.onchange = view.oninput = view.onsubmit = view.onkeydown = null;
   view.innerHTML = '';
   view.className = `view view-${tab}`;
   if (hash !== currentHash) window.scrollTo(0, 0);
@@ -228,7 +230,8 @@ function paintStatusBar() {
   const nums = (bgc.match(/[\d.]+/g) || []).map(Number);
   // rgb(r, g, b) or color(srgb r g b), as a colour-mix comes back
   const bg = bgc.startsWith('color(') ? nums.slice(0, 3).map((v) => Math.round(v * 255)) : nums.slice(0, 3);
-  const bgHex = bg.length === 3 && bg.every((v) => v >= 0 && v <= 255) ? '#' + bg.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('') : STATUS.dark.other;
+  const clear = /rgba?\([^)]*,\s*0\)$|transparent/.test(bgc);
+  const bgHex = !clear && bg.length === 3 && bg.every((v) => v >= 0 && v <= 255) ? '#' + bg.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('') : STATUS.dark.other;
   const shade = document.documentElement.dataset.theme === 'dark' ? { ...STATUS.dark, home: mixHex(hex, '#141a26', 0.3), other: bgHex } : { home: mixHex(hex, '#e6e7ee', 0.42), other: main };
   const tab = document.body.dataset.tab;
   const own = tab === 'tasbeeh' && document.querySelector('.tsb')?.dataset.top;
@@ -431,10 +434,14 @@ document.documentElement.classList.add('ready');
 
 // With Latin digits chosen, numbers written into the pages' text (references, counts, labels) follow
 // the choice too, everywhere, as each page is drawn.
+// Text the user is editing (a textarea's content, an editable block) is left as typed.
+function editable(n) {
+  return !!n.parentElement?.closest('textarea, [contenteditable], script, style');
+}
 function fixDigits(root) {
   if (!latinDigits() || !root) return;
   const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  for (let n = walk.nextNode(); n; n = walk.nextNode()) if (/[٠-٩]/.test(n.nodeValue)) n.nodeValue = toLatin(n.nodeValue);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) if (/[٠-٩]/.test(n.nodeValue) && !editable(n)) n.nodeValue = toLatin(n.nodeValue);
   for (const el of root.querySelectorAll?.('input[placeholder], [aria-label]') || []) {
     if (el.placeholder && /[٠-٩]/.test(el.placeholder)) el.placeholder = toLatin(el.placeholder);
   }
@@ -443,7 +450,7 @@ new MutationObserver((list) => {
   if (!latinDigits()) return;
   for (const m of list) {
     if (m.type === 'characterData') {
-      if (/[٠-٩]/.test(m.target.nodeValue)) m.target.nodeValue = toLatin(m.target.nodeValue);
-    } else for (const n of m.addedNodes) n.nodeType === 3 ? /[٠-٩]/.test(n.nodeValue) && (n.nodeValue = toLatin(n.nodeValue)) : fixDigits(n);
+      if (/[٠-٩]/.test(m.target.nodeValue) && !editable(m.target)) m.target.nodeValue = toLatin(m.target.nodeValue);
+    } else for (const n of m.addedNodes) n.nodeType === 3 ? /[٠-٩]/.test(n.nodeValue) && !editable(n) && (n.nodeValue = toLatin(n.nodeValue)) : fixDigits(n);
   }
 }).observe(document.body, { childList: true, subtree: true, characterData: true });

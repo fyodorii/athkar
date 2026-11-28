@@ -7,13 +7,15 @@ import { haptic, pageHeader } from '../ui.js';
 
 const RATE = 0.15;
 const money = (v) => num(v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+// What the user typed, with Arabic digits, the Arabic decimal mark (٫) and thousands marks (٬ ,).
+const amount = (s) => Number(String(s).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[٬,\s]/g, '').replace(/٫/g, '.')) || 0;
 
 // «حاسبة ضريبة القيمة المضافة»: add 15% to a price, or take it out of a price that includes it.
 export function renderVat(view) {
   let mode = 'add';
   let value = '';
   const draw = () => {
-    const a = Number(String(value).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/,/g, '')) || 0;
+    const a = amount(value);
     const net = mode === 'add' ? a : a / (1 + RATE);
     const vat = net * RATE;
     const total = net + vat;
@@ -40,7 +42,7 @@ export function renderVat(view) {
       </section>`;
   };
   const update = () => {
-    const a = Number(value.replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/,/g, '')) || 0;
+    const a = amount(value);
     const net = mode === 'add' ? a : a / (1 + RATE);
     const out = { net, vat: net * RATE, total: net * (1 + RATE) };
     for (const k in out) view.querySelector(`[data-o="${k}"]`).textContent = money(out[k]);
@@ -79,9 +81,32 @@ const cue = (n = 1, ms = 15) => {
   chime(Array.from({ length: n }, (_, i) => i * 0.16), false);
 };
 
+// The timer's last three seconds and its end are timed here, not by the page, so they sound
+// wherever the user is in the app (on the other tab, or another page).
+let alarm = 0;
+let beeps = [];
+let onRing = null; // the page's redraw, while it is open
+const ring = () => {
+  cd.end = 0;
+  cd.left = cd.total;
+  chime([0, 0.35, 0.7, 1.05, 1.6, 1.95, 2.3, 2.65]);
+  haptic(150, true, true);
+  setTimeout(() => haptic(150, true, true), 900);
+  setTimeout(() => haptic(150, true, true), 1800);
+  onRing?.();
+};
+const arm = () => {
+  clearTimeout(alarm);
+  beeps.forEach(clearTimeout);
+  beeps = [];
+  if (!cd.end) return;
+  const l = cd.end - Date.now();
+  for (const s of [3, 2, 1]) if (l - s * 1000 > 0) beeps.push(setTimeout(() => cue(1, 20), l - s * 1000));
+  alarm = setTimeout(ring, Math.max(0, l));
+};
+
 export function renderStopwatch(view) {
   let raf = 0;
-  let lastSec = -1;
   const running = () => (tab === 'watch' ? !!sw.start : !!cd.end);
   const elapsed = () => sw.acc + (sw.start ? Date.now() - sw.start : 0);
   const left = () => (cd.end ? cd.end - Date.now() : cd.left);
@@ -91,8 +116,8 @@ export function renderStopwatch(view) {
       ${pageHeader('مؤقت وعداد', { back: '#/tools' })}
       <section class="card stw">
         <div class="seg-tabs">
-          <button class="${tab === 'watch' ? 'on' : ''}" data-stab="watch">العداد</button>
-          <button class="${tab === 'timer' ? 'on' : ''}" data-stab="timer">المؤقت</button>
+          <button class="${tab === 'watch' ? 'on' : ''}" data-stab="watch">العداد${sw.start && tab !== 'watch' ? ' •' : ''}</button>
+          <button class="${tab === 'timer' ? 'on' : ''}" data-stab="timer">المؤقت${cd.end && tab !== 'timer' ? ' •' : ''}</button>
         </div>
         <div class="stw-face" data-face>${tab === 'watch' ? fmt(elapsed()) : fmt(left(), false)}</div>
         ${tab === 'timer' && !r ? `<div class="stw-set">
@@ -107,39 +132,31 @@ export function renderStopwatch(view) {
         </div>
         ${tab === 'watch' && sw.laps.length ? `<ol class="stw-laps">${sw.laps.map((l, i) => `<li><span>لفة ${num(i + 1)}</span><b>${fmt(l)}</b></li>`).reverse().join('')}</ol>` : ''}
       </section>`;
+    loop();
   };
-  const tick = () => {
-    const f = view.querySelector('[data-face]');
-    if (!f) return;
-    if (tab === 'watch') f.textContent = fmt(elapsed());
-    else {
-      const l = left();
-      f.textContent = fmt(l, false);
-      const sec = Math.ceil(l / 1000);
-      if (cd.end && sec <= 3 && sec > 0 && sec !== lastSec) cue(1, 20);
-      lastSec = sec;
-      if (cd.end && l <= 0) {
-        cd.end = 0;
-        cd.left = cd.total;
-        chime([0, 0.35, 0.7, 1.05, 1.6, 1.95, 2.3, 2.65]);
-        haptic(150, true, true);
-        setTimeout(() => haptic(150, true, true), 900);
-        setTimeout(() => haptic(150, true, true), 1800);
-        draw();
-      }
-    }
-    raf = requestAnimationFrame(tick);
+  // The face moves only while something counts.
+  const loop = () => {
+    cancelAnimationFrame(raf);
+    raf = 0;
+    if (!sw.start && !cd.end) return;
+    const step = () => {
+      const f = view.querySelector('[data-face]');
+      if (!f) return;
+      f.textContent = tab === 'watch' ? fmt(elapsed()) : fmt(left(), false);
+      raf = requestAnimationFrame(step);
+    };
+    step();
   };
+  onRing = draw;
   draw();
-  tick();
   const readSet = () => {
     const h = Number(view.querySelector('[data-hr]')?.value || 0);
     const m = Number(view.querySelector('[data-min]')?.value || 0);
     const s = Number(view.querySelector('[data-sec]')?.value || 0);
-    cd.left = cd.total = Math.max(1, Math.min(23, h) * 3600 + Math.min(59, m) * 60 + Math.min(59, s)) * 1000;
+    cd.left = cd.total = Math.max(1, Math.min(23, Math.max(0, h)) * 3600 + Math.min(59, Math.max(0, m)) * 60 + Math.min(59, Math.max(0, s))) * 1000;
   };
   view.onclick = (e) => {
-    const t = e.target.closest("[data-stab]");
+    const t = e.target.closest('[data-stab]');
     if (t) {
       tab = t.dataset.stab;
       return draw();
@@ -153,12 +170,13 @@ export function renderStopwatch(view) {
           sw.start = 0;
         } else sw.start = Date.now();
       } else if (cd.end) {
-        cd.left = cd.end - Date.now();
+        cd.left = Math.max(0, cd.end - Date.now());
         cd.end = 0;
       } else {
         if (cd.left === cd.total) readSet();
         cd.end = Date.now() + cd.left;
       }
+      arm();
       return draw();
     }
     if (e.target.closest('[data-lap]')) {
@@ -172,6 +190,7 @@ export function renderStopwatch(view) {
       cue(3, 30);
       if (tab === 'watch') Object.assign(sw, { start: 0, acc: 0, laps: [] });
       else Object.assign(cd, { end: 0, left: cd.total });
+      arm();
       return draw();
     }
   };
@@ -180,6 +199,7 @@ export function renderStopwatch(view) {
   };
   return { destroy: () => {
     cancelAnimationFrame(raf);
+    onRing = null;
     view.onclick = view.onchange = null;
   } };
 }

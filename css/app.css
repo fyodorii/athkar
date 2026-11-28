@@ -2977,3 +2977,7 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 [data-theme='dark'] .br-ball[data-phase='hold'] { background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--gold) 70%, #2a2210), color-mix(in srgb, var(--gold) 45%, #120e06)); }
 [data-theme='dark'] .br-text { color: #fff; }
 .br-stage:not(:has([data-phase])) .br-text { color: #fff; }
+
+/* ---------- Version 115: design review ---------- */
+/* An odd shortcut out at the end of the home grid takes the whole row. */
+.hx-grid a:last-child:nth-child(odd) { grid-column: 1 / -1; justify-content: center; }
