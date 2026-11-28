@@ -21,8 +21,8 @@ export const MY_ADHKAR = [
 
 // Morning and evening in the user's order (`p` is the id prefix: am, pm): the crown of dhikr,
 // the prayer upon the Prophet ﷺ, the two isti'adhas in one card three times, the other
-// ta'awwudhat, then the rest as in wird-data.js, with «لا حول ولا قوة إلا بالله» a hundred
-// times before the closing istighfar.
+// ta'awwudhat, then the rest as in wird-data.js, with the supplication of Muhammad ibn Wasi' and
+// «لا حول ولا قوة إلا بالله» a hundred times before the closing istighfar.
 const WIRD_FIRST = [13, 17, 1, 37, 38, 39, 40];
 const WIRD_TITLES = { 13: 'تاج الذكر', 17: 'الصلاة على النبي' };
 function ordered(items, p) {
@@ -35,16 +35,15 @@ function ordered(items, p) {
   });
   // «حسبي الله…» is shown as the verse it is.
   const rest = items.filter((x) => !used.includes(x.id)).map((x) => (x.id === `${p}-32` ? { ...x, quran: true, text: HASBIYA, ref: 'التوبة: ١٢٩' } : x));
-  const last = rest.findIndex((x) => x.id === `${p}-47`);
-  rest.splice(last, 0, { id: `${p}-48`, text: 'لا حول ولا قوة إلا بالله', count: 100 });
-  // Before the closing istighfar: the supplication of Muhammad ibn Wasi' against Satan.
+  // Before the closing istighfar: the supplication of Muhammad ibn Wasi' against Satan, then «لا حول
+  // ولا قوة إلا بالله» a hundred times.
   rest.splice(rest.findIndex((x) => x.id === `${p}-47`), 0, {
     id: `${p}-49`,
-    text: 'اللهم إنك سلطت علينا عدواً بصيراً بعيوبنا، يرانا هو وقبيله من حيث لا نراهم، اللهم فآيسه منا كما آيسته من رحمتك، وقنّطه منا كما قنّطته من عفوك، وباعد بيننا وبينه كما باعدت بينه وبين رحمتك، إنك على كل شيء قدير',
+    text: 'اللهم إنك سلطت علينا عدواً بصيراً بعيوبنا، يرانا هو وقبيله من حيث لا نراهم، اللهم فآيسه منا كما آيسته من رحمتك، وقنّطه منا كما قنّطته من عفوك، وباعد بيننا وبينه كما باعدت بينه وبين جنتك، إنك على كل شيء قدير',
     count: 1,
-    note: 'وفي بعض الكتب المتأخرة: «كما باعدت بينه وبين جنتك»',
-    ref: 'من دعاء التابعي محمد بن واسع بعد صلاة الصبح، ذكره الغزالي في إحياء علوم الدين (٣/ ٣٧)، وليس حديثاً مرفوعاً؛ قال ابن باز: لا بأس به',
-  });
+    note: 'وفي إحياء علوم الدين (٣/ ٣٧): «كما باعدت بينه وبين رحمتك»',
+    ref: 'من دعاء التابعي محمد بن واسع، وليس حديثاً مرفوعاً. وبلفظ «جنتك» سُئل عنه ابن باز فقال: «وهذا الدعاء لا بأس به» (مجموع فتاواه ٢٦/ ١٢٩)، وهو كذلك في حاشية البجيرمي (٢/ ١٩)',
+  }, { id: `${p}-48`, text: 'لا حول ولا قوة إلا بالله', count: 100 });
   return [...head, ...rest];
 }
 
