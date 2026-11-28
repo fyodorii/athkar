@@ -17,7 +17,6 @@ import { esc, toast } from './ui.js';
 import { icon } from './icons.js';
 
 const CLOCK = /^\d{1,2}:\d\d$/; // a stored time of day
-const LATE = 10 * 60000; // a reminder still shows this long after its moment
 
 export const notifySupported = () => 'Notification' in window;
 export const notifyPermission = () => (notifySupported() ? Notification.permission : 'unsupported');
@@ -126,20 +125,8 @@ async function show(r) {
   }
 }
 
-// Called every second, and when the app comes back: shows what is due and not yet shown.
-export function checkReminders() {
-  return; // release 111: the app no longer gives reminders
-  if (!state.settings.notify.on && !state.reminders.some((r) => r.on) && !state.khatmas.some((k) => k.remind) && !(state.surahRem.on && state.surahRem.list.length)) return;
-  const now = Date.now();
-  const log = state.notifyLog;
-  const due = reminders().filter((r) => r.at <= now && now - r.at < LATE && !log[r.id]);
-  if (!due.length) return;
-  for (const r of due) log[r.id] = now;
-  for (const k of Object.keys(log)) if (now - log[k] > 4 * 86400000) delete log[k];
-  save();
-  // Several at once (the app was away): the latest one speaks for them.
-  show(due[due.length - 1]);
-}
+// Reminders were removed (release 111): nothing is shown any more; kept for the callers.
+export function checkReminders() {}
 
 // Marks what is already past as shown, so turning reminders on does not replay the day.
 export function primeReminders() {

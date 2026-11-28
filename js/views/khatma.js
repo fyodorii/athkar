@@ -10,7 +10,7 @@ import { dayKey } from '../prayer.js';
 import { JUZ, pageEnd, PAGES, pageStart, SURAH_END, SURAHS } from '../quran-data.js';
 import { save, state, uid } from '../store.js';
 import { hoursAt, today } from '../today.js';
-import { confirmSheet, esc, haptic, openSheet, pageHeader, ring, toast, toggle } from '../ui.js';
+import { confirmSheet, esc, haptic, openSheet, pageHeader, ring, toast } from '../ui.js';
 
 export { juzOf };
 

@@ -3,7 +3,7 @@
 import { CITIES, nearestCity } from '../cities.js';
 import { googleAccount } from '../google.js';
 import { APP_NAME, APP_VERSION, DESIGNER } from '../config.js';
-import { clockText, hijriText, minutesText, num } from '../dates.js';
+import { clockText, hijriText, num } from '../dates.js';
 import { icon } from '../icons.js';
 import { METHODS, PRAYER_NAMES } from '../prayer.js';
 import { exportData, importData, save, state } from '../store.js';
@@ -539,8 +539,6 @@ export function renderFonts(view) {
 // ---- Reminders and the iqama ----
 
 // Loaded when the notifications page opens, so a blocked file does not stop the settings.
-let away = null;
-const loadAway = () => import('../away.js').then((m) => (away = m)).catch(() => null);
 
 // «الإقامة»: the minutes between each adhan and its iqama, shown on the home screen after the adhan.
 export function renderNotify(view) {
@@ -574,6 +572,7 @@ export function renderNotify(view) {
 // «ترتيب الرئيسية والأدوات»: move each shortcut and tool up or down, or hide it.
 export async function renderOrder(view) {
   const [{ QUICK, SECTIONS }, { TOOLS }, { ordered }] = await Promise.all([import('./home.js'), import('./tools.js'), import('../order.js')]);
+  if (location.hash !== '#/settings/order') return; // the user left while it loaded
   const LISTS = { sections: ['أقسام الرئيسية', SECTIONS], home: ['اختصارات الرئيسية', QUICK], tools: ['الأدوات', TOOLS] };
   const s = state.settings;
   const conf = (k) => (s.order ??= {})[k] ??= { list: [], hidden: [] };
