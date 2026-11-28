@@ -2747,14 +2747,6 @@ body[data-tab='search'] .sr-field { margin-top: 6px; }
 .en-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: var(--ink-2); }
 .en-head b { font-size: 17px; color: var(--ink); }
 .en-head em { margin-inline-start: auto; font-style: normal; font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--primary); color: var(--primary-ink); }
-.en-bar { display: flex; align-items: center; gap: 10px; }
-.en-bar span { display: grid; gap: 2px; }
-.en-bar span:last-child { text-align: end; }
-.en-bar small { font-size: 12px; color: var(--ink-3); }
-.en-bar b { font-size: 18px; font-variant-numeric: tabular-nums; }
-.en-bar i { flex: 1; height: 3px; border-radius: 3px; background: linear-gradient(to left, var(--primary), var(--danger)); opacity: 0.6; }
-.en-need { display: flex; gap: 6px; align-items: flex-start; margin: 10px 0 0; font-size: 13px; line-height: 1.7; color: var(--ink-2); }
-.en-need svg { flex-shrink: 0; margin-top: 4px; }
 .en-ev { margin: 0 0 10px; padding: 14px 16px; }
 .en-ev p { margin: 0 0 8px; font-size: 15px; line-height: 1.95; }
 .en-ev small { font-size: 12.5px; line-height: 1.8; }
@@ -2981,3 +2973,38 @@ img.ic.fluent { object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 1
 /* ---------- Version 115: design review ---------- */
 /* An odd shortcut out at the end of the home grid takes the whole row. */
 .hx-grid a:last-child:nth-child(odd) { grid-column: 1 / -1; justify-content: center; }
+
+/* ---------- Version 116: the chosen time and the time of need in «خروج الصلوات» ---------- */
+.pt-hero.ends b { font-size: clamp(20px, 6.4vw, 26px); line-height: 1.35; }
+.pt-hero.need { background: linear-gradient(150deg, color-mix(in srgb, var(--gold) 72%, #000), color-mix(in srgb, var(--gold) 48%, #000)); }
+[data-theme='dark'] .pt-hero.need { background: linear-gradient(150deg, color-mix(in srgb, var(--gold) 40%, #15120c), color-mix(in srgb, var(--gold) 20%, #0e0c08)); }
+.en-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: -4px 4px 12px; font-size: 13px; color: var(--ink-2); }
+.en-legend span, .en-kind b { display: inline-flex; align-items: center; gap: 8px; }
+.en-legend span::before, .en-kind b::before { content: ''; flex-shrink: 0; width: 20px; height: 8px; border-radius: 99px; background: var(--primary); }
+.en-legend .nd::before, .en-kind.nd b::before, .en-track .nd { background: repeating-linear-gradient(-45deg, var(--gold) 0 4px, color-mix(in srgb, var(--gold) 45%, transparent) 4px 8px); }
+.en.on.need { box-shadow: 0 0 0 2px var(--gold); }
+.en.done { opacity: 0.62; }
+.en-head em.nd { background: color-mix(in srgb, var(--gold) 78%, #000); color: #fff; }
+[data-theme='dark'] .en-head em.nd { background: var(--gold); color: #1d1608; }
+.en-head em.off { background: var(--bg-2); color: var(--ink-3); }
+.en-track { position: relative; display: flex; gap: 3px; height: 10px; margin: 2px 0 6px; }
+.en-track i { min-width: 8px; border-radius: 99px; }
+.en-track .ch { background: var(--primary); }
+.en-track s { position: absolute; top: 50%; width: 16px; height: 16px; margin-block-start: -8px; margin-inline-start: -8px; border-radius: 50%; background: var(--card-solid); border: 3px solid var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); transition: inset-inline-start 1s linear; }
+.en-row { display: flex; align-items: center; gap: 10px; padding: 10px 0 0; }
+.en-row + .en-row { margin-top: 10px; border-top: 1px solid var(--line); }
+.en-row > span:first-child { flex: 1; min-width: 0; display: grid; gap: 1px; padding-inline-start: 16px; position: relative; }
+.en-row > span:first-child::before { content: ''; position: absolute; inset-inline-start: 0; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.en-row.nd > span:first-child::before { background: var(--gold); }
+.en-row b { font-size: 15px; }
+.en-row small { font-size: 12.5px; line-height: 1.6; color: var(--ink-3); }
+.en-span { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.en-span b { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.en-span i { font-style: normal; color: var(--ink-3); }
+.en-note { margin: 10px 0 0; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 12.5px; line-height: 1.8; color: var(--ink-2); }
+.en-kinds { display: grid; gap: 10px; }
+@media (min-width: 560px) { .en-kinds { grid-template-columns: 1fr 1fr; } }
+.en-kind { padding: 14px 16px; }
+.en-kind b { font-size: 16px; }
+.en-kind p { margin: 8px 0 0; font-size: 14.5px; line-height: 1.9; color: var(--ink-2); }
+.en-src { margin: 8px 4px 12px; font-size: 12.5px; }
